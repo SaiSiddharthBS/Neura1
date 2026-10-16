@@ -96,6 +96,17 @@ def main() -> None:
         page.wait_for_timeout(800)
         shot("company-brain")
 
+        # 7b The wider company brain
+        page.get_by_role("button", name="Kaveri", exact=True).click()
+        page.wait_for_timeout(1500)
+        page.locator("section.card").nth(1).screenshot(path=str(OUT / "who-knows.png")); shots.append("who-knows.png")
+        for name, url, wait in (("people", "/people?id=P-RAHUL", "Knows about"),
+                                ("projects", "/projects?id=PRJ-KAVERI2", "Recent discussion"),
+                                ("whats-new", "/changes", "Needs attention")):
+            page.goto(base + url)
+            page.wait_for_selector(f"text={wait}")
+            shot(name)
+
         # 8 Investigations history
         page.goto(f"{base}/history")
         page.wait_for_timeout(800)

@@ -22,7 +22,8 @@ One supplier notice in. Every affected product, build, customer, decision and ow
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white">
   <img alt="React Flow" src="https://img.shields.io/badge/React_Flow-ff0072">
   <img alt="Ollama" src="https://img.shields.io/badge/Ollama-Qwen2.5--7B-111111?logo=ollama&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-31_passing-2fd3a5">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-35_passing-2fd3a5">
+  <img alt="MCP" src="https://img.shields.io/badge/MCP-12_tools-5b6cff">
   <img alt="Cost" src="https://img.shields.io/badge/running_cost-₹0-2fd3a5">
 </p>
 
@@ -135,6 +136,11 @@ mindmap
       Jira tickets
       Test reports
       Change policy
+    Projects
+      Kaveri Phase 2 rollout
+      VC-300 controller
+      FY27 cost-down
+      Firmware 2.4
     Decisions
       Rejected substitutes
       Bench evidence
@@ -144,6 +150,49 @@ mindmap
 | Who | When | Today | With Neura1 |
 |---|---|---|---|
 | Founder / Head of Ops (buyer)<br>Engineering, procurement, planning, sales, quality (users) | A supplier price, lead-time, end-of-life or last-time-buy notice | Forward the email. Search the BOM sheet. Dig through Slack. Planning and sales hear late. | Paste the email. Every team sees what it affects, what it costs, what was decided before, and who does what. |
+
+<br>
+
+## ✦ The whole company, one graph
+
+Supplier changes are the sharpest problem, so they lead the demo. But Track 03 asks for an agent that *understands how a
+company works*, and the same graph answers questions about any part of Voltline:
+
+| Track 03 asks for | Neura1 | Try it |
+|---|---|---|
+| People, teams, **projects**, documents, decisions in one graph | 4 projects with leads, members, roles and scope, linked to the same parts, orders, customers and decisions | **Projects** page |
+| Knowledge from docs, tickets and chats | Slack threads, Jira tickets, reports, notices and PDFs, split into passages and linked by exact ids and chat aliases ("pmic_seq.c" → `FW-PMIC-SEQ`) | **Company brain** search |
+| **Who owns what, and who knows what** | Ownership is stored. Expertise is *derived* from the graph: what people own, decided, wrote about, and work on, plus who covers when they're away. | **Who knows about…** · **People** |
+| Tracing decisions to their source | DEC-117 links to the exact Slack message and Jira comment, quoted word for word | Red banner → evidence |
+| **Keeping knowledge current** | Re-imports update passages in place. Edited or removed evidence, decisions on obsolete revisions, expiring quotes and unowned records are flagged. | **What's new** |
+| Answers with clear sources | Every Ask answer lists the passages it relied on (clickable) and the Cypher it ran | **Ask** |
+| **Get work done** | Approve impact tasks; Ask drafts tasks ("Ask Rahul to review pmic_seq.c…") that a person confirms | Tasks panel · Ask |
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/demo/people.png" alt="People"><br><sub><b>People</b>: what Rahul owns, what he knows from what he wrote, his projects, and who covers for him.</sub></td>
+    <td width="50%"><img src="docs/demo/projects.png" alt="Projects"><br><sub><b>Projects</b>: members and roles, scope, decisions, open tasks, recent discussion.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/demo/who-knows.png" alt="Who knows"><br><sub><b>Who knows about Kaveri</b>, ranked, with the reason for each person.</sub></td>
+    <td><img src="docs/demo/whats-new.png" alt="What's new"><br><sub><b>What's new</b>, and the knowledge that may no longer be true.</sub></td>
+  </tr>
+</table>
+
+### Use the brain from any agent (MCP)
+
+Neura1 is also an **MCP server** with 12 tools: `where_used`, `change_impact`, `who_knows`, `person`, `project`,
+`list_projects`, `decisions`, `alternates`, `search_documents`, `recent_changes`, `read_only_cypher` and `propose_task`.
+Any MCP client (Claude Desktop, IDEs, other agents) can pick the right graph tool for the question. All tools are
+read-only, and tasks are drafts until a person confirms them.
+
+```json
+{
+  "mcpServers": {
+    "neura1": { "command": "uv", "args": ["--directory", "/path/to/Neura1/api", "run", "python", "-m", "neura1.mcp_server"] }
+  }
+}
+```
 
 <br>
 
@@ -353,7 +402,7 @@ cd api
 cp .env.example .env                               # set NEURA1_DEMO_PASSCODE
 uv sync
 uv run python -m neura1.cli load                   # load Voltline Controls + saved model extractions
-uv run pytest -q                                   # 31 tests
+uv run pytest -q                                   # 35 tests
 uv run uvicorn neura1.main:app --port 8000
 
 cd ../web && pnpm install && pnpm dev              # http://localhost:3000
@@ -400,10 +449,10 @@ The agent uses a JSON plan-act loop, so it works even on servers whose native to
 
 | Check | Result |
 |---|---|
-| Automated tests | **31 passing**: BOM roll-ups, revision applicability, cost edge cases, import validation, CAD BOMs, extraction verification, idempotent approvals, the HTTP flow end to end, and 503 when the graph is down |
+| Automated tests | **35 passing**: BOM roll-ups, revision applicability, cost edge cases, import validation, CAD BOMs, extraction verification, idempotent approvals, the HTTP flow end to end, and 503 when the graph is down |
 | Local model on real fixture documents | DEC-117 found in **Slack and Jira** ✓ · notice read correctly ✓ · MX-3360 bench result ✓ · TR-131 bench note **missed** ✗ · [full table](docs/DEMO.md#what-the-local-model-got-right-and-wrong) |
 | Mistakes caught and fixed | The agent once called MX-3360 "approved". That led to the approval wording in tool output and the rule-based check. |
-| Frozen evaluation | 32 ground-truth questions in [`api/eval/golden.yaml`](api/eval/golden.yaml), written before any model ran: graph agent vs search-only vs whole-corpus, same model. **Results pending GPU time; failures will be published, not hidden.** |
+| Frozen evaluation | 38 ground-truth questions in [`api/eval/golden.yaml`](api/eval/golden.yaml), written before any model ran: graph agent vs search-only vs whole-corpus, same model. **Results pending GPU time; failures will be published, not hidden.** |
 
 <br>
 
@@ -429,7 +478,9 @@ api/                 FastAPI service
   neura1/engine/       deterministic cost engine
   neura1/ingest/       loaders · validator · document passages · verified extraction
   neura1/agent.py      Ask agent with bounded tools and guardrails
-  tests/  eval/        31 tests · 32-question frozen evaluation
+  neura1/brain.py      who knows what · people · projects · what changed
+  neura1/mcp_server.py the graph's tools for any MCP client
+  tests/  eval/        35 tests · 38-question frozen evaluation
 web/                 Next.js app: Inbox · Impact · Company brain · Investigations · Import
 fixture/voltline/    synthetic company: records · chats · tickets · docs · notice · updates · model extractions
 docs/                demo walkthrough · data model · queries · target customer · reuse · AI disclosure

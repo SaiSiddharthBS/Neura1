@@ -38,6 +38,10 @@ graph LR
   Decision -- APPLIES_TO --> Revision
   Decision -- DECIDED_BY --> Person
   Decision -- "EVIDENCED_BY {quote}" --> Chunk
+  Person -- "LEADS / WORKS_ON {role}" --> Project
+  Project -- COVERS --> Customer & Order & Build & Revision & Item
+  Person -- BACKS_UP --> Person
+  Alias -- REFERS_TO --> Item & Project & Customer
   Investigation -- TRIGGERED_BY --> Source
   Investigation -- CONCERNS --> Item
   Investigation -- PRODUCED --> Action
@@ -58,6 +62,33 @@ graph LR
 | `Chunk` | `text`, `author`, `ts`, `page`, `source_version` | A passage: one Slack message, one ticket comment, one paragraph. Full-text indexed |
 | `Decision` | `outcome` (approved · rejected · proposed · evidence), `summary`, `reason`, `decided_at`, `authority`, `extracted_by` | |
 | `Investigation`, `Action` | content-hash ids, `status`, `approved_by`, `created_at` | Idempotent: re-approving finds the same nodes |
+| `Project` | `name`, `status`, `start_date`, `target_date`, `summary` | Linked to people (`LEADS`, `WORKS_ON {role}`) and to whatever it covers |
+| `Alias` | `term` | Names people actually use in chat ("pmic_seq.c", "Kaveri") that point at a record |
+
+## Who knows what
+
+Expertise is not stored. It is derived from the graph every time, with the evidence for each signal
+([`WHO_KNOWS`](queries.md#who_knows)):
+
+| Signal | Weight |
+|---|---|
+| Owns it, or leads the project | 5 |
+| Made a recorded decision about it or its alternates | 4 |
+| Owns something that depends on it | 3 |
+| Works on the project | 3 |
+| Owns an assembly that uses it · works on a project that covers it · backs up the owner | 2 |
+| Each passage they wrote that mentions it | 1 |
+
+## Keeping knowledge current
+
+- **Re-importing a document updates its passages in place.** Links from decisions and tasks survive.
+- **Each passage carries a `text_hash`.** `EVIDENCED_BY` and `CITES` store the hash they relied on. If the passage is
+  edited later, the mismatch is flagged as "edited after it was relied on".
+- **A passage that disappears is deleted, unless something cites it.** In that case it stays, marked `retracted_at`, and
+  is flagged.
+- **Each source keeps `previous_version` and `updated_at`.**
+- **The "needs attention" list also flags** decisions that apply to revisions no longer released, quotes expiring
+  within 90 days, and builds or customers with no owner.
 
 ## Why a graph
 
