@@ -1,0 +1,15 @@
+project_id,person_id,role
+PRJ-KAVERI2,P-FARHAN,lead
+PRJ-KAVERI2,P-VIKRAM,production
+PRJ-KAVERI2,P-SANJAY,commissioning
+PRJ-KAVERI2,P-KAVYA,sponsor
+PRJ-VC300,P-ARJUN,lead
+PRJ-VC300,P-PRIYA,power hardware
+PRJ-VC300,P-RAHUL,firmware
+PRJ-VC300,P-ANANYA,qualification
+PRJ-COSTDOWN,P-MEERA,lead
+PRJ-COSTDOWN,P-PRIYA,engineering review
+PRJ-COSTDOWN,P-KAVYA,sponsor
+PRJ-FW24,P-RAHUL,lead
+PRJ-FW24,P-SANJAY,field validation
+PRJ-FW24,P-ANANYA,test

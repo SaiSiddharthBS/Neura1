@@ -1,0 +1,5 @@
+id,name,status,lead_id,start_date,target_date,summary
+PRJ-KAVERI2,Kaveri Phase 2 pumping-station rollout,active,P-FARHAN,2026-08-01,2026-12-15,Supply and commission 80 VC-200 Rev C controllers for Kaveri Water Utilities' Phase 2 stations
+PRJ-VC300,VC-300 next-generation controller,design,P-ARJUN,2026-07-15,2027-06-30,Successor to VC-200 with a second Ethernet port and a redesigned power stage
+PRJ-COSTDOWN,FY27 BOM cost-down,active,P-MEERA,2026-09-01,2027-03-31,Reduce VC-200 and VG-50 material cost by 8% without new qualification risk
+PRJ-FW24,Firmware 2.4 release,active,P-RAHUL,2026-09-15,2026-11-30,Cold-start hardening and field-update tooling for VC-200 and VG-50
