@@ -44,8 +44,8 @@ export default function BrainView() {
         </span>}
       </div>
 
-      <AskBox key={params.get("ask") ?? ""} onOpen={setOpen} initial={params.get("ask") ?? undefined} />
-      <WhoKnows key={params.get("who") ?? ""} onOpen={setOpen} initial={params.get("who") ?? undefined} />
+      <AskBox key={`ask:${params.get("ask") ?? ""}`} onOpen={setOpen} initial={params.get("ask") ?? undefined} />
+      <WhoKnows key={`who:${params.get("who") ?? ""}`} onOpen={setOpen} initial={params.get("who") ?? undefined} />
 
       <section className="card p-4">
         <form onSubmit={(e) => { e.preventDefault(); api<Search>(`/api/search?q=${encodeURIComponent(q)}`).then(setHits); }}

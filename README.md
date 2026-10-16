@@ -25,6 +25,7 @@ the whole company (people, projects, products, customers, decisions) and turns i
   <img alt="Ollama" src="https://img.shields.io/badge/Ollama-Qwen2.5--7B-111111?logo=ollama&logoColor=white">
   <img alt="Tests" src="https://img.shields.io/badge/tests-63_passing-2fd3a5">
   <img alt="MCP" src="https://img.shields.io/badge/MCP-16_tools-5b6cff">
+  <img alt="Licence" src="https://img.shields.io/badge/licence-AGPL--3.0-a42e2b">
   <img alt="Cost" src="https://img.shields.io/badge/running_cost-₹0-2fd3a5">
 </p>
 
@@ -571,6 +572,12 @@ Main entry: **Track 03, Company Brain**. Also entered: Track 01, Agents That Act
 - [x] AI assistance disclosed in [docs/AI_DISCLOSURE.md](docs/AI_DISCLOSURE.md)
 - [ ] Demo video
 - [ ] Live deployment
+
+## ✦ Licence
+
+Neura1 is free software under the [GNU Affero General Public License v3.0](LICENSE). You may use, study, change and
+share it; if you run a modified version as a network service, offer its source to its users under the same licence.
+The document editor it embeds, SuperDoc, uses the same licence.
 
 <br>
 

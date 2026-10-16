@@ -20,6 +20,7 @@ export default function ImpactView({ source, item, price, lead, asOf }: Props) {
   const [lens, setLens] = useState<Lens>("Engineering");
 
   const load = useCallback(() => {
+    if (!source && !item) return Promise.resolve();
     const request = source
       ? api<ImpactReport>(`/api/impact/notice?source_id=${encodeURIComponent(source)}${asOf ? `&as_of=${asOf}` : ""}`, { method: "POST" })
       : api<ImpactReport | Unresolved>("/api/impact", {
@@ -42,6 +43,15 @@ export default function ImpactView({ source, item, price, lead, asOf }: Props) {
     load();
   }, [load]);
 
+  if (!source && !item) {
+    return (
+      <div className="card p-6">
+        <div className="font-medium">Choose what changed.</div>
+        <div className="mt-1 text-sm text-muted">Open a supplier notice from <a href="/signals" className="text-accent hover:underline">Signals</a>,
+          or try a what-if such as <a href="/impact?item=NB54360&price=320&lead=22" className="text-accent hover:underline">NB54360 at ₹320 with a 22-week lead time</a>.</div>
+      </div>
+    );
+  }
   if (error) return <div className="card p-6 text-danger">{error}</div>;
   if (unresolved) {
     const cands = unresolved.candidates as { id: string; name: string; mpn: string }[];

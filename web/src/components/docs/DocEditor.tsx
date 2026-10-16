@@ -131,6 +131,8 @@ export default function DocEditor({ id }: { id: string }) {
           if (!res.ok) throw new Error("Could not load the saved file");
           source = new File([await res.blob()], `${m.title}.docx`, { type: DOCX });
         }
+        // SuperDoc is built on Vue, which reads these build flags as globals when they are not compiled in.
+        Object.assign(globalThis, { __VUE_OPTIONS_API__: true, __VUE_PROD_DEVTOOLS__: false, __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false });
         const { SuperDoc } = await import("superdoc");
         if (cancelled || !host.current) return;
         const me = await api<{ id: string | null; name: string }>("/api/viewer").catch(() => ({ id: viewerId(), name: "Flyvi" }));

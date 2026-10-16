@@ -3,6 +3,7 @@ name = "neura1"
 version = "0.1.0"
 description = "Neura1: change-impact company brain for hardware companies, built on FalkorDB"
 requires-python = ">=3.11"
+license = "AGPL-3.0-only"
 dependencies = [
     "falkordb>=1.0.0",
     "fastapi>=0.115.0",

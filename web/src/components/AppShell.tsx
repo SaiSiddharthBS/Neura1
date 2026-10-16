@@ -43,7 +43,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen gap-5 p-3 lg:p-5">
       <aside className="card sticky top-5 hidden h-[calc(100vh-40px)] w-60 shrink-0 flex-col lg:flex">
         <Link href="/" className="flex items-center gap-3 border-b border-line px-5 py-5">
-          <Image src="/mark.png" alt="" width={40} height={32} style={{ height: "auto" }} className="drop-shadow-[0_0_12px_rgba(90,209,230,0.45)]" />
+          <Image src="/mark.png" alt="" width={256} height={207} loading="eager" style={{ width: 40, height: "auto" }} className="drop-shadow-[0_0_12px_rgba(90,209,230,0.45)]" />
           <span>
             <span className="block text-[17px] font-semibold tracking-tight">Neura1</span>
             <span className="block text-[11px] text-muted">Company brain · Flyvi</span>
@@ -78,7 +78,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="min-w-0 flex-1">
         <header className="card mb-4 flex items-center gap-3 px-4 py-3 lg:hidden">
-          <Image src="/mark.png" alt="" width={30} height={24} style={{ height: "auto" }} />
+          <Image src="/mark.png" alt="" width={256} height={207} loading="eager" style={{ width: 30, height: "auto" }} />
           <span className="font-semibold">Neura1</span>
           <nav className="ml-auto flex gap-1 overflow-x-auto text-xs">
             {NAV.flatMap((g) => g.items).map((i) => (
