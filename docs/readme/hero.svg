@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 440" width="1200" height="440" role="img" aria-labelledby="t d">
+  <title id="t">Neura1: know what a change breaks before it breaks</title>
+  <desc id="d">A supplier price change on NB54360 traced to 3 parts per VC-200 controller, 3 of 3 builds at risk, a 37,400 rupee cost increase, and a previously rejected substitute recalled as DEC-117.</desc>
+  <style>
+    :root { --bg1:#eef3f6; --bg2:#e6eef2; --ink:#0d1b22; --muted:#4b5d66; --glass:rgba(255,255,255,.52); --edge:rgba(255,255,255,.85); --shadow:rgba(16,40,52,.12); --b1:#5ad1e6; --b2:#7c9cff; --b3:#3fd6a6; --red:#d63b2f; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg1:#071016; --bg2:#0b1820; --ink:#eaf6fb; --muted:#9fb6c1; --glass:rgba(255,255,255,.07); --edge:rgba(255,255,255,.22); --shadow:rgba(0,0,0,.45); --b1:#1fb6d4; --b2:#4f5fe0; --b3:#13a37b; --red:#ff7a6e; }
+    }
+    .bg { fill:url(#bg); }
+    .blob { filter:url(#blur); opacity:.75; transform-box:fill-box; transform-origin:center; }
+    .b1 { fill:var(--b1); animation:drift1 18s ease-in-out infinite alternate; }
+    .b2 { fill:var(--b2); animation:drift2 22s ease-in-out infinite alternate; }
+    .b3 { fill:var(--b3); animation:drift3 26s ease-in-out infinite alternate; }
+    @keyframes drift1 { to { transform:translate(140px,40px) scale(1.15); } }
+    @keyframes drift2 { to { transform:translate(-160px,-30px) scale(.9); } }
+    @keyframes drift3 { to { transform:translate(90px,-60px) scale(1.1); } }
+    .glass { fill:var(--glass); stroke:var(--edge); stroke-width:1.2; filter:url(#shadow); }
+    .sheen { fill:url(#sheen); }
+    .eyebrow { font:600 13px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif; letter-spacing:.14em; fill:var(--muted); }
+    .h1 { font:700 46px -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Helvetica,Arial,sans-serif; letter-spacing:-.02em; fill:var(--ink); }
+    .lede { font:400 19px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif; fill:var(--muted); }
+    .num { font:700 34px -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Helvetica,Arial,sans-serif; letter-spacing:-.02em; fill:var(--ink); }
+    .numred { fill:var(--red); }
+    .lab { font:500 13.5px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif; fill:var(--muted); }
+    .mono { font:500 13px ui-monospace,"SF Mono",Menlo,Consolas,monospace; fill:var(--muted); }
+    .card { animation:rise .9s cubic-bezier(.2,.8,.2,1) both; }
+    .c2 { animation-delay:.12s } .c3 { animation-delay:.24s } .c4 { animation-delay:.36s }
+    @keyframes rise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+    @media (prefers-reduced-motion: reduce) { .b1,.b2,.b3,.card { animation:none; } }
+  </style>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--bg1)"/><stop offset="1" style="stop-color:var(--bg2)"/></linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="70"/></filter>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="140%"><feDropShadow dx="0" dy="10" stdDeviation="16" style="flood-color:var(--shadow)"/></filter>
+    <clipPath id="frame"><rect width="1200" height="440" rx="28"/></clipPath>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect class="bg" width="1200" height="440"/>
+    <circle class="blob b1" cx="230" cy="120" r="190"/>
+    <circle class="blob b2" cx="980" cy="110" r="210"/>
+    <circle class="blob b3" cx="700" cy="420" r="200"/>
+
+    <text class="eyebrow" x="64" y="78">GRAPH HACKS 2026 · TRACK 03 · COMPANY BRAIN ON FALKORDB</text>
+    <text class="h1" x="64" y="136">Know what a change breaks</text>
+    <text class="h1" x="64" y="190">before it breaks.</text>
+    <text class="lede" x="64" y="232">A supplier raises one chip from ₹250 to ₹320 and stretches lead time to 22 weeks.</text>
+    <text class="lede" x="64" y="258">Neura1 traces it through the whole company in one graph, with a source for every claim.</text>
+
+    <g class="card c1"><rect class="glass" x="64" y="296" width="250" height="104" rx="22"/><rect class="sheen" x="64" y="296" width="250" height="104" rx="22"/>
+      <text class="num" x="88" y="346">3 per unit</text><text class="lab" x="88" y="374">per VC-200 Rev C controller</text></g>
+    <g class="card c2"><rect class="glass" x="330" y="296" width="250" height="104" rx="22"/><rect class="sheen" x="330" y="296" width="250" height="104" rx="22"/>
+      <text class="num" x="354" y="346">3 of 3</text><text class="lab" x="354" y="374">planned builds at risk</text></g>
+    <g class="card c3"><rect class="glass" x="596" y="296" width="250" height="104" rx="22"/><rect class="sheen" x="596" y="296" width="250" height="104" rx="22"/>
+      <text class="num" x="620" y="346">₹37,400</text><text class="mono" x="620" y="374">420 × (320 − 250) + 8,000</text></g>
+    <g class="card c4"><rect class="glass" x="862" y="296" width="274" height="104" rx="22"/><rect class="sheen" x="862" y="296" width="274" height="104" rx="22"/>
+      <text class="num numred" x="886" y="346">DEC-117</text><text class="lab" x="886" y="374">rejected part, recalled from Slack</text></g>
+  </g>
+</svg>
