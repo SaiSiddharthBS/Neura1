@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import AskBox from "@/components/AskBox";
+import WhoKnows from "@/components/WhoKnows";
 import EvidenceDrawer from "@/components/EvidenceDrawer";
 import { api } from "@/lib/api";
 
@@ -39,7 +40,8 @@ export default function Brain() {
         </span>}
       </div>
 
-      <AskBox />
+      <AskBox onOpen={setOpen} />
+      <WhoKnows onOpen={setOpen} />
 
       <section className="card p-4">
         <form onSubmit={(e) => { e.preventDefault(); api<Hit[]>(`/api/search?q=${encodeURIComponent(q)}`).then(setHits); }}

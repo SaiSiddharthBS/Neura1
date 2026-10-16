@@ -14,6 +14,9 @@ export const metadata: Metadata = {
 const NAV = [
   { href: "/", label: "Inbox" },
   { href: "/brain", label: "Company brain" },
+  { href: "/projects", label: "Projects" },
+  { href: "/people", label: "People" },
+  { href: "/changes", label: "What's new" },
   { href: "/history", label: "Investigations" },
   { href: "/import", label: "Import" },
 ];
@@ -28,7 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <span className="grid h-7 w-7 place-items-center rounded-md bg-ink text-xs text-white">N1</span>
               Neura1
             </Link>
-            <nav className="flex gap-1 text-sm">
+            <nav className="flex gap-1 overflow-x-auto text-sm">
               {NAV.map((n) => (
                 <Link key={n.href} href={n.href} className="rounded-md px-3 py-1.5 text-muted hover:bg-bg hover:text-ink">
                   {n.label}

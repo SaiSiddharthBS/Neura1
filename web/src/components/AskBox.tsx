@@ -1,19 +1,21 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { ClipboardCheck, FileText, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { api, ApiError, type TraceStep } from "@/lib/api";
 
-type Answer = { answer: string; warnings?: string[]; tool_calls: { tool: string; args: Record<string, unknown> }[]; trace: TraceStep[] };
+type Draft = { owner: string; title: string; target: string | null; why: string };
+type Answer = { answer: string; warnings?: string[]; sources?: string[]; drafts?: Draft[]; tool_calls: { tool: string; args: Record<string, unknown> }[]; trace: TraceStep[] };
 
 const EXAMPLES = [
   "Can we switch from NB54360 to NB54361-L?",
-  "Who owns the firmware that depends on NB54360?",
-  "Which customer orders are exposed if NB54360 is late?",
-  "Which revision of PSU-24 is in the VG-50 gateway?",
+  "Who should a new firmware engineer talk to about pmic_seq.c?",
+  "What is the status of the VC-300 project and who is on it?",
+  "What happened with the Kaveri brownouts?",
+  "Ask Rahul to review pmic_seq.c for MX-3360",
 ];
 
-export default function AskBox() {
+export default function AskBox({ onOpen }: { onOpen?: (chunk: string) => void }) {
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
   const [a, setA] = useState<Answer | null>(null);
@@ -56,6 +58,17 @@ export default function AskBox() {
             <div key={w} className="rounded-lg border border-danger/40 bg-red-50 p-3 text-sm text-danger">{w}</div>
           ))}
           <div className="whitespace-pre-wrap rounded-lg bg-bg p-3 text-sm leading-relaxed">{a.answer}</div>
+          {a.sources && a.sources.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="text-muted">Sources:</span>
+              {a.sources.map((s) => (
+                <button key={s} onClick={() => onOpen?.(s)} className="flex items-center gap-1 rounded-md border border-line px-2 py-0.5 hover:border-ink">
+                  <FileText size={11} /> {s.split("/").pop()}
+                </button>
+              ))}
+            </div>
+          )}
+          {a.drafts?.map((d, i) => <DraftTask key={i} d={d} />)}
           <details className="text-sm">
             <summary className="cursor-pointer text-muted">
               How this was answered: {a.tool_calls.length} tool calls, {a.trace.length} Cypher queries
@@ -74,5 +87,34 @@ export default function AskBox() {
         </div>
       )}
     </section>
+  );
+}
+
+function DraftTask({ d }: { d: Draft }) {
+  const [state, setState] = useState<string | null>(null);
+  async function create() {
+    let pass = "", name = "";
+    try { pass = localStorage.getItem("neura1-passcode") ?? ""; name = localStorage.getItem("neura1-reviewer") ?? ""; } catch {}
+    pass = pass || prompt("Demo passcode") || "";
+    name = name || prompt("Your name") || "";
+    if (!pass || !name) return;
+    try { localStorage.setItem("neura1-passcode", pass); localStorage.setItem("neura1-reviewer", name); } catch {}
+    try {
+      const r = await api<{ id: string; new: boolean; owner: string | null }>("/api/tasks", {
+        method: "POST", write: true, body: JSON.stringify({ ...d, created_by: name }),
+      });
+      setState(r.new ? `Created ${r.id} for ${r.owner ?? "nobody (owner not found)"}` : `Already exists (${r.id})`);
+    } catch (e) {
+      setState((e as Error).message);
+    }
+  }
+  return (
+    <div className="rounded-lg border border-accent/40 bg-teal-50 p-3 text-sm">
+      <div className="flex items-center gap-2 font-medium text-accent"><ClipboardCheck size={15} /> Draft task, not created yet</div>
+      <div className="mt-1"><b>{d.title}</b> → {d.owner}{d.target ? ` · ${d.target}` : ""}</div>
+      {d.why && <div className="text-xs text-muted">{d.why}</div>}
+      {state ? <div className="mt-2 text-xs">{state}</div> :
+        <button onClick={create} className="mt-2 rounded-md bg-ink px-3 py-1 text-xs text-white">Create task</button>}
+    </div>
   );
 }
