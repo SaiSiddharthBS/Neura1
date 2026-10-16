@@ -85,9 +85,39 @@ def approve(graph: Graph, item_id: str, source_id: str | None, actions: list[dic
             WITH a UNWIND (CASE WHEN size($cites) = 0 THEN [NULL] ELSE $cites END) AS cid
             OPTIONAL MATCH (c:Chunk {id:cid})
             FOREACH (_ IN CASE WHEN c IS NULL THEN [] ELSE [1] END |
-                     MERGE (a)-[r:CITES]->(c) SET r.source_version=c.source_version)
+                     MERGE (a)-[r:CITES]->(c) SET r.source_version=c.source_version, r.text_hash=c.text_hash)
             RETURN DISTINCT a.new AS new
         """, {"inv": inv_id, "id": action_id, "a": a, "now": now, "by": approved_by,
               "cites": a.get("cites", [])}, read_only=False)
         (created if res and res[0]["new"] else existing).append(action_id)
     return {"investigation": inv_id, "created": created, "already_existed": existing}
+
+
+def create_task(graph: Graph, title: str, owner: str | None, target: str | None, why: str, created_by: str,
+                cites: list[str] = ()) -> dict:
+    """A single task, e.g. drafted by the Ask agent and confirmed by a person. Idempotent like approvals.
+
+    The owner may be a first name ("Rahul"); it is assigned only when it identifies exactly one person.
+    """
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    action_id = "ACT-" + _key("task", title.strip().lower(), owner or "", target or "")
+    res = rows(graph, """
+        MERGE (a:Action {id:$id})
+        ON CREATE SET a.kind='task', a.title=$title, a.why=$why, a.target=$target, a.status='open',
+                      a.created_at=$now, a.approved_by=$by, a.new=true
+        ON MATCH SET a.new=false
+        WITH a OPTIONAL MATCH (p:Person)
+        WHERE p.id = $owner OR toLower(p.name) = toLower($owner) OR toLower(p.name) STARTS WITH (toLower($owner) + ' ')
+        WITH a, collect(p) AS ps
+        FOREACH (x IN CASE WHEN size(ps) = 1 THEN ps ELSE [] END | MERGE (a)-[:ASSIGNED_TO]->(x))
+        WITH a OPTIONAL MATCH (t {id:$target}) WHERE NOT t:Action
+        FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (a)-[:CONCERNS]->(t))
+        WITH a UNWIND (CASE WHEN size($cites) = 0 THEN [NULL] ELSE $cites END) AS cid
+        OPTIONAL MATCH (c:Chunk {id:cid})
+        FOREACH (_ IN CASE WHEN c IS NULL THEN [] ELSE [1] END |
+                 MERGE (a)-[r:CITES]->(c) SET r.source_version=c.source_version, r.text_hash=c.text_hash)
+        WITH DISTINCT a OPTIONAL MATCH (a)-[:ASSIGNED_TO]->(p:Person)
+        RETURN a.id AS id, a.new AS new, p.name AS owner
+    """, {"id": action_id, "title": title, "why": why, "target": target, "now": now, "by": created_by,
+          "owner": owner, "cites": list(cites)}, read_only=False)
+    return res[0] if res else {"id": action_id, "new": False, "owner": None}

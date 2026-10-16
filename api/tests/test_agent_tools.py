@@ -14,9 +14,22 @@ def test_cypher_guard_blocks_writes_and_adds_limit():
     assert guard_cypher("MATCH (n:Item) RETURN n.id").endswith("LIMIT 50")
 
 
-def test_who_finds_owner_by_owned_id(graph):
-    out = run_tool(graph, Trace(graph), "who", {"text": "FW-PMIC-SEQ"})
-    assert [r["name"] for r in out] == ["Rahul Iyer"]
+def test_who_knows_finds_owner_by_owned_id(graph):
+    out = run_tool(graph, Trace(graph), "who_knows", {"text": "FW-PMIC-SEQ"})
+    assert out["people"][0]["name"] == "Rahul Iyer"
+
+
+def test_propose_task_only_drafts_and_sources_are_collected(graph):
+    from neura1.agent import _finish
+
+    t = Trace(graph)
+    draft = run_tool(graph, t, "propose_task", {"owner": "Rahul Iyer", "title": "Review pmic_seq.c for MX-3360",
+                                                  "target": "FW-PMIC-SEQ", "why": "regulator change"})
+    profile = run_tool(graph, t, "person", {"name": "Rahul"})
+    out = _finish(graph, "Drafted a task for Rahul.", [], t, [draft, profile])
+    assert out["drafts"][0]["owner"] == "Rahul Iyer"
+    assert any(s.startswith("chats/") for s in out["sources"])
+    assert graph.ro_query("MATCH (a:Action {kind:'task'}) RETURN count(a)").result_set[0][0] == 0
 
 
 def test_read_only_cypher_runs_with_trace(graph):

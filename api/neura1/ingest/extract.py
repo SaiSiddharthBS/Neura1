@@ -265,7 +265,7 @@ def load_decisions(graph: Graph, snapshot: dict) -> dict:
             graph.query("""
                 MATCH (d:Decision {id:$id}), (c:Chunk {id:$chunk})
                 MERGE (d)-[ev:EVIDENCED_BY]->(c)
-                SET ev.quote=$quote, ev.source_version=c.source_version, ev.rank=$rank
+                SET ev.quote=$quote, ev.source_version=c.source_version, ev.text_hash=c.text_hash, ev.rank=$rank
             """, {"id": d["id"], "chunk": e["chunk_id"], "quote": e["quote"], "rank": rank})
         written.append(d["id"])
     return {"written": written, "rejected": rejected}

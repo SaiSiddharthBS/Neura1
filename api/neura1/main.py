@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel
 from redis.exceptions import ConnectionError as RedisConnectionError, TimeoutError as RedisTimeout
 
-from neura1 import actions, agent, queries as Q
+from neura1 import actions, agent, brain, queries as Q
 from neura1.config import settings
 from neura1.graph import GraphUnavailable, get_graph, rows
 from neura1.impact import ChangeEvent, analyse
@@ -374,3 +374,55 @@ def ask(body: AskIn, g=Depends(graph)):
     if len(body.question) > 500:
         raise HTTPException(400, "Question too long")
     return agent.ask(g, body.question)
+
+
+# ---------- the wider company brain ----------
+
+@app.get("/api/brain/who-knows")
+def who_knows(q: str, g=Depends(graph)):
+    return brain.who_knows(g, q)
+
+
+@app.get("/api/people")
+def people(g=Depends(graph)):
+    return rows(g, brain.PEOPLE)
+
+
+@app.get("/api/people/{person_id}")
+def person(person_id: str, g=Depends(graph)):
+    found = brain.person(g, person_id)
+    if not found:
+        raise HTTPException(404, "Unknown person")
+    return found
+
+
+@app.get("/api/projects")
+def projects(g=Depends(graph)):
+    return rows(g, brain.PROJECTS)
+
+
+@app.get("/api/projects/{project_id}")
+def project(project_id: str, g=Depends(graph)):
+    found = brain.project(g, project_id)
+    if not found:
+        raise HTTPException(404, "Unknown project")
+    return found
+
+
+@app.get("/api/changes")
+def changes(today: date | None = None, g=Depends(graph)):
+    return brain.changes(g, today)
+
+
+class TaskIn(BaseModel):
+    title: str
+    owner: str | None = None
+    target: str | None = None
+    why: str = ""
+    created_by: str
+    cites: list[str] = []
+
+
+@app.post("/api/tasks", dependencies=[Depends(require_passcode)])
+def create_task(body: TaskIn, g=Depends(graph)):
+    return actions.create_task(g, body.title, body.owner, body.target, body.why, body.created_by, body.cites)

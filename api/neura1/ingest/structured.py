@@ -61,6 +61,8 @@ INDEXES = [
     "CREATE INDEX FOR (n:Quote) ON (n.id)",
     "CREATE INDEX FOR (n:Source) ON (n.id)",
     "CREATE INDEX FOR (n:Decision) ON (n.id)",
+    "CREATE INDEX FOR (n:Project) ON (n.id)",
+    "CREATE INDEX FOR (n:Alias) ON (n.term)",
 ]
 
 # (csv file, cypher). Each row is passed as $r; $src is the export's source id.
@@ -117,6 +119,25 @@ LOADERS: list[tuple[str, str]] = [
         SET s.qty=toInteger($r.qty), s.shipped_on=$r.shipped_on, s.source=$src, s.authority=$auth
         WITH s MATCH (c:Customer {id:$r.customer_id}), (v:Revision {id:$r.rev_id})
         MERGE (s)-[:SHIPPED_TO]->(c) MERGE (s)-[:OF_REV]->(v)"""),
+    ("projects.csv", """
+        MERGE (p:Project {id:$r.id})
+        SET p.name=$r.name, p.status=$r.status, p.start_date=$r.start_date, p.target_date=$r.target_date,
+            p.summary=$r.summary, p.source=$src, p.authority=$auth
+        WITH p MATCH (lead:Person {id:$r.lead_id}) MERGE (lead)-[l:LEADS]->(p) SET l.source=$src"""),
+    ("project_members.csv", """
+        MATCH (p:Project {id:$r.project_id}), (m:Person {id:$r.person_id})
+        MERGE (m)-[w:WORKS_ON]->(p) SET w.role=$r.role, w.source=$src, w.authority=$auth"""),
+    # A project covers any record: customers, orders, builds, revisions, items.
+    ("project_scope.csv", """
+        MATCH (p:Project {id:$r.project_id}), (x {id:$r.target_id})
+        MERGE (p)-[c:COVERS]->(x) SET c.source=$src, c.authority=$auth"""),
+    ("backups.csv", """
+        MATCH (a:Person {id:$r.person_id}), (b:Person {id:$r.backup_id})
+        MERGE (b)-[c:BACKS_UP]->(a) SET c.source=$src, c.authority=$auth"""),
+    # Other names people use for a record in chats and documents (e.g. "pmic_seq.c" for FW-PMIC-SEQ).
+    ("aliases.csv", """
+        MATCH (x {id:$r.target_id})
+        MERGE (a:Alias {term:$r.term}) MERGE (a)-[:REFERS_TO]->(x) SET a.source=$src"""),
     # Ownership targets can be any labelled node with an id.
     ("ownership.csv", """
         MATCH (p:Person {id:$r.person_id}), (x {id:$r.target_id})
@@ -160,7 +181,7 @@ def existing_ids(graph: Graph) -> dict:
 
     labels = {"teams": "Team", "people": "Person", "items": "Item", "revisions": "Revision",
               "suppliers": "Supplier", "quotes": "Quote", "customers": "Customer", "builds": "Build",
-              "orders": "Order", "shipments": "Shipment"}
+              "orders": "Order", "shipments": "Shipment", "projects": "Project"}
     out: dict = {k: {r["id"] for r in rows(graph, f"MATCH (n:{label}) RETURN n.id AS id")}
                  for k, label in labels.items()}
     out["_mpn"] = {r["mpn"].upper(): r["id"] for r in rows(

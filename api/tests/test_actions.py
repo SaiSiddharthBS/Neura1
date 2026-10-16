@@ -26,3 +26,13 @@ def test_approval_is_idempotent_and_survives_a_new_session(graph):
     assert {"Priya Nair", "Rahul Iyer", "Ananya Rao", "Meera Kulkarni"} <= owners
     cited = rows(graph, "MATCH (:Action)-[r:CITES]->(c:Chunk) RETURN count(r) AS n")[0]["n"]
     assert cited > 0
+
+
+def test_task_from_a_draft_is_assigned_by_first_name_and_not_duplicated(fresh_graph):
+    from neura1.actions import create_task
+
+    first = create_task(fresh_graph, "Review pmic_seq.c for MX-3360", "Rahul", "FW-PMIC-SEQ", "regulator change", "Kavya")
+    again = create_task(fresh_graph, "Review pmic_seq.c for MX-3360", "Rahul", "FW-PMIC-SEQ", "regulator change", "Kavya")
+    assert first["new"] is True and first["owner"] == "Rahul Iyer"
+    assert again["new"] is False and again["id"] == first["id"]
+    assert create_task(fresh_graph, "Something", "Nobody", None, "", "Kavya")["owner"] is None

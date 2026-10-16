@@ -18,16 +18,37 @@ USED_BY = {
     "EVIDENCE_FOR": "Evidence lookups",
     "POLICY_CHUNK": "Task citations",
     "SEARCH_PASSAGES": "Company brain search",
+    "SUGGEST_ITEMS": "Unresolved part numbers in notices (suggestions, never auto-picked)",
+    "RESOLVE_ANY": "Who knows · Ask agent · MCP: name, id or chat alias → record",
+    "WHO_KNOWS": "Who knows about… (Company brain), Ask and MCP `who_knows`",
+    "PERSON": "People page", "PERSON_OWNS": "People page", "PERSON_PROJECTS": "People page",
+    "PERSON_DECISIONS": "People page", "PERSON_TASKS": "People page", "PERSON_TOPICS": "People page · what they know",
+    "PERSON_RECENT": "People page", "PEOPLE": "People directory", "PROJECTS": "Projects page",
+    "PROJECT": "Project detail", "PROJECT_MEMBERS": "Project detail", "PROJECT_SCOPE": "Project detail",
+    "PROJECT_DECISIONS": "Project detail", "PROJECT_TASKS": "Project detail", "PROJECT_ACTIVITY": "Project detail",
+    "CHANGES": "What's new feed", "STALE_EVIDENCE": "What's new · needs attention",
+    "STALE_DECISIONS": "What's new · needs attention", "EXPIRING_QUOTES": "What's new · needs attention",
+    "UNOWNED": "What's new · needs attention",
 }
 
 
 def main() -> None:
-    src = (REPO_ROOT / "api" / "neura1" / "queries.py").read_text()
-    lines = src.splitlines()
     out = ["# Cypher queries Neura1 depends on", "",
-           "Generated from [`api/neura1/queries.py`](../api/neura1/queries.py) by `uv run python -m neura1.docs`.",
+           "Generated from [`api/neura1/queries.py`](../api/neura1/queries.py) (change impact) and "
+           "[`api/neura1/brain.py`](../api/neura1/brain.py) (company-wide questions) by `uv run python -m neura1.docs`.",
            "All queries are parameterised and run read-only (`GRAPH.RO_QUERY`). Writes happen only in the loaders",
            "(`api/neura1/ingest/`) and in `api/neura1/actions.py`.", ""]
+    for module in ("queries.py", "brain.py"):
+        src = (REPO_ROOT / "api" / "neura1" / module).read_text()
+        out += _section(src, "Change impact" if module == "queries.py" else "The wider company brain")
+    (REPO_ROOT / "docs").mkdir(exist_ok=True)
+    (REPO_ROOT / "docs" / "queries.md").write_text("\n".join(out))
+    print("wrote docs/queries.md")
+
+
+def _section(src: str, heading: str) -> list[str]:
+    lines = src.splitlines()
+    out = [f"# {heading}", ""]
     for node in ast.parse(src).body:
         if not (isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant)):
             continue
@@ -41,9 +62,7 @@ def main() -> None:
         out += [f"## `{name}`", "", " ".join(comment), "",
                 f"**Parameters:** {', '.join(f'`${p}`' for p in params) or 'none'}  ",
                 f"**Used by:** {USED_BY.get(name, '—')}", "", "```cypher", node.value.value.strip(), "```", ""]
-    (REPO_ROOT / "docs").mkdir(exist_ok=True)
-    (REPO_ROOT / "docs" / "queries.md").write_text("\n".join(out))
-    print("wrote docs/queries.md")
+    return out
 
 
 if __name__ == "__main__":

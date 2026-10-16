@@ -71,7 +71,12 @@ def _ticket(data: dict) -> list[Segment]:
 
 
 def _markdown(text: str) -> list[Segment]:
-    """Split on blank lines; track `--- Page N ---` markers so evidence can cite a page."""
+    """Split on blank lines; track `--- Page N ---` markers so evidence can cite a page.
+
+    A `Date: YYYY-MM-DD` line (as in notices and reports) dates every passage of the document.
+    """
+    found = re.search(r"^(?:Date|Prepared[^\n]*Date):?\s*.*?(\d{4}-\d{2}-\d{2})", text, re.M)
+    dated = found.group(1) if found else None
     segs, page = [], None
     for i, block in enumerate(re.split(r"\n\s*\n", text)):
         block = block.strip()
@@ -80,7 +85,7 @@ def _markdown(text: str) -> list[Segment]:
         if m := re.fullmatch(r"--- Page (\d+) ---", block):
             page = int(m.group(1))
             continue
-        segs.append(Segment(f"p{i}", block, page=page))
+        segs.append(Segment(f"p{i}", block, ts=dated, page=page))
     return segs
 
 
@@ -130,6 +135,11 @@ def entity_lexicon(graph: Graph) -> list[tuple[re.Pattern, str]]:
             terms[r["term"]] = r["id"]
     for r in rows(graph, "MATCH (s:Supplier) RETURN s.id AS id, s.name AS name"):
         terms[r["name"].split(" (")[0]] = r["id"]
+    for r in rows(graph, "MATCH (p:Project) RETURN p.id AS id, p.name AS name"):
+        terms[r["id"]] = r["id"]
+        terms[r["name"]] = r["id"]
+    for r in rows(graph, "MATCH (a:Alias)-[:REFERS_TO]->(x) RETURN a.term AS term, x.id AS id"):
+        terms.setdefault(r["term"], r["id"])
     for r in rows(graph, "MATCH (s:Source) WHERE s.ref IS NOT NULL RETURN s.id AS id, s.ref AS ref"):
         terms.setdefault(r["ref"], r["id"])
     return [(re.compile(rf"(?<![\w-]){re.escape(t)}(?![\w-])"), target)
@@ -152,9 +162,18 @@ def load_sources(graph: Graph, root: Path | None = None, dirs=UNSTRUCTURED_DIRS,
     paths = files or sorted(p for d in dirs for p in (root / d).glob("*") if p.suffix in SUPPORTED)
     parsed = [(p, *parse_source(p, root)) for p in paths]
 
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     # Sources first, so cross-document references (TR-112, HW-311...) resolve on the second pass.
+    # A changed file keeps its previous version id, so "what changed" can say when and from what.
     for _, meta, _ in parsed:
-        graph.query("MERGE (s:Source {id:$m.id}) SET s += $m, s.authority='source_document'", {"m": meta})
+        graph.query("""
+            MERGE (s:Source {id:$m.id})
+            ON CREATE SET s.first_seen=$now
+            SET s.previous_version = CASE WHEN s.version IS NOT NULL AND s.version <> $m.version
+                                          THEN s.version ELSE s.previous_version END,
+                s.updated_at = CASE WHEN s.version IS NULL OR s.version <> $m.version THEN $now ELSE s.updated_at END
+            SET s += $m, s.authority='source_document'
+        """, {"m": meta, "now": now})
     try:
         graph.query("CALL db.idx.fulltext.createNodeIndex('Chunk', 'text')")
     except Exception as exc:
@@ -164,22 +183,40 @@ def load_sources(graph: Graph, root: Path | None = None, dirs=UNSTRUCTURED_DIRS,
     lexicon = entity_lexicon(graph)
     counts: dict[str, int] = {}
     for _, meta, segments in parsed:
-        graph.query("MATCH (s:Source {id:$id})<-[:PART_OF]-(c:Chunk) DETACH DELETE c", {"id": meta["id"]})
+        keep = []
         for ordinal, seg in enumerate(segments):
             chunk = {"id": f"{meta['id']}#{seg.key}", "text": seg.text, "author": seg.author, "ts": seg.ts,
-                     "page": seg.page, "ordinal": ordinal, "source_version": meta["version"]}
+                     "page": seg.page, "ordinal": ordinal, "source_version": meta["version"],
+                     "text_hash": hashlib.sha256(seg.text.encode()).hexdigest()[:12]}
+            keep.append(chunk["id"])
+            # Passages are updated in place, so decisions and tasks that cite them keep their links,
+            # and a changed passage is detectable by its text hash.
             graph.query("""
                 MATCH (s:Source {id:$sid})
-                CREATE (c:Chunk) SET c = $c
-                CREATE (c)-[:PART_OF]->(s)
-                WITH c OPTIONAL MATCH (p:Person {name:$c.author})
-                FOREACH (_ IN CASE WHEN p IS NULL THEN [] ELSE [1] END | CREATE (c)-[:SAID_BY]->(p))
-            """, {"sid": meta["id"], "c": chunk})
+                MERGE (c:Chunk {id:$c.id})
+                ON CREATE SET c.first_seen=$now
+                SET c.revised_at = CASE WHEN c.text_hash IS NOT NULL AND c.text_hash <> $c.text_hash
+                                        THEN $now ELSE c.revised_at END
+                SET c += $c
+                REMOVE c.retracted_at
+                MERGE (c)-[:PART_OF]->(s)
+                WITH c OPTIONAL MATCH (c)-[old:SAID_BY|MENTIONS]->() DELETE old
+                WITH DISTINCT c OPTIONAL MATCH (p:Person {name:$c.author})
+                FOREACH (_ IN CASE WHEN p IS NULL THEN [] ELSE [1] END | MERGE (c)-[:SAID_BY]->(p))
+            """, {"sid": meta["id"], "c": chunk, "now": now})
             targets = sorted(mentions(seg.text, lexicon) - {meta["id"]})
             if targets:
                 graph.query("""
                     MATCH (c:Chunk {id:$cid}) UNWIND $targets AS t
                     MATCH (x {id:t}) MERGE (c)-[:MENTIONS]->(x)
                 """, {"cid": chunk["id"], "targets": targets})
+        # Passages that disappeared: delete them unless something cites them; then keep them, marked retracted.
+        graph.query("""
+            MATCH (s:Source {id:$sid})<-[:PART_OF]-(c:Chunk) WHERE NOT c.id IN $keep
+            OPTIONAL MATCH (c)<-[cite:EVIDENCED_BY|CITES]-()
+            WITH c, count(cite) AS cited
+            FOREACH (_ IN CASE WHEN cited = 0 THEN [1] ELSE [] END | DETACH DELETE c)
+            FOREACH (_ IN CASE WHEN cited > 0 THEN [1] ELSE [] END | SET c.retracted_at = $now)
+        """, {"sid": meta["id"], "keep": keep, "now": now})
         counts[meta["id"]] = len(segments)
     return counts

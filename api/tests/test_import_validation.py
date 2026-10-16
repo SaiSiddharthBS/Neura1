@@ -9,12 +9,10 @@ def issues(report, level="error"):
 
 
 def test_every_template_validates_against_itself():
-    # Templates reference each other, so validate them together.
+    # Templates reference each other's example ids only partly, so the only errors allowed are unknown references.
     report = validate({f"{n}.csv": template_csv(n) for n in SPECS})
-    # Example rows only reference ids from other examples where those exist; refs to unknown ids are expected
-    assert all(i["column"] in {"team_id", "item_id", "child_item", "parent_rev", "rev_id", "customer_id",
-                               "build_id", "supplier_id", "alt_item_id", "from_item", "to_item", "target_id",
-                               "person_id", "child_rev"} for i in report["issues"] if i["level"] == "error")
+    errors = [i for i in report["issues"] if i["level"] == "error"]
+    assert all("is not a known" in i["message"] for i in errors), errors
 
 
 def test_broken_bom_reports_precise_rows():

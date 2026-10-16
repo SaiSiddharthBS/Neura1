@@ -11,7 +11,7 @@ from decimal import Decimal
 
 from falkordb import Graph
 
-from neura1 import queries as Q
+from neura1 import brain, queries as Q
 from neura1.config import settings
 from neura1.graph import rows
 from neura1.impact import ChangeEvent, Trace, analyse
@@ -86,8 +86,21 @@ TOOLS = [
     ("alternates", "Alternate parts listed for a part, with their quotes and approval status.",
      {"item_id": {"type": "string"}}),
     ("quotes", "Supplier quotes for an item, with validity dates.", {"item_id": {"type": "string"}}),
-    ("who", "People: role, team, and what they own. Pass a person's name, a team name, or an id they might own.",
+    ("who_knows", "Who knows about something: a part, project, customer, order or alias like 'pmic_seq.c'. "
+                  "Returns people ranked with the reasons (owns it, decided, discussed, works on it).",
      {"text": {"type": "string"}}),
+    ("person", "A person's profile: role, team, backup, what they own, projects, decisions, open tasks, topics.",
+     {"name": {"type": "string"}}),
+    ("project", "A project's lead, members, scope, related decisions, open tasks and recent discussion. "
+                "Pass the project name or id; use list_projects first if unsure.",
+     {"text": {"type": "string"}}),
+    ("list_projects", "All projects with status, lead and target date.", {}),
+    ("recent_changes", "What changed recently across the company, and knowledge that may be out of date "
+                       "(edited evidence, decisions on obsolete revisions, expiring quotes).", {}),
+    ("propose_task", "Draft a task for a person. It is NOT created until a human confirms it. Use when the user "
+                     "asks to assign, follow up, or get something done.",
+     {"owner": {"type": "string"}, "title": {"type": "string"}, "target": {"type": ["string", "null"]},
+      "why": {"type": "string"}}),
     ("search_documents", "Full-text search over chats, tickets, reports and notices.", {"query": {"type": "string"}}),
     ("read_only_cypher", "Run a read-only Cypher query on the company graph when no other tool fits. Labels: Item, "
                          "Revision, Supplier, Quote, Build, Order, Customer, Shipment, Person, Team, Source, Chunk, "
@@ -125,13 +138,35 @@ def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
         return trace.run(name, Q.QUOTES, {"item_id": args["item_id"]})
     if name == "search_documents":
         return trace.run(name, Q.SEARCH_PASSAGES, {"q": args["query"], "limit": 6})
-    if name == "who":
-        return trace.run(name, """
-            MATCH (p:Person)-[:MEMBER_OF]->(t:Team)
-            OPTIONAL MATCH (p)-[:OWNS]->(x)
-            WITH p, t, collect(x.id) AS owns
-            WHERE toLower(p.name) CONTAINS toLower($t) OR toLower(t.name) CONTAINS toLower($t) OR $t IN owns
-            RETURN p.name AS name, p.role AS role, t.name AS team, owns""", {"t": args["text"]})
+    if name == "who_knows":
+        r = brain.who_knows(graph, args["text"])
+        trace.steps.extend(r.pop("trace"))
+        return r
+    if name == "person":
+        found = trace.run("find_person", """MATCH (p:Person) WHERE toLower(p.name) CONTAINS toLower($t)
+                                             OR p.id = $t RETURN p.id AS id""", {"t": args["name"]})
+        if len(found) != 1:
+            return {"error": f"{len(found)} people match {args['name']!r}"}
+        r = brain.person(graph, found[0]["id"])
+        trace.steps.extend(r.pop("trace"))
+        return r
+    if name == "project":
+        found = trace.run("find_project", """MATCH (p:Project) WHERE toLower(p.name) CONTAINS toLower($t)
+                                              OR toUpper(p.id) = toUpper($t) RETURN p.id AS id""", {"t": args["text"]})
+        if len(found) != 1:
+            return {"error": f"{len(found)} projects match {args['text']!r}", "hint": "use list_projects"}
+        r = brain.project(graph, found[0]["id"])
+        trace.steps.extend(r.pop("trace"))
+        return r
+    if name == "list_projects":
+        return trace.run(name, brain.PROJECTS, {})
+    if name == "recent_changes":
+        r = brain.changes(graph, limit=15)
+        trace.steps.extend(r.pop("trace"))
+        return r
+    if name == "propose_task":
+        return {"draft": {k: args.get(k) for k in ("owner", "title", "target", "why")},
+                "note": "Draft only. A person must confirm it in Neura1 before it exists."}
     if name == "read_only_cypher":
         q = guard_cypher(args["query"])
         return trace.run(name, q, {})
@@ -174,6 +209,29 @@ Tools:
 """ + "{catalogue}"
 
 
+CHUNK_ID = re.compile(r"^[\w./-]+\.(?:json|md|txt|pdf)#[\w-]+$")
+
+
+def _collect(value, out: list):
+    """Every passage id that appears anywhere in tool results: these are the answer's sources."""
+    if isinstance(value, dict):
+        for v in value.values():
+            _collect(v, out)
+    elif isinstance(value, list):
+        for v in value:
+            _collect(v, out)
+    elif isinstance(value, str) and CHUNK_ID.match(value) and value not in out:
+        out.append(value)
+
+
+def _finish(graph: Graph, answer: str, calls: list, trace: Trace, results: list) -> dict:
+    sources: list[str] = []
+    _collect(results, sources)
+    drafts = [r["draft"] for r in results if isinstance(r, dict) and "draft" in r]
+    return {"answer": answer, "warnings": check_approval_claims(graph, answer), "tool_calls": calls,
+            "sources": sources[:12], "drafts": drafts, "trace": trace.steps}
+
+
 def ask(graph: Graph, question: str, max_steps: int = 6) -> dict:
     """Plan-act loop using JSON output only, so it works on any OpenAI-compatible server,
     including local models whose native tool-call parsing is unreliable."""
@@ -181,7 +239,7 @@ def ask(graph: Graph, question: str, max_steps: int = 6) -> dict:
 
     c = client()
     trace = Trace(graph)
-    calls = []
+    calls, results = [], []
     messages = [{"role": "system", "content": PLANNER.replace("{catalogue}", _catalogue())},
                 {"role": "user", "content": question}]
     for _ in range(max_steps):
@@ -191,18 +249,16 @@ def ask(graph: Graph, question: str, max_steps: int = 6) -> dict:
                 response_format={"type": "json_schema", "json_schema": {"name": "step", "schema": STEP_SCHEMA}})
             step = _parse_json(resp.choices[0].message.content or "")
         except Exception as exc:
-            return {"answer": f"The model could not complete this question ({exc}).", "warnings": [],
-                    "tool_calls": calls, "trace": trace.steps}
+            return _finish(graph, f"The model could not complete this question ({exc}).", calls, trace, results)
         if step.get("tool") == "answer" or step.get("tool") not in {t[0] for t in TOOLS}:
-            answer = (step.get("answer") or "").strip() or "No answer."
-            return {"answer": answer, "warnings": check_approval_claims(graph, answer), "tool_calls": calls,
-                    "trace": trace.steps}
+            return _finish(graph, (step.get("answer") or "").strip() or "No answer.", calls, trace, results)
         args = step.get("args") or {}
         try:
             result = run_tool(graph, trace, step["tool"], args)
         except Exception as exc:  # report tool errors back to the model instead of failing the request
             result = {"error": str(exc)}
         calls.append({"tool": step["tool"], "args": args})
+        results.append(result)
         messages.append({"role": "assistant", "content": json.dumps(step)})
         messages.append({"role": "user", "content": f"Result of {step['tool']}:\n"
                          + json.dumps(result, default=str)[:6000]
@@ -215,6 +271,4 @@ def ask(graph: Graph, question: str, max_steps: int = 6) -> dict:
         answer = _parse_json(resp.choices[0].message.content or "").get("answer", "")
     except Exception:
         answer = ""
-    answer = answer or "I could not finish within the step limit."
-    return {"answer": answer, "warnings": check_approval_claims(graph, answer), "tool_calls": calls,
-            "trace": trace.steps}
+    return _finish(graph, answer or "I could not finish within the step limit.", calls, trace, results)

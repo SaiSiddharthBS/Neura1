@@ -173,3 +173,35 @@
   category: supply
   question: What does MX-3360 cost and who quoted it?
   all: ["265", Sahyadri]
+
+# Added 2026-10-16 with the wider company brain (projects, expertise, currency). Written before running any model.
+- id: q33
+  split: heldout
+  category: who_knows
+  question: Who should I ask about pmic_seq.c, and who covers when they are away?
+  all: [Rahul Iyer, Arjun Mehta]
+- id: q34
+  split: heldout
+  category: project
+  question: Who leads the VC-300 project and what is its target date?
+  all: [Arjun Mehta, "2027-06-30"]
+- id: q35
+  split: heldout
+  category: history
+  question: What caused the brownouts at Kaveri and how were they fixed?
+  any: [["2.3.1"], [power-good, power good, "4 ms"]]
+- id: q36
+  split: dev
+  category: people
+  question: Which projects is Priya Nair working on?
+  any: [[VC-300, PRJ-VC300], [cost-down, cost down, PRJ-COSTDOWN]]
+- id: q37
+  split: heldout
+  category: currency
+  question: Which supplier quotes expire before the end of 2026?
+  all: [Q-101, Q-102]
+- id: q38
+  split: heldout
+  category: project
+  question: Which customer order is part of the Kaveri Phase 2 project?
+  all: [SO-881]

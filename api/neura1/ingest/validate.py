@@ -72,18 +72,31 @@ SPECS: dict[str, Spec] = {s.name: s for s in [
          ("id", "customer_id", "qty", "due_date"), ints=("qty",), positive=("qty",), dates=("due_date",),
          refs={"customer_id": "customers", "build_id": "builds"},
          example=("SO-881", "C-KAVERI", "BO-0412", "80", "2026-11-20", "Penalty per clause 9.2")),
+    Spec("projects", "Projects", ("id", "name", "status", "lead_id", "start_date", "target_date", "summary"),
+         ("id", "name", "status"), dates=("start_date", "target_date"), refs={"lead_id": "people"},
+         example=("PRJ-VC300", "VC-300 controller", "design", "P-ARJUN", "2026-07-15", "2027-06-30", "Successor")),
+    Spec("project_members", "Project members", ("project_id", "person_id", "role"), ("project_id", "person_id"),
+         key=None, refs={"project_id": "projects", "person_id": "people"},
+         example=("PRJ-VC300", "P-PRIYA", "power hardware")),
+    Spec("project_scope", "Project scope", ("project_id", "target_id"), ("project_id", "target_id"), key=None,
+         refs={"project_id": "projects", "target_id": "*"}, example=("PRJ-VC300", "PSU-24")),
+    Spec("backups", "Backups (who covers whom)", ("person_id", "backup_id"), ("person_id", "backup_id"), key=None,
+         refs={"person_id": "people", "backup_id": "people"}, example=("P-PRIYA", "P-ARJUN")),
+    Spec("aliases", "Aliases (names used in chats)", ("term", "target_id"), ("term", "target_id"), key="term",
+         refs={"target_id": "*"}, example=("pmic_seq.c", "FW-PMIC-SEQ")),
     Spec("shipments", "Shipped units", ("id", "customer_id", "rev_id", "qty", "shipped_on"),
          ("id", "customer_id", "rev_id", "qty"), ints=("qty",), dates=("shipped_on",),
          refs={"customer_id": "customers", "rev_id": "revisions"},
          example=("SH-2024-07", "C-KAVERI", "VC-200-B", "220", "2024-07-18")),
 ]}
 
-NOUN = {"teams": "team", "people": "person", "items": "item", "revisions": "revision", "suppliers": "supplier",
+NOUN = {"projects": "project", "teams": "team", "people": "person", "items": "item", "revisions": "revision", "suppliers": "supplier",
         "quotes": "quote", "customers": "customer", "builds": "build", "orders": "order", "shipments": "shipment"}
 
 # Load order respects references.
 ORDER = ["teams", "people", "items", "revisions", "bom", "alternates", "dependencies", "suppliers", "quotes",
-         "stock", "customers", "builds", "orders", "shipments", "ownership"]
+         "stock", "customers", "builds", "orders", "shipments", "projects", "project_members", "project_scope",
+         "backups", "aliases", "ownership"]
 
 
 def template_csv(name: str) -> str:
