@@ -19,7 +19,7 @@ def test_escalation_plan_crosses_departments_and_lands_on_the_board(fresh_graph)
     c = S.customer_360(fresh_graph, "C-KONKAN")
     assert c["rank"] == 2 and c["escalation"].startswith("inbox/escalation_")
     owners = {a["owner"] for a in c["actions"]}
-    assert {"Keerthana", "Nagarjun", "Sai", "Sharath", "Jayaram"} <= owners
+    assert {"Keerthana", "Nagarjun", "Sai", "Sharath", "Suresh"} <= owners
     approve(fresh_graph, "C-KONKAN", c["escalation"], c["actions"], "Hithesh", None, None, kind="escalation")
     tasks = [t for t in board(fresh_graph)["columns"]["open"] if t["plan_kind"] == "escalation" and t["investigation"]]
     assert len(tasks) == len(c["actions"])

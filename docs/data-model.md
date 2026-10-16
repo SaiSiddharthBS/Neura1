@@ -69,6 +69,7 @@ graph LR
 | `Absence` | `start_date`, `end_date`, `kind` | `Person-HAS_ABSENCE->Absence`; visibility follows the reporting chain |
 | `Certification` | `standard`, `valid_until` | `CERTIFIES` a revision; `RETEST_IF_CHANGED` an item |
 | `Event` | `kind`, `at`, `by` | Task moves and profile edits, linked `ON` the record they changed |
+| `Document` | `title`, `kind` (blank · change_notice · customer_response · handover · import), `version`, `audience` (everyone · money · leave:<person>) | `CREATED_BY` a person, `ABOUT` the record a template was written for, `HAS_SOURCE` its text projection (a `Source` of kind `document` whose passages link to what it names). The .docx itself is kept in `data/documents/`. |
 | `Conversation`, `Turn` | `question`, `answer`, `at` | Ask memory; turns `CITED` passages and are `ABOUT` records |
 | `ActionItem` | `task`, `due`, `quote` | Meeting action items, `FOUND_IN` a passage, `FOR` a person |
 

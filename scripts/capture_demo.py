@@ -140,6 +140,46 @@ def main() -> None:
         page.wait_for_timeout(1500)
         shot("chat")
 
+        # 7c3 Neura1 Docs: a change notice written from the graph, a fact check, and an AI edit as tracked changes
+        page.goto(f"{base}/docs")
+        page.wait_for_selector("text=Engineering change notice")
+        shot("docs-library")
+        page.locator("button", has_text="Create from the graph").first.click()
+        page.wait_for_selector(".superdoc-page", timeout=240000)
+        page.wait_for_function("() => !!window.neura1Doc", timeout=120000)
+        page.wait_for_timeout(2500)
+        page.get_by_role("button", name="Save").click()
+        page.wait_for_selector("text=Saved · version", timeout=120000)
+        shot("docs-change-notice")
+        page.goto(f"{base}/docs")
+        page.locator("button", has_text="Blank document").click()
+        page.wait_for_selector(".superdoc-page", timeout=240000)
+        page.wait_for_function("() => !!window.neura1Doc", timeout=120000)
+        page.wait_for_timeout(1500)
+        page.locator(".superdoc-page").first.click(position={"x": 300, "y": 160})
+        page.keyboard.press("Meta+ArrowDown")
+        page.keyboard.press("Enter")
+        page.keyboard.type("Proposal: we will switch NB54360 to NB54361-L to cut cost, using quote Q-099. "
+                           "MX-3360 is approved as a second source. Raghavendra will review PSM-28 Rev 1 before SO-889 ships.")
+        page.get_by_role("button", name="Check facts").click()
+        page.get_by_role("button", name="Check again").click()
+        page.wait_for_selector("text=was rejected (DEC-117)", timeout=60000)
+        page.wait_for_timeout(1000)
+        shot("docs-fact-check")
+        page.get_by_role("button", name="Edit with AI").click()
+        page.locator(".superdoc-page").first.click(position={"x": 300, "y": 160})
+        page.keyboard.press("Meta+ArrowDown")
+        for _ in range(62):
+            page.keyboard.press("Shift+ArrowLeft")
+        page.get_by_role("button", name="Selection").click()
+        page.get_by_role("button", name="Make it more formal").click()
+        try:
+            page.wait_for_function("() => !document.body.innerText.includes('Reading the graph and rewriting')", timeout=900000)
+            page.wait_for_timeout(1500)
+            shot("docs-ai-edit")
+        except Exception:
+            print("AI edit skipped: model not available")
+
         # 7d People and organisation, seen as an R&D engineer and then as a software engineer
         page.evaluate("() => localStorage.setItem('neura1-viewer', 'P-VISHWAS')")
         for name, url, wait in (("my-day", "/me", "Your work"),

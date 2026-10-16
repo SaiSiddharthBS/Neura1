@@ -809,3 +809,136 @@ def record_timeline(id: str, g=Depends(graph), v: access.Viewer = Depends(curren
     if not v.sees_money:
         events = [e if e["kind"] != "quote" else e | {"detail": "price hidden for your role"} for e in events]
     return events
+
+
+# ---------- Neura1 Docs ----------
+
+def _doc_or_404(g, doc_id: str, v: access.Viewer) -> dict:
+    from neura1 import documents
+    d = documents.get(g, doc_id)
+    if not d:
+        raise HTTPException(404, "Unknown document")
+    if not documents.may_open(d, v):
+        raise HTTPException(403, "This document states amounts; it is open to leadership, BD and purchase")
+    return d
+
+
+@app.get("/api/docs")
+def docs_list(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import documents
+    return documents.list_docs(g, v)
+
+
+class DocCreateIn(BaseModel):
+    template: str = "blank"          # blank | change_notice | customer_response | handover | import
+    record: str | None = None
+    title: str | None = None
+    markdown: str | None = None      # for imports
+
+
+@app.post("/api/docs", dependencies=[Depends(require_passcode)])
+def docs_create(body: DocCreateIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import documents
+    if not v.id:
+        raise HTTPException(400, "Choose who you are first")
+    try:
+        if body.template == "change_notice":
+            notice = next((s["id"] for s in scenarios.signals(g) if s["kind"] == "notice"
+                           and s["subject"] == body.record), None)
+            report = _impact_from_notice(notice, None, g) if notice else _impact(ChangeIn(item=body.record or ""), g)
+            if report.get("status") != "ok":
+                raise HTTPException(404, "Unknown part")
+            title, md = documents.change_notice(g, report, v)
+        elif body.template == "customer_response":
+            title, md = documents.customer_response(g, body.record or "", v)
+        elif body.template == "handover":
+            title, md = documents.handover_note(g, body.record or "", v)
+        elif body.template == "import":
+            title, md = body.title or "Imported document", body.markdown or ""
+        else:
+            title, md = body.title or "Untitled document", f"# {body.title or 'Untitled document'}\n\n"
+    except KeyError:
+        raise HTTPException(404, "Unknown record")
+    except PermissionError as exc:
+        raise HTTPException(403, str(exc))
+    doc_id = documents.create(g, title, body.template, v, body.record)
+    return {"id": doc_id, "title": title, "markdown": md}
+
+
+@app.get("/api/docs/{doc_id}")
+def docs_get(doc_id: str, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import documents
+    d = _doc_or_404(g, doc_id, v)
+    return d | {"has_file": documents.file_path(doc_id).exists()}
+
+
+@app.get("/api/docs/{doc_id}/file")
+def docs_file(doc_id: str, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from fastapi.responses import FileResponse
+    from neura1 import documents
+    d = _doc_or_404(g, doc_id, v)
+    path = documents.file_path(doc_id)
+    if not path.exists():
+        raise HTTPException(404, "Not saved yet")
+    return FileResponse(path, filename=f"{d['title']}.docx",
+                        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+
+
+@app.put("/api/docs/{doc_id}", dependencies=[Depends(require_passcode)])
+async def docs_save(doc_id: str, file: UploadFile = File(...), title: str = Form(...), blocks: str = Form("[]"),
+                    g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import documents
+    _doc_or_404(g, doc_id, v)
+    data = await file.read()
+    if not data.startswith(b"PK") or len(data) > 25 * 1024 * 1024:
+        raise HTTPException(400, "Expected a .docx file under 25 MB")
+    texts = [b if isinstance(b, str) else b.get("text", "") for b in json.loads(blocks)]
+    return documents.save(g, doc_id, data, title.strip() or "Untitled document", texts, v)
+
+
+class BlocksIn(BaseModel):
+    blocks: list[dict]
+    instruction: str = ""
+    title: str = ""
+
+
+@app.post("/api/docs/check")
+def docs_check(body: BlocksIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import documents
+    return {"flags": documents.check(g, body.blocks, v)}
+
+
+@app.post("/api/docs/ai")
+def docs_ai(body: BlocksIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import documents
+    if not body.instruction.strip():
+        raise HTTPException(400, "Say what to change")
+    try:
+        return documents.ai_edit(g, body.instruction.strip(), body.blocks, v, body.title)
+    except ValueError as exc:
+        raise HTTPException(413, str(exc))
+    except LLMUnavailable as exc:
+        raise HTTPException(503, str(exc))
+
+
+@app.get("/api/docs-insert")
+def docs_insert(kind: str, record: str, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import documents
+    try:
+        return {"markdown": documents.insert_block(g, kind, record, v)}
+    except (KeyError, ValueError) as exc:
+        raise HTTPException(404, str(exc))
+
+
+@app.post("/api/docs-import")
+async def docs_import(file: UploadFile = File(...)):
+    from neura1 import documents
+    name = file.filename or "document.txt"
+    if not name.lower().endswith((".pdf", ".md", ".txt")):
+        raise HTTPException(400, "Open .docx files directly; import .pdf, .md or .txt here")
+    data = await file.read()
+    try:
+        title, md = documents.import_text(name, data)
+    except Exception as exc:
+        raise HTTPException(422, f"Could not read this file: {exc}")
+    return {"title": title, "markdown": md}

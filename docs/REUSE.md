@@ -21,4 +21,6 @@ event, including:
 - the visual design language: dark "obsidian glass" palette, azure accent, Inter/JetBrains Mono pairing and a floating sidebar. It was re-implemented here as new Tailwind tokens and components; no stylesheet or component code was copied.
 **Not carried over:** no source code, UI, database schema, or data from the earlier codebase.
 
-Third-party libraries are listed in `api/pyproject.toml` and `web/package.json`.
+Third-party libraries are listed in `api/pyproject.toml` and `web/package.json`. The document editor uses
+[SuperDoc](https://github.com/Harbour-Enterprises/superdoc), which is licensed under AGPL-3.0; anyone running a
+modified Neura1 as a network service must offer its source under the same terms.

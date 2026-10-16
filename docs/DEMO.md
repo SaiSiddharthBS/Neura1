@@ -135,6 +135,30 @@ in milliseconds; `@neura1` runs the full agent in the thread. Replies only inclu
 channel may see: in #engineering the impact reply has no rupee figures and `/away` gives no dates. When a plan is
 approved, a task finishes or a supplier notice arrives, Neura1 posts it to the channel that needs it.
 
+## 9c. Write documents with the brain
+
+![Change notice](demo/docs-change-notice.png)
+
+**Documents** is a Word editor inside Neura1 (SuperDoc: real pages, toolbar, tables, tracked changes, comments,
+.docx in and out, PDF via print). *Engineering change notice* writes a complete HB-ENG-04 notice for NB54360 from
+the graph: affected products, the three builds and orders at risk, the ₹37,400 cost, DEC-117 against NB54361-L,
+and every required review with its owner. The same goes for a customer response and a leave handover note.
+
+![Fact check](demo/docs-fact-check.png)
+
+Type a careless proposal and press **Check facts**. Fixed rules over the graph, not a model, find: the rejected
+NB54361-L (with the Slack and Jira proof), MX-3360 called "approved" when it is not, an expired quote Q-099, an
+obsolete PSM-28 Rev 1, Raghavendra being away in November, and SO-889, which doesn't exist.
+
+![AI edit](demo/docs-ai-edit.png)
+
+Select text and ask **Neura1 AI** to change it, or choose a section or the whole document. The local model's edit
+arrives as tracked changes by "Neura1 AI". Facts it was given come from the graph, and any number or ID it adds
+that is in neither the document nor the records is flagged. Saving makes the document knowledge: its passages link
+to NB54360, Q-101 and the rest, and it appears in their timelines. A document stating amounts opens only for
+leadership, BD and purchase; a handover note only for those who may see that person's leave, and it is never added
+to shared search.
+
 ## 10. Bring in a real company
 
 ![Import](demo/import-errors.png)

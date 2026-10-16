@@ -46,7 +46,7 @@ def extract_all(only: str | None = None) -> None:
 
     graph = get_graph()
     jobs = [(graph, r["id"], "decisions") for r in rows(graph, """
-        MATCH (s:Source) WHERE s.kind IN ['chat','ticket','doc'] AND NOT s.id STARTS WITH 'uploads/'
+        MATCH (s:Source) WHERE s.kind IN ['chat','ticket','doc'] AND NOT s.id STARTS WITH 'uploads/' AND NOT s.id STARTS WITH 'documents/'
         RETURN s.id AS id ORDER BY id""")]
     jobs += [(graph, r["id"], "notice") for r in rows(graph, """
         MATCH (s:Source {kind:'notice'}) WHERE NOT s.id STARTS WITH 'uploads/' RETURN s.id AS id""")]

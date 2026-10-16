@@ -28,6 +28,8 @@ services:
       NEURA1_LLM_MODEL: ${NEURA1_LLM_MODEL:-qwen2.5:7b}
       NEURA1_LLM_API_KEY: ${NEURA1_LLM_API_KEY:-not-needed}
     depends_on: [falkordb]
+    volumes:
+      - neura1_data:/app/data   # uploaded files and saved documents
     ports:
       - "8000:8000"
     profiles: [full]
@@ -40,5 +42,6 @@ services:
     profiles: [full]
 
 volumes:
+  neura1_data:
   falkordb_data:
   ollama_data:

@@ -9,7 +9,7 @@ type Hit = { id: string; label: string; name: string; kind: string | null };
 type Cmd = { key: string; title: string; hint: string; icon: React.ElementType; go: () => void };
 
 const PAGES = [
-  ["Overview", "/"], ["Chat", "/chat"], ["My day", "/me"], ["Organisation", "/org"], ["Signals", "/signals"], ["Workboard", "/board"], ["Plans", "/history"], ["Ask & search", "/brain"], ["Graph explorer", "/explore"],
+  ["Overview", "/"], ["Chat", "/chat"], ["My day", "/me"], ["Organisation", "/org"], ["Signals", "/signals"], ["Workboard", "/board"], ["Plans", "/history"], ["Ask & search", "/brain"], ["Graph explorer", "/explore"], ["Documents", "/docs"],
   ["People", "/people"], ["Projects", "/projects"], ["Customers", "/customers"], ["Risk radar", "/risk"],
   ["What's new", "/changes"], ["Import", "/import"],
 ];
