@@ -1,0 +1,175 @@
+# Frozen question set for Voltline. Written 2026-10-16 from the fixture, BEFORE running any model.
+# Scoring: an answer passes if it contains every string in `all` and at least one string from each list
+# in `any` (case-insensitive; commas and ₹ are stripped from the answer before matching numbers), and
+# none of the strings in `none`.
+# split: dev questions may be used to tune prompts; heldout questions may not.
+# state: base = fixture as loaded; updated = after /api/updates/apply (new quote + chat + bench note).
+
+- id: q01
+  split: dev
+  category: where_used
+  question: Which released product revisions use NB54360, and how many does each unit contain?
+  all: [VC-200-C, VG-50-A]
+  any: [["3"], ["1"]]
+- id: q02
+  split: heldout
+  category: where_used
+  question: How many NB54360 regulators are in one VC-200 Rev C controller?
+  all: ["3"]
+- id: q03
+  split: heldout
+  category: revision_applicability
+  question: Is VC-200 Rev D affected by the NB54360 change?
+  any: [[draft, not released]]
+- id: q04
+  split: dev
+  category: revision_applicability
+  question: Does the obsolete VC-200 Rev B still count toward NB54360 demand?
+  any: [["no", "not", "obsolete"]]
+- id: q05
+  split: heldout
+  category: exposure
+  question: Which planned builds use VC-200 Rev C?
+  all: [BO-0412, BO-0421]
+- id: q06
+  split: heldout
+  category: cost
+  question: How many NB54360 parts do all planned builds need in total?
+  all: ["480"]
+- id: q07
+  split: dev
+  category: cost
+  question: After using free stock, how many NB54360 do we need to buy for the planned builds?
+  all: ["420"]
+- id: q08
+  split: heldout
+  category: cost
+  question: Which quote is the current price baseline for NB54360, and what is the unit price?
+  all: [Q-101, "250"]
+- id: q09
+  split: heldout
+  category: cost
+  question: Why shouldn't quote Q-099 be used for NB54360 costing?
+  any: [[expired, "2026-06-30", no longer valid, not valid]]
+- id: q10
+  split: dev
+  category: decision
+  question: Can we switch from NB54360 to the cheaper NB54361-L?
+  any: [[rejected, "no", not approved, should not]]
+  all: [thermal]
+- id: q11
+  split: heldout
+  category: decision
+  question: Who decided against using NB54361-L, and when?
+  all: [Arjun Mehta, "2025-03-12"]
+- id: q12
+  split: heldout
+  category: decision
+  question: Which test showed NB54361-L failing, and at what ambient temperature?
+  all: [TR-112]
+  any: [["68"]]
+- id: q13
+  split: heldout
+  category: decision
+  question: Is MX-3360 approved as a replacement for NB54360?
+  any: [[not approved, "no", unqualified, needs, review, no qualification]]
+- id: q14
+  split: dev
+  category: ownership
+  question: Who owns the firmware that depends on NB54360?
+  all: [Rahul Iyer]
+- id: q15
+  split: heldout
+  category: dependency
+  question: Which firmware module depends on NB54360, and why?
+  any: [[pmic_seq, FW-PMIC-SEQ], [soft-start, soft start]]
+- id: q16
+  split: heldout
+  category: ownership
+  question: Who owns the PSU-24 power module?
+  all: [Priya Nair]
+- id: q17
+  split: dev
+  category: exposure
+  question: Which customer orders are exposed to the NB54360 change?
+  all: [SO-881, SO-884, SO-887]
+- id: q18
+  split: heldout
+  category: exposure
+  question: Which exposed customer order has a late-delivery penalty, and for which customer?
+  all: [SO-881, Kaveri]
+- id: q19
+  split: heldout
+  category: ownership
+  question: Who is the account manager for Kaveri Water Utilities?
+  all: [Farhan Sheikh]
+- id: q20
+  split: heldout
+  category: exposure
+  question: How many units already in the field contain NB54360, and on which revision?
+  all: ["220"]
+  any: [[VC-200-B, Rev B]]
+- id: q21
+  split: dev
+  category: cost
+  question: What does a TP-PSU-07 requalification cost?
+  any: [["8000"]]
+- id: q22
+  split: heldout
+  category: ownership
+  question: Who plans the VC-200 builds?
+  all: [Vikram Desai]
+- id: q23
+  split: heldout
+  category: ownership
+  question: Which team is Ananya Rao in?
+  all: [Quality]
+- id: q24
+  split: heldout
+  category: policy
+  question: Who has to approve a component change on a released product revision?
+  any: [[Engineering Manager, Arjun Mehta]]
+- id: q25
+  split: dev
+  category: notice
+  question: What lead time does the latest notice give for NB54360?
+  all: ["22"]
+- id: q26
+  split: heldout
+  category: cost
+  question: If NB54360 goes to ₹320 per unit, what is the estimated cost increase for planned builds including requalification?
+  any: [["37400"]]
+- id: q27
+  split: heldout
+  category: abstain
+  question: What is the unit price of the LM-4G LTE module?
+  any: [[no quote, not recorded, unknown, "no price", don't have, does not have, not available, no recorded]]
+  none: ["₹"]
+- id: q28
+  split: heldout
+  category: abstain
+  question: Who owns the VX7-MCU part?
+  any: [[no owner, not recorded, unassigned, "no one", nobody, not assigned, no recorded]]
+- id: q29
+  split: heldout
+  category: supply
+  question: Which supplier currently quotes NB54360?
+  all: [Deccan Components]
+- id: q30
+  split: heldout
+  category: where_used
+  question: Which revision of the PSU-24 module is built into VG-50 Rev A?
+  any: [[PSU-24-2, Rev 2, revision 2]]
+- id: q31
+  split: heldout
+  state: updated
+  category: decision
+  question: After Priya's bench check, can MX-3360 be used in production now?
+  any: [["no", not yet, pending, not approved, needs]]
+  all: [TP-PSU-07]
+- id: q32
+  split: heldout
+  state: updated
+  category: supply
+  question: What does MX-3360 cost and who quoted it?
+  all: ["265", Sahyadri]

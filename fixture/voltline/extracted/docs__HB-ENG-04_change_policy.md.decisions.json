@@ -1,0 +1,12 @@
+{
+  "source_id": "docs/HB-ENG-04_change_policy.md",
+  "kind": "decisions",
+  "model": "qwen2.5:7b",
+  "extracted_at": "2026-10-16T05:54:49+00:00",
+  "source_versions": [
+    "docs/HB-ENG-04_change_policy.md"
+  ],
+  "output": {
+    "decisions": []
+  }
+}

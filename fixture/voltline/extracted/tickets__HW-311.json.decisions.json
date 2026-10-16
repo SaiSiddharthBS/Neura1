@@ -1,0 +1,36 @@
+{
+  "source_id": "tickets/HW-311.json",
+  "kind": "decisions",
+  "model": "qwen2.5:7b",
+  "extracted_at": "2026-10-16T06:00:30+00:00",
+  "source_versions": [
+    "tickets/HW-311.json"
+  ],
+  "output": {
+    "decisions": [
+      {
+        "outcome": "rejected",
+        "subject": "NB54361-L",
+        "instead_of": "NB54360",
+        "applies_to": [
+          "PSU-24 Rev 2"
+        ],
+        "summary": "NB54361-L rejected as cost-down for NB54360 on PSU-24 Rev 2",
+        "reason": "Hit thermal shutdown at 68C under full load (TR-112 page 4)",
+        "decided_by": "Arjun Mehta",
+        "decided_at": "2025-03-12",
+        "ref": "DEC-117",
+        "evidence": [
+          {
+            "chunk_id": "tickets/HW-311.json#comment-2",
+            "quote": "Closing as Won't Do. Rejected per DEC-117. NB54360 remains the only approved regulator for PSU-24 Rev 2."
+          },
+          {
+            "chunk_id": "tickets/HW-311.json#comment-1",
+            "quote": "Thermal soak per TP-PSU-07 at 70C ambient, sealed enclosure: NB54361-L hit thermal shutdown at 68C under full load."
+          }
+        ]
+      }
+    ]
+  }
+}

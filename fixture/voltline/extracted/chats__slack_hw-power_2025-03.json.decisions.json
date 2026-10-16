@@ -1,0 +1,36 @@
+{
+  "source_id": "chats/slack_hw-power_2025-03.json",
+  "kind": "decisions",
+  "model": "qwen2.5:7b",
+  "extracted_at": "2026-10-16T05:54:32+00:00",
+  "source_versions": [
+    "chats/slack_hw-power_2025-03.json"
+  ],
+  "output": {
+    "decisions": [
+      {
+        "outcome": "rejected",
+        "subject": "NB54361-L",
+        "instead_of": "NB54360",
+        "applies_to": [
+          "PSU-24 Rev 2"
+        ],
+        "summary": "NB54361-L rejected as a substitute for NB54360 on PSU-24 Rev 2",
+        "reason": "Fails thermal derating at 70C ambient in sealed cabinets (TR-112)",
+        "decided_by": "Arjun Mehta",
+        "decided_at": "2025-03-12",
+        "ref": "DEC-117",
+        "evidence": [
+          {
+            "chunk_id": "chats/slack_hw-power_2025-03.json#m4",
+            "quote": "Decision: we reject NB54361-L as a substitute for NB54360 on PSU-24 Rev 2 because it fails thermal derating at 70C ambient in sealed cabinets (TR-112). Keep NB54360. Logging this as DEC-117."
+          },
+          {
+            "chunk_id": "chats/slack_hw-power_2025-03.json#m3",
+            "quote": "NB54361-L on PSU-24 Rev 2 went into thermal shutdown at 68C ambient under full load in the sealed enclosure. NB54360 held regulation through 70C with margin."
+          }
+        ]
+      }
+    ]
+  }
+}
