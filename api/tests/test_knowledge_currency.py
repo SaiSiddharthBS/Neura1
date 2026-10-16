@@ -7,9 +7,9 @@ from neura1.ingest.extract import load_decisions
 from neura1.ingest.unstructured import load_sources
 
 THREAD = {"channel": "#hw-test", "messages": [
-    {"id": "m1", "ts": "2026-01-01T10:00:00+05:30", "user": "Arjun Mehta",
-     "text": "Decision: we reject NB54361-L instead of NB54360 on PSU-24 Rev 2. Logging as DEC-900."},
-    {"id": "m2", "ts": "2026-01-01T11:00:00+05:30", "user": "Priya Nair", "text": "Noted."}]}
+    {"id": "m1", "ts": "2026-01-01T10:00:00+05:30", "user": "Vishwas",
+     "text": "Decision: we reject NB54361-L instead of NB54360 on PSM-28 Rev 2. Logging as DEC-900."},
+    {"id": "m2", "ts": "2026-01-01T11:00:00+05:30", "user": "Raghavendra", "text": "Noted."}]}
 
 
 def test_edited_and_removed_evidence_is_flagged_not_lost(fresh_graph, tmp_path):
@@ -43,4 +43,4 @@ def test_edited_and_removed_evidence_is_flagged_not_lost(fresh_graph, tmp_path):
 def test_who_knows_ranks_owner_and_decision_maker(graph):
     r = brain.who_knows(graph, "pmic_seq.c")              # resolved through an alias
     assert r["subject"]["id"] == "FW-PMIC-SEQ"
-    assert r["people"][0]["name"] == "Rahul Iyer"
+    assert r["people"][0]["name"] == "Sai"

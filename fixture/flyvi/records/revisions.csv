@@ -1,0 +1,7 @@
+id,item_id,rev,status,effective_from
+PDU-28-B,PDU-28,B,obsolete,2023-04-01
+PDU-28-C,PDU-28,C,released,2025-06-15
+PDU-28-D,PDU-28,D,draft,
+BCU-24-A,BCU-24,A,released,2025-09-01
+PSM-28-1,PSM-28,1,obsolete,2023-02-10
+PSM-28-2,PSM-28,2,released,2025-04-20

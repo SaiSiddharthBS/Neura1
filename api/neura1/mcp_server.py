@@ -15,7 +15,7 @@ from neura1.graph import get_graph
 from neura1.impact import Trace
 
 mcp = MCPServer("neura1", instructions=(
-    "Neura1 is the company brain of an industrial electronics maker, stored in FalkorDB. Use these tools to "
+    "Neura1 is the company brain of Flyvi Technologies (power electronics for aerospace and defence; synthetic demo data), stored in FalkorDB. Use these tools to "
     "trace part changes, find who owns and who knows what, look up projects and decisions with their sources, "
     "and see what changed. Alternates are not approved unless a decision says so."))
 
@@ -112,6 +112,12 @@ def customer(text: str) -> str:
 def risk_radar() -> str:
     """Where the company is fragile: chokepoints, single-sourced parts, one-person knowledge, concentration."""
     return _call("risk_radar")
+
+
+@mcp.tool()
+def recall(text: str) -> str:
+    """What people have already asked and been told about a record or topic (shared conversation memory)."""
+    return _call("recall", text=text)
 
 
 @mcp.tool()

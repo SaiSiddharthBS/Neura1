@@ -4,6 +4,7 @@
   uv run python -m neura1.cli extract    # call the model on every document and save snapshots
   uv run python -m neura1.cli seed       # load the demo company only if the graph is empty
   uv run python -m neura1.cli check-model  # verify the model endpoint supports what Neura1 needs
+  uv run python -m neura1.cli embed      # embed passages for semantic search (needs NEURA1_LLM_EMBED_MODEL)
 """
 
 import json
@@ -26,6 +27,13 @@ def load(reset: bool = True) -> None:
     print("records:", load_records(graph))
     print("sources:", load_sources(graph))
     print("decisions:", extract.load_snapshots(graph))
+    from neura1.config import settings
+    if settings.llm_embed_model:
+        try:
+            from neura1.search import index_embeddings
+            print("embedded passages:", index_embeddings(graph))
+        except Exception as exc:  # semantic search stays off; keyword search still works
+            print("embeddings skipped:", exc)
 
 
 def extract_all(only: str | None = None) -> None:
@@ -54,13 +62,23 @@ def extract_all(only: str | None = None) -> None:
     load_sources(scratch, files=updates)
     jobs += [(scratch, str(p.relative_to(settings.fixture_dir)), "decisions") for p in updates]
 
+    jobs += [(graph, r["id"], "actions") for r in rows(graph, """
+        MATCH (s:Source {kind:'doc'}) WHERE toLower(s.title) CONTAINS 'weekly' OR toLower(s.title) CONTAINS 'review'
+              OR toLower(s.title) CONTAINS 'kickoff' RETURN s.id AS id""")]
     wanted = [w for w in (only or "").split(",") if w]
     if wanted:  # run in the order given, so the most important documents finish first
         jobs = [j for w in wanted for j in jobs if w in j[1]]
     for g, sid, kind in jobs:
         snap = extract.run_model(g, sid, kind)
         print(f"{kind:9} {sid}: {json.dumps(snap['output'], ensure_ascii=False)[:300]}", flush=True)
+    if not only:
+        print("tip: meeting action items are extracted with kind 'actions'", flush=True)
     scratch.delete()
+
+
+def embed() -> None:
+    from neura1.search import index_embeddings
+    print("embedded passages:", index_embeddings(get_graph()))
 
 
 def seed() -> None:
@@ -114,4 +132,4 @@ if __name__ == "__main__":
     if cmd == "extract":
         extract_all(rest[0] if rest else None)
     else:
-        {"load": load, "seed": seed, "check-model": check_model}.get(cmd, lambda: print(__doc__))()
+        {"load": load, "seed": seed, "check-model": check_model, "embed": embed}.get(cmd, lambda: print(__doc__))()

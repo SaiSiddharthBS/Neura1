@@ -42,9 +42,9 @@ export default function Overview() {
     <div className="space-y-5">
       <section className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-cyan">Voltline Controls · company brain</div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-cyan">Flyvi Technologies · company brain</div>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">What needs attention today</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted">One graph of Voltline&apos;s people, projects, products, customers, suppliers, documents and decisions. Every change below is traced through all of it.</p>
+          <p className="mt-1 max-w-2xl text-sm text-muted">One graph of Flyvi&apos;s people, projects, products, customers, suppliers, documents and decisions. Every change below is traced through all of it.</p>
         </div>
         <button onClick={() => window.dispatchEvent(new Event("neura1:palette"))}
                 className="flex items-center gap-2 rounded-xl border border-line bg-elev px-4 py-2.5 text-sm text-muted hover:border-line2 hover:text-ink">

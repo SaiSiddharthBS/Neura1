@@ -1,6 +1,6 @@
 # Cypher queries Neura1 depends on
 
-Generated from [`queries.py`](../api/neura1/queries.py), [`brain.py`](../api/neura1/brain.py) and [`scenarios.py`](../api/neura1/scenarios.py) by `uv run python -m neura1.docs`.
+Generated from [`queries.py`](../api/neura1/queries.py), [`brain.py`](../api/neura1/brain.py) and [`scenarios.py`](../api/neura1/scenarios.py), `people.py`, `search.py`, `memory.py` and `access.py` by `uv run python -m neura1.docs`.
 All queries are parameterised and run read-only (`GRAPH.RO_QUERY`). Writes happen only in the loaders
 (`api/neura1/ingest/`) and in `api/neura1/actions.py`.
 
@@ -226,7 +226,8 @@ Anything a person might ask about, found by id, name, or an alias used in chats.
 
 ```cypher
 MATCH (x)
-WHERE (x:Item OR x:Revision OR x:Project OR x:Customer OR x:Order OR x:Build OR x:Person OR x:Team OR x:Supplier)
+WHERE (x:Item OR x:Revision OR x:Project OR x:Customer OR x:Order OR x:Build OR x:Person OR x:Team OR x:Supplier
+       OR x:Skill OR x:Organization OR x:Certification)
   AND (toUpper(x.id) = toUpper($text) OR toLower(x.name) = toLower($text) OR toUpper(x.mpn) = toUpper($text))
 RETURN x.id AS id, labels(x)[0] AS label, coalesce(x.name, x.id) AS name
 UNION
@@ -248,6 +249,9 @@ WHERE (x:Item OR x:Project OR x:Person OR x:Customer OR x:Order OR x:Build OR x:
        OR toLower(coalesce(x.mpn, '')) CONTAINS toLower($q))
 RETURN x.id AS id, labels(x)[0] AS label, coalesce(x.name, x.id) AS name, x.kind AS kind
 LIMIT 12
+UNION
+MATCH (x:Skill) WHERE toLower(x.name) CONTAINS toLower($q)
+RETURN x.id AS id, 'Skill' AS label, x.name AS name, NULL AS kind
 ```
 
 ## `WHO_KNOWS`
@@ -286,6 +290,13 @@ RETURN p.id AS person, 'discussed it' AS signal, 1 AS weight, c.id AS evidence, 
 UNION ALL
 MATCH (b:Person)-[:BACKS_UP]->(o:Person)-[:OWNS]->(x {id:$id})
 RETURN b.id AS person, 'backs up the owner' AS signal, 2 AS weight, o.id AS evidence, NULL AS ts
+UNION ALL
+MATCH (p:Person)-[:HAS_SKILL]->(x:Skill {id:$id})
+RETURN p.id AS person, 'has the skill' AS signal, 4 AS weight, x.name AS evidence, NULL AS ts
+UNION ALL
+MATCH (p:Person)<-[:ASSIGNED_TO]-(a:Action)-[:CONCERNS]->(x {id:$id})
+RETURN p.id AS person, CASE WHEN a.status = 'done' THEN 'finished work on it' ELSE 'working on it' END AS signal,
+       CASE WHEN a.status = 'done' THEN 3 ELSE 2 END AS weight, a.id AS evidence, coalesce(a.completed_at, a.created_at) AS ts
 ```
 
 ## `PERSON`
@@ -379,7 +390,7 @@ ORDER BY mentions DESC LIMIT 12
 
 ```cypher
 MATCH (:Person {id:$id})<-[:SAID_BY]-(c:Chunk)-[:PART_OF]->(s:Source)
-WHERE c.retracted_at IS NULL
+WHERE c.retracted_at IS NULL AND NOT c.text STARTS WITH '#'
 RETURN c.id AS chunk, c.text AS text, c.ts AS ts, s.title AS title ORDER BY ts DESC LIMIT 6
 ```
 
@@ -494,7 +505,7 @@ RETURN DISTINCT a.id AS id, a.title AS title, a.status AS status, p.name AS owne
 
 ```cypher
 MATCH (pr:Project {id:$id})
-MATCH (c:Chunk)-[:MENTIONS]->(x) WHERE (x = pr OR (pr)-[:COVERS]->(x)) AND c.retracted_at IS NULL
+MATCH (c:Chunk)-[:MENTIONS]->(x) WHERE (x = pr OR (pr)-[:COVERS]->(x)) AND c.retracted_at IS NULL AND NOT c.text STARTS WITH '#'
 MATCH (c)-[:PART_OF]->(s:Source)
 RETURN DISTINCT c.id AS chunk, c.text AS text, c.author AS author, c.ts AS ts, s.title AS title
 ORDER BY ts DESC LIMIT 8
@@ -509,7 +520,7 @@ Recent activity across the company, newest first.
 
 ```cypher
 MATCH (c:Chunk)-[:PART_OF]->(s:Source)
-WHERE c.ts IS NOT NULL AND c.retracted_at IS NULL AND NOT c.id ENDS WITH '#title'
+WHERE c.ts IS NOT NULL AND c.retracted_at IS NULL AND NOT c.id ENDS WITH '#title' AND NOT c.text STARTS WITH '#'
   AND (s.kind IN ['chat', 'ticket'] OR c.ordinal = 1)
 RETURN CASE s.kind WHEN 'notice' THEN 'notice' WHEN 'doc' THEN 'document' ELSE 'message' END AS kind, c.ts AS at, c.author AS who, s.title AS what, c.text AS detail, c.id AS ref
 UNION ALL
@@ -585,6 +596,21 @@ RETURN b.id AS record, 'Build' AS label, NULL AS chunk, 'no planner recorded' AS
 UNION ALL
 MATCH (c:Customer) WHERE NOT (:Person)-[:OWNS]->(c)
 RETURN c.id AS record, 'Customer' AS label, NULL AS chunk, 'no account manager recorded' AS reason
+```
+
+## `ACTION_ITEMS`
+
+
+
+**Parameters:** none  
+**Used by:** —
+
+```cypher
+MATCH (ai:ActionItem)-[:FOR]->(p:Person)
+MATCH (ai)-[:FOUND_IN]->(c:Chunk)-[:PART_OF]->(s:Source)
+RETURN ai.id AS id, ai.task AS task, ai.due AS due, ai.quote AS quote, ai.status AS status, p.name AS owner,
+       c.id AS chunk, s.title AS meeting, c.ts AS at
+ORDER BY at DESC
 ```
 
 # Company events and the risk radar
@@ -927,4 +953,269 @@ OPTIONAL MATCH (inv:Investigation)-[:TRIGGERED_BY]->(s)
 RETURN s.id AS id, s.kind AS kind, s.title AS title, max(c.ts) AS date,
        collect(DISTINCT {id: x.id, label: labels(x)[0]}) AS mentions, inv.id AS investigation
 ORDER BY date DESC
+```
+
+# People and organisation
+
+## `PERSON_CORE`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (p:Person {id:$id})
+OPTIONAL MATCH (p)-[:MEMBER_OF]->(t:Team)
+OPTIONAL MATCH (t)-[:PART_OF]->(org:Organization)
+OPTIONAL MATCH (p)-[:REPORTS_TO]->(m:Person)
+OPTIONAL MATCH (r:Person)-[:REPORTS_TO]->(p)
+OPTIONAL MATCH (b:Person)-[:BACKS_UP]->(p)
+OPTIONAL MATCH (p)-[:BACKS_UP]->(c:Person)
+OPTIONAL MATCH (p)-[hr:HOLDS_ROLE]->(o:Organization)
+RETURN p.id AS id, p.name AS name, p.role AS role, t.id AS team_id, t.name AS team, org.name AS organization,
+       m.id AS manager_id, m.name AS manager,
+       collect(DISTINCT {id: r.id, name: r.name, role: r.role}) AS reports,
+       collect(DISTINCT {id: b.id, name: b.name}) AS backed_up_by,
+       collect(DISTINCT {id: c.id, name: c.name}) AS backs_up,
+       collect(DISTINCT {role: hr.role, org: o.name}) AS org_roles
+```
+
+## `CHAIN`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH path = (:Person {id:$id})-[:REPORTS_TO*1..6]->(top:Person)
+WITH path ORDER BY length(path) DESC LIMIT 1
+RETURN [n IN nodes(path) | {id: n.id, name: n.name, role: n.role}] AS chain
+```
+
+## `WORK`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (:Person {id:$id})<-[:ASSIGNED_TO]-(a:Action)
+OPTIONAL MATCH (a)-[:IN_PROJECT]->(pr:Project)
+OPTIONAL MATCH (inv:Investigation)-[:PRODUCED]->(a)
+OPTIONAL MATCH (a)-[:CONCERNS]->(t)
+RETURN a.id AS id, a.title AS title, coalesce(a.status, 'open') AS status, a.kind AS kind,
+       a.created_at AS created_at, a.completed_at AS completed_at, a.updated_at AS updated_at,
+       pr.id AS project_id, pr.name AS project, inv.id AS investigation, inv.kind AS plan_kind, t.id AS target
+ORDER BY coalesce(a.completed_at, a.updated_at, a.created_at) DESC
+```
+
+## `SKILLS`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (:Person {id:$id})-[:HAS_SKILL]->(s:Skill)
+OPTIONAL MATCH (o:Person)-[:HAS_SKILL]->(s) WHERE o.id <> $id
+RETURN s.id AS id, s.name AS name, collect(o.name) AS also
+ORDER BY name
+```
+
+## `ABSENCES`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (:Person {id:$id})-[:HAS_ABSENCE]->(a:Absence)
+RETURN a.start_date AS start_date, a.end_date AS end_date, a.kind AS kind, a.note AS note ORDER BY start_date
+```
+
+## `ORGS`
+
+
+
+**Parameters:** none  
+**Used by:** —
+
+```cypher
+MATCH (o:Organization)
+OPTIONAL MATCH (o)-[:SUBSIDIARY_OF]->(parent:Organization)
+OPTIONAL MATCH (p:Person)-[r:HOLDS_ROLE]->(o)
+RETURN o.id AS id, o.name AS name, o.kind AS kind, o.note AS note, parent.id AS parent_id,
+       collect(DISTINCT {id: p.id, name: p.name, role: r.role}) AS officers
+```
+
+## `TEAMS`
+
+
+
+**Parameters:** none  
+**Used by:** —
+
+```cypher
+MATCH (t:Team)
+OPTIONAL MATCH (t)-[:PART_OF]->(o:Organization)
+OPTIONAL MATCH (p:Person)-[:MEMBER_OF]->(t)
+RETURN t.id AS id, t.name AS name, o.id AS org_id, collect(DISTINCT {id: p.id, name: p.name, role: p.role}) AS members
+ORDER BY name
+```
+
+## `REPORTING`
+
+
+
+**Parameters:** none  
+**Used by:** —
+
+```cypher
+MATCH (p:Person)-[:REPORTS_TO]->(m:Person) RETURN p.id AS person, m.id AS manager
+```
+
+## `PEOPLE_FLAT`
+
+
+
+**Parameters:** `$today`  
+**Used by:** —
+
+```cypher
+MATCH (p:Person)
+OPTIONAL MATCH (p)-[:MEMBER_OF]->(t:Team)
+OPTIONAL MATCH (p)<-[:ASSIGNED_TO]-(a:Action) WHERE coalesce(a.status, 'open') <> 'done'
+OPTIONAL MATCH (p)-[:HAS_ABSENCE]->(ab:Absence) WHERE ab.start_date <= $today AND ab.end_date >= $today
+RETURN p.id AS id, p.name AS name, p.role AS role, t.id AS team_id, t.name AS team,
+       count(DISTINCT a) AS open_work, count(DISTINCT ab) > 0 AS away_now
+```
+
+## `MY_WATCH`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (me:Person {id:$id})
+OPTIONAL MATCH (me)-[:OWNS]->(o)
+OPTIONAL MATCH (me)-[:WORKS_ON|LEADS]->(pr:Project)
+OPTIONAL MATCH (pr)-[:COVERS]->(x)
+WITH me, collect(DISTINCT o.id) + collect(DISTINCT pr.id) + collect(DISTINCT x.id) AS ids
+RETURN [i IN ids WHERE i IS NOT NULL] AS ids
+```
+
+## `MY_NEWS`
+
+
+
+**Parameters:** `$ids`, `$since`  
+**Used by:** —
+
+```cypher
+MATCH (c:Chunk)-[:MENTIONS]->(x) WHERE x.id IN $ids AND c.ts >= $since AND c.retracted_at IS NULL AND NOT c.text STARTS WITH '#'
+MATCH (c)-[:PART_OF]->(s:Source)
+RETURN DISTINCT c.id AS chunk, s.title AS title, s.kind AS kind, c.author AS author, c.ts AS ts, c.text AS text,
+       collect(DISTINCT x.id) AS about
+ORDER BY ts DESC LIMIT 12
+```
+
+## `TEAM_AWAY`
+
+
+
+**Parameters:** `$id`, `$today`  
+**Used by:** —
+
+```cypher
+MATCH (me:Person {id:$id})
+OPTIONAL MATCH (me)-[:MEMBER_OF]->(t:Team)<-[:MEMBER_OF]-(colleague:Person)
+OPTIONAL MATCH (r:Person)-[:REPORTS_TO*1..4]->(me)
+WITH collect(DISTINCT colleague) + collect(DISTINCT r) AS people
+UNWIND people AS p
+MATCH (p)-[:HAS_ABSENCE]->(a:Absence) WHERE a.end_date >= $today
+RETURN DISTINCT p.id AS id, p.name AS name, a.start_date AS start_date, a.end_date AS end_date
+ORDER BY start_date
+```
+
+# Hybrid search
+
+## `VECTOR`
+
+
+
+**Parameters:** `$k`, `$v`  
+**Used by:** —
+
+```cypher
+CALL db.idx.vector.queryNodes('Chunk', 'embedding', $k, vecf32($v)) YIELD node, score
+RETURN node.id AS chunk, score
+```
+
+## `KEYWORD`
+
+
+
+**Parameters:** `$k`, `$q`  
+**Used by:** —
+
+```cypher
+CALL db.idx.fulltext.queryNodes('Chunk', $q) YIELD node, score
+RETURN node.id AS chunk, score LIMIT $k
+```
+
+## `EXPAND`
+
+
+
+**Parameters:** `$ids`  
+**Used by:** —
+
+```cypher
+MATCH (c:Chunk) WHERE c.id IN $ids
+MATCH (c)-[:PART_OF]->(s:Source)
+OPTIONAL MATCH (c)-[:MENTIONS]->(x) WHERE NOT x:Source
+RETURN c.id AS chunk, c.text AS text, c.author AS author, c.ts AS ts, c.page AS page, s.title AS title, s.kind AS kind,
+       collect(DISTINCT {id: x.id, label: labels(x)[0]}) AS mentions
+```
+
+# Conversation memory
+
+## `RECALL`
+
+Past turns about a record or matching words, across everyone's conversations (shared memory).
+
+**Parameters:** `$text`  
+**Used by:** —
+
+```cypher
+MATCH (t:Turn)-[:ABOUT]->(x) WHERE x.id = $text OR toLower(coalesce(x.name, '')) = toLower($text)
+MATCH (c:Conversation)-[:HAS_TURN]->(t)
+OPTIONAL MATCH (p:Person)-[:STARTED]->(c)
+RETURN t.question AS question, t.answer AS answer, t.at AS at, p.name AS asked_by
+ORDER BY at DESC LIMIT 5
+```
+
+# Permissions
+
+## `VIEWER`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (p:Person {id:$id})
+OPTIONAL MATCH (p)-[:MEMBER_OF]->(t:Team)
+OPTIONAL MATCH (r:Person)-[:REPORTS_TO*1..6]->(p)
+OPTIONAL MATCH (p)-[:BACKS_UP]->(covered:Person)
+RETURN p.id AS id, p.name AS name, p.role AS role, t.id AS team, t.name AS team_name,
+       collect(DISTINCT r.id) AS reports, collect(DISTINCT covered.id) AS covers
 ```

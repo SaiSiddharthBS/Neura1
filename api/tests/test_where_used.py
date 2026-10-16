@@ -13,25 +13,25 @@ def where_used(graph, item_id):
 
 def test_quantity_rolls_up_across_nested_and_repeated_occurrences(graph):
     res = where_used(graph, "NB54360")
-    # VC-200 Rev C: 2x PSU-24 (1 each) + 1 direct on U12
-    assert res["VC-200-C"]["qty_per_unit"] == 3
-    assert len(res["VC-200-C"]["paths"]) == 2
-    assert res["VG-50-A"]["qty_per_unit"] == 1
+    # PDU-28 Rev C: 2x PSM-28 (1 each) + 1 direct on U12
+    assert res["PDU-28-C"]["qty_per_unit"] == 3
+    assert len(res["PDU-28-C"]["paths"]) == 2
+    assert res["BCU-24-A"]["qty_per_unit"] == 1
 
 
 def test_draft_and_obsolete_revisions_are_not_applicable(graph):
     res = where_used(graph, "NB54360")
-    assert res["VC-200-D"]["applicable"] is False
-    assert res["VC-200-D"]["paths"][0]["blocked_by"] == ["VC-200-D"]
-    assert res["VC-200-B"]["applicable"] is False
+    assert res["PDU-28-D"]["applicable"] is False
+    assert res["PDU-28-D"]["paths"][0]["blocked_by"] == ["PDU-28-D"]
+    assert res["PDU-28-B"]["applicable"] is False
     applicable = {rev for rev, r in res.items() if r["applicable"]}
-    assert applicable == {"VC-200-C", "VG-50-A"}
+    assert applicable == {"PDU-28-C", "BCU-24-A"}
 
 
 def test_part_only_in_draft_has_no_applicable_use(graph):
     res = where_used(graph, "MX-3360")
-    assert set(res) == {"VC-200-D"}
-    assert res["VC-200-D"]["applicable"] is False
+    assert set(res) == {"PDU-28-D"}
+    assert res["PDU-28-D"]["applicable"] is False
 
 
 def test_reimport_is_idempotent(graph):

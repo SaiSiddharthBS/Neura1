@@ -1,4 +1,0 @@
-id,customer_id,build_id,qty,due_date,penalty_note,unit_price,penalty_pct_per_week,penalty_cap_pct
-SO-881,C-KAVERI,BO-0412,80,2026-11-20,Late delivery penalty per contract clause 9.2,42000,0.5,5
-SO-884,C-DECCAN,BO-0415,60,2026-11-25,,32000,,
-SO-887,C-KONKAN,BO-0421,40,2026-12-10,,42000,,

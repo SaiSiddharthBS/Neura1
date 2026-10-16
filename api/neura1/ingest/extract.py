@@ -56,7 +56,7 @@ Rules:
   it would have replaced.
 - decided_by is the person who stated the decision; decided_at is the date of that passage (YYYY-MM-DD).
 - ref is a decision id such as DEC-123 if one is written, else null.
-- applies_to lists assemblies/products with revisions as written, e.g. "PSU-24 Rev 2".
+- applies_to lists assemblies/products with revisions as written, e.g. "PSM-28 Rev 2".
 - evidence: cite the passage that STATES the decision first, then any passage with the test result.
   chunk_id is the number in square brackets, e.g. "3". quote is copied EXACTLY from that passage and is
   one sentence or less.
@@ -97,6 +97,27 @@ NOTICE_SCHEMA = {
     },
     "required": ["part", "change_types", "new_unit_price", "currency", "effective_date", "lead_weeks"],
 }
+
+ACTIONS_SCHEMA = {
+    "type": "object",
+    "properties": {"actions": {"type": "array", "items": {
+        "type": "object",
+        "properties": {
+            "owner": {"type": "string", "description": "Person's name exactly as written"},
+            "task": {"type": "string", "description": "What they will do, as a short imperative"},
+            "due": {"type": ["string", "null"], "description": "YYYY-MM-DD if a date is written, else null"},
+            "chunk_id": {"type": "string"},
+            "quote": {"type": "string", "description": "Copied exactly from the passage"},
+        },
+        "required": ["owner", "task", "due", "chunk_id", "quote"],
+    }}},
+    "required": ["actions"],
+}
+
+ACTIONS_SYSTEM = """You read meeting notes and list the action items: things a named person said they will do or was
+asked to do. Only include items with a clear owner. chunk_id is the number in square brackets of the passage.
+quote is copied EXACTLY from that passage and shows the commitment. If there are no action items, return
+{"actions": []}."""
 
 NOTICE_SYSTEM = """You read supplier notices and return the changed facts as JSON. Use null when the notice
 does not state a value. Never compute or infer prices or dates that are not written."""
@@ -156,6 +177,10 @@ def run_model(graph: Graph, source_id: str, kind: str) -> dict:
     passages = source_passages(graph, source_id)
     if kind == "decisions":
         out = chat_json(DECISION_SYSTEM, _prompt(passages), DECISION_SCHEMA, "decisions")
+    elif kind == "actions":
+        out = chat_json(ACTIONS_SYSTEM, _prompt(passages), ACTIONS_SCHEMA, "actions")
+        for a in out.get("actions", []):
+            a["chunk_id"] = resolve_chunk_ref(a.get("chunk_id", ""), passages) or a.get("chunk_id")
     else:
         out = chat_json(NOTICE_SYSTEM, "\n\n".join(p["text"] for p in passages), NOTICE_SCHEMA, "notice")
     if kind == "decisions":
@@ -275,8 +300,40 @@ def load_snapshots(graph: Graph) -> dict:
     """Load saved extractions for sources that are in the graph (update documents load when they arrive)."""
     present = {r["id"] for r in rows(graph, "MATCH (s:Source) RETURN s.id AS id")}
     out = {}
-    for path in sorted((settings.fixture_dir / "extracted").glob("*.decisions.json")):
+    for path in sorted((settings.fixture_dir / "extracted").glob("*.json")):
         snap = json.loads(path.read_text())
-        if snap["source_id"] in present:
+        if snap["source_id"] not in present:
+            continue
+        if snap["kind"] == "decisions":
             out[snap["source_id"]] = load_decisions(graph, snap)
+        elif snap["kind"] == "actions":
+            out[snap["source_id"] + " (actions)"] = load_action_items(graph, snap)
     return out
+
+
+def load_action_items(graph: Graph, snapshot: dict) -> dict:
+    """Write verified meeting action items as proposals; a person turns them into tasks."""
+    passages = {p["id"]: p for p in source_passages(graph, snapshot["source_id"])}
+    written, rejected = [], []
+    for a in snapshot["output"].get("actions", []):
+        p = passages.get(a.get("chunk_id"))
+        owner = rows(graph, "MATCH (x:Person) WHERE toLower(x.name) = toLower($n) RETURN x.id AS id", {"n": a.get("owner", "")})
+        problems = []
+        if p is None or not _norm(a.get("quote", "")) or _norm(a["quote"]) not in _norm(p["text"]):
+            problems.append("quote not found verbatim")
+        if len(owner) != 1:
+            problems.append(f"owner {a.get('owner')!r} is not exactly one person")
+        if problems:
+            rejected.append({"item": a, "problems": problems})
+            continue
+        key = "AI-" + hashlib.sha256(f"{snapshot['source_id']}|{a['owner']}|{a['task']}".encode()).hexdigest()[:8]
+        graph.query("""
+            MATCH (c:Chunk {id:$chunk}), (o:Person {id:$owner})
+            MERGE (ai:ActionItem {id:$id})
+            SET ai.task=$task, ai.due=$due, ai.quote=$quote, ai.authority='extracted', ai.extracted_by=$model,
+                ai.status=coalesce(ai.status, 'proposed')
+            MERGE (ai)-[:FOUND_IN]->(c) MERGE (ai)-[:FOR]->(o)
+        """, {"chunk": a["chunk_id"], "owner": owner[0]["id"], "id": key, "task": a["task"], "due": a.get("due"),
+              "quote": a["quote"], "model": snapshot["model"]})
+        written.append(key)
+    return {"written": written, "rejected": rejected}

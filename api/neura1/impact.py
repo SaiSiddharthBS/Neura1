@@ -15,8 +15,8 @@ from neura1 import queries as Q
 from neura1.engine.cost import CostError, Demand, OneTimeCost, Quote, price_change_scenario
 from neura1.graph import rows
 
-REQUAL_COST = OneTimeCost("TP-PSU-07 requalification (per candidate part)", Decimal(8000), "INR",
-                          "docs/TP-PSU-07_test_procedure.md")
+REQUAL_COST = OneTimeCost("TP-PSM-07 requalification (per candidate part)", Decimal(8000), "INR",
+                          "docs/TP-PSM-07_test_procedure.md")
 
 
 @dataclass

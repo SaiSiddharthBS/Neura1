@@ -26,14 +26,14 @@ text{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Helve
 <line class="grid" x1="339.3" y1="116" x2="339.3" y2="312"/><text class="mono" x="339.3" y="328" text-anchor="middle">100</text>
 <line class="grid" x1="454.7" y1="116" x2="454.7" y2="312"/><text class="mono" x="454.7" y="328" text-anchor="middle">200</text>
 <line class="grid" x1="570.0" y1="116" x2="570.0" y2="312"/><text class="mono" x="570.0" y="328" text-anchor="middle">300</text>
-<text class="lab" x="54" y="141">BO-0412</text><text class="sm" x="54" y="158">VC-200 C × 100 · 3 Nov</text>
+<text class="lab" x="54" y="141">BO-0412</text><text class="sm" x="54" y="158">PDU-28 C × 100 · 3 Nov</text>
 <rect class="grow" x="224" y="128" width="69.2" height="30" rx="7" style="fill:var(--stock);animation-delay:0.0s"/>
 <rect class="grow" x="293.2" y="128" width="276.8" height="30" rx="7" style="fill:var(--short);animation-delay:0.1s"/>
 <text class="val" x="578.0" y="148">300</text>
-<text class="lab" x="54" y="205">BO-0415</text><text class="sm" x="54" y="222">VG-50 A × 60 · 10 Nov</text>
+<text class="lab" x="54" y="205">BO-0415</text><text class="sm" x="54" y="222">BCU-24 A × 60 · 10 Nov</text>
 <rect class="grow" x="224.0" y="192" width="69.2" height="30" rx="7" style="fill:var(--short);animation-delay:0.22s"/>
 <text class="val" x="301.2" y="212">60</text>
-<text class="lab" x="54" y="269">BO-0421</text><text class="sm" x="54" y="286">VC-200 C × 40 · 24 Nov</text>
+<text class="lab" x="54" y="269">BO-0421</text><text class="sm" x="54" y="286">PDU-28 C × 40 · 24 Nov</text>
 <rect class="grow" x="224.0" y="256" width="138.4" height="30" rx="7" style="fill:var(--short);animation-delay:0.33999999999999997s"/>
 <text class="val" x="370.4" y="276">120</text>
 <rect x="54" y="346" width="12" height="12" rx="3" style="fill:var(--stock)"/><text class="sm" x="72" y="356">from free stock</text><rect x="190" y="346" width="12" height="12" rx="3" style="fill:var(--short)"/><text class="sm" x="208" y="356">shortfall · 420 parts to buy</text>

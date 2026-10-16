@@ -14,7 +14,7 @@ type Result = {
   by_text?: { name: string; passages: number }[];
 };
 
-const EXAMPLES = ["NB54360", "pmic_seq.c", "Kaveri", "VC-300", "PSU-24"];
+const EXAMPLES = ["NB54360", "pmic_seq.c", "Nilgiri", "PDU-48", "PSM-28"];
 
 export default function WhoKnows({ onOpen, initial }: { onOpen?: (chunk: string) => void; initial?: string }) {
   const [q, setQ] = useState("");

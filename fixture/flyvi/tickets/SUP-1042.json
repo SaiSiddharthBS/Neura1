@@ -1,0 +1,14 @@
+{
+  "key": "SUP-1042",
+  "tracker": "synthetic Jira-style export",
+  "title": "Nilgiri: PDU-28 Rev B brownout on cold restart",
+  "status": "Resolved",
+  "assignee": "Sai",
+  "reporter": "Nagarjun",
+  "created": "2026-09-08",
+  "description": "Two PDU-28 Rev B controllers at Nilgiri Aero Systems restarted after a brownout during a cold morning start. Units run firmware 2.2.",
+  "comments": [
+    {"author": "Sai", "date": "2026-09-08", "body": "Root cause: firmware 2.2 waits 4 ms for power-good; the regulator soft-start needs up to 4 ms plus margin. Fixed in pmic_seq.c (FW-233)."},
+    {"author": "Nagarjun", "date": "2026-09-12", "body": "Firmware 2.3.1 deployed to all 220 Rev B units at Nilgiri. Closing."}
+  ]
+}

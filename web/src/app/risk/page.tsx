@@ -32,7 +32,7 @@ export default function RiskRadar() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Risk radar</h1>
         <p className="mt-1 text-sm text-muted">
-          Where Voltline is fragile, found by FalkorDB graph algorithms and traversals across people, products, customers and suppliers.
+          Where Flyvi is fragile, found by FalkorDB graph algorithms and traversals across people, products, customers and suppliers.
           {" "}{r.trace.length} queries, {algoMs.toFixed(0)} ms.
         </p>
       </div>

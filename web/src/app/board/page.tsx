@@ -25,7 +25,9 @@ const COLUMNS = [
 
 const KIND: Record<string, string> = {
   engineering_review: "Engineering", firmware_review: "Firmware", requalification: "Quality",
-  procurement: "Procurement", production_replan: "Production", customer_comms: "Sales", task: "Ask",
+  procurement: "Procurement", production_replan: "Production", customer_comms: "Sales", task: "Ask", work: "Work",
+  handover: "Handover", interim_owner: "Handover", interim_lead: "Handover", handover_note: "Handover", confirm_handover: "Handover",
+  customer_response: "Customer", root_cause: "Support", prioritise_fix: "Software", production_hold: "Production", executive_brief: "Leadership",
 };
 
 function initials(name: string | null) {

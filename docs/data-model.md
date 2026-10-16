@@ -1,6 +1,6 @@
 # Graph data model
 
-One FalkorDB graph per company (`voltline` in the demo). Every node and relationship that comes from a
+One FalkorDB graph per company (`flyvi` in the demo). Every node and relationship that comes from a
 company record carries `source` (which export or document it came from) and `authority`.
 
 ## Authority levels
@@ -63,7 +63,18 @@ graph LR
 | `Decision` | `outcome` (approved · rejected · proposed · evidence), `summary`, `reason`, `decided_at`, `authority`, `extracted_by` | |
 | `Investigation`, `Action` | content-hash ids, `status`, `approved_by`, `created_at` | Idempotent: re-approving finds the same nodes |
 | `Project` | `name`, `status`, `start_date`, `target_date`, `summary` | Linked to people (`LEADS`, `WORKS_ON {role}`) and to whatever it covers |
-| `Alias` | `term` | Names people actually use in chat ("pmic_seq.c", "Kaveri") that point at a record |
+| `Alias` | `term` | Names people actually use in chat ("pmic_seq.c", "Nilgiri") that point at a record |
+| `Organization` | `name`, `kind` | Datasol (parent) and Flyvi (`SUBSIDIARY_OF`); people `HOLDS_ROLE {role}` (director, shareholder, CTO); teams are `PART_OF` an organisation |
+| `Skill` | `name` | `Person-HAS_SKILL->Skill`; stated skills sit alongside knowledge derived from work |
+| `Absence` | `start_date`, `end_date`, `kind` | `Person-HAS_ABSENCE->Absence`; visibility follows the reporting chain |
+| `Certification` | `standard`, `valid_until` | `CERTIFIES` a revision; `RETEST_IF_CHANGED` an item |
+| `Event` | `kind`, `at`, `by` | Task moves and profile edits, linked `ON` the record they changed |
+| `Conversation`, `Turn` | `question`, `answer`, `at` | Ask memory; turns `CITED` passages and are `ABOUT` records |
+| `ActionItem` | `task`, `due`, `quote` | Meeting action items, `FOUND_IN` a passage, `FOR` a person |
+
+Relationships not in the diagram above: `REPORTS_TO`, `BACKS_UP`, `IN_PROJECT` (work items), `ASSIGNED_TO` (tickets and
+tasks), `SUBSIDIARY_OF`, `HOLDS_ROLE`, `HAS_SKILL`, `HAS_ABSENCE`, `CERTIFIES`, `RETEST_IF_CHANGED`, `ON`, `STARTED`,
+`HAS_TURN`, `CITED`, `FOUND_IN`.
 
 ## Who knows what
 
@@ -104,7 +115,7 @@ Expertise is not stored. It is derived from the graph every time, with the evide
 ## Modelling choices
 
 - **Assemblies are pinned by revision.** A BOM line to an assembly points at the specific sub-assembly revision
-  (`Revision-CONTAINS->Revision`). A product revision released with PSU-24 Rev 2 keeps meaning Rev 2.
+  (`Revision-CONTAINS->Revision`). A product revision released with PSM-28 Rev 2 keeps meaning Rev 2.
 - **Applicability is computed, not stored.** A path counts only if every revision on it is `released`, and the
   query reports which revision blocked an excluded path.
 - **Cross-references are not approvals.** `ALTERNATE_OF.basis` records why an alternate is listed.

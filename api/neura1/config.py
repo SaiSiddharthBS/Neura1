@@ -12,8 +12,8 @@ class Settings(BaseSettings):
     falkordb_port: int = 6380
     falkordb_username: str | None = None
     falkordb_password: str | None = None
-    graph_name: str = "voltline"
-    fixture_dir: Path = REPO_ROOT / "fixture" / "voltline"
+    graph_name: str = "flyvi"
+    fixture_dir: Path = REPO_ROOT / "fixture" / "flyvi"
     # Where a company's own uploaded documents are kept (not committed).
     data_dir: Path = REPO_ROOT / "data"
 
@@ -21,7 +21,12 @@ class Settings(BaseSettings):
     llm_base_url: str | None = None
     llm_api_key: str = "not-needed"
     llm_model: str | None = None
+    llm_embed_model: str | None = None  # e.g. nomic-embed-text; enables semantic search over passages
     llm_timeout: float = 900  # seconds; CPU-only local models are slow, a DGX is fast
+
+    # Live ingestion. Slack requests are verified with the app's signing secret; Jira with a shared secret header.
+    slack_signing_secret: str | None = None
+    webhook_secret: str = "change-me"
 
     # Required in the X-Demo-Passcode header for anything that writes to the graph.
     demo_passcode: str = "change-me"

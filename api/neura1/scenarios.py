@@ -400,6 +400,8 @@ def signals(graph: Graph) -> list[dict]:
             snap = extract.snapshot_path(s["id"], "notice")
             if snap.exists():
                 subject = _json.loads(snap.read_text())["output"].get("part")
-        subject = subject or next((m["id"] for m in mentions if m["label"] == pick), None)
+        # Without an extraction, prefer a record named in the file name (e.g. notice_NB54360_...), then the first mention.
+        subject = subject or next((m["id"] for m in mentions if m["label"] == pick and m["id"] in s["id"]), None) \
+            or next((m["id"] for m in mentions if m["label"] == pick), None)
         out.append(s | {"subject": subject, "mentions": mentions})
     return out

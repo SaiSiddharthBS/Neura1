@@ -18,7 +18,7 @@ from neura1.config import settings
 from neura1.graph import rows
 
 UNSTRUCTURED_DIRS = ("chats", "tickets", "docs", "inbox")
-DOC_REF = re.compile(r"^([A-Z]{2,4}-[A-Z]{0,4}-?\d{2,4})")  # TR-112, HB-ENG-04, TP-PSU-07, HW-311
+DOC_REF = re.compile(r"^([A-Z]{2,4}-[A-Z]{0,4}-?\d{2,4})")  # TR-112, HB-ENG-04, TP-PSM-07, HW-311
 
 
 @dataclass
@@ -160,7 +160,7 @@ REV_PHRASE = re.compile(r"\b([A-Z]{2,3}-\d{2,3}) Rev ([A-Z0-9])\b")
 
 def mentions(text: str, lexicon: list[tuple[re.Pattern, str]]) -> set[str]:
     found = {target for pattern, target in lexicon if pattern.search(text)}
-    # "VC-200 Rev C" names the revision VC-200-C
+    # "PDU-28 Rev C" names the revision PDU-28-C
     found |= {f"{item}-{rev}" for item, rev in REV_PHRASE.findall(text)}
     return found
 

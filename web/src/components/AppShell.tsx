@@ -4,12 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Bell, Brain, Building2, Command, FolderKanban, History, Inbox, KanbanSquare, LayoutDashboard, Radar, Upload, Users,
+  Bell, Brain, Building2, Command, FolderKanban, History, Inbox, KanbanSquare, LayoutDashboard, Network, Radar, Sun, Upload, Users,
 } from "lucide-react";
 import CommandPalette from "@/components/CommandPalette";
+import ViewerSwitch from "@/components/ViewerSwitch";
 
 const NAV = [
   { section: "Today", items: [
+    { href: "/me", label: "My day", icon: Sun },
     { href: "/", label: "Overview", icon: LayoutDashboard },
     { href: "/signals", label: "Signals", icon: Inbox },
     { href: "/board", label: "Workboard", icon: KanbanSquare },
@@ -18,6 +20,7 @@ const NAV = [
   { section: "Company brain", items: [
     { href: "/brain", label: "Ask & search", icon: Brain },
     { href: "/people", label: "People", icon: Users },
+    { href: "/org", label: "Organisation", icon: Network },
     { href: "/projects", label: "Projects", icon: FolderKanban },
     { href: "/customers", label: "Customers", icon: Building2 },
     { href: "/risk", label: "Risk radar", icon: Radar },
@@ -40,7 +43,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <Image src="/mark.png" alt="" width={40} height={32} style={{ height: "auto" }} className="drop-shadow-[0_0_12px_rgba(90,209,230,0.45)]" />
           <span>
             <span className="block text-[17px] font-semibold tracking-tight">Neura1</span>
-            <span className="block text-[11px] text-muted">Company brain · Voltline</span>
+            <span className="block text-[11px] text-muted">Company brain · Flyvi</span>
           </span>
         </Link>
         <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
@@ -60,6 +63,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
         <div className="space-y-2 border-t border-line p-4">
+          <ViewerSwitch />
           <button onClick={() => window.dispatchEvent(new Event("neura1:palette"))}
                   className="flex w-full items-center justify-between rounded-xl bg-elev px-3 py-2 text-xs text-muted hover:text-ink">
             <span className="flex items-center gap-2"><Command size={13} /> Search or ask</span>

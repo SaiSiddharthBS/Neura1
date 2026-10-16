@@ -1,3 +1,0 @@
-from_item,to_item,note
-FW-PMIC-SEQ,NB54360,Power-good sequencing assumes NB54360 4 ms soft-start
-TP-PSU-07,NB54360,Qualifies regulator thermal derating at 70C ambient

@@ -13,7 +13,8 @@ from neura1.impact import Trace
 # Anything a person might ask about, found by id, name, or an alias used in chats.
 RESOLVE_ANY = """
 MATCH (x)
-WHERE (x:Item OR x:Revision OR x:Project OR x:Customer OR x:Order OR x:Build OR x:Person OR x:Team OR x:Supplier)
+WHERE (x:Item OR x:Revision OR x:Project OR x:Customer OR x:Order OR x:Build OR x:Person OR x:Team OR x:Supplier
+       OR x:Skill OR x:Organization OR x:Certification)
   AND (toUpper(x.id) = toUpper($text) OR toLower(x.name) = toLower($text) OR toUpper(x.mpn) = toUpper($text))
 RETURN x.id AS id, labels(x)[0] AS label, coalesce(x.name, x.id) AS name
 UNION
@@ -29,6 +30,9 @@ WHERE (x:Item OR x:Project OR x:Person OR x:Customer OR x:Order OR x:Build OR x:
        OR toLower(coalesce(x.mpn, '')) CONTAINS toLower($q))
 RETURN x.id AS id, labels(x)[0] AS label, coalesce(x.name, x.id) AS name, x.kind AS kind
 LIMIT 12
+UNION
+MATCH (x:Skill) WHERE toLower(x.name) CONTAINS toLower($q)
+RETURN x.id AS id, 'Skill' AS label, x.name AS name, NULL AS kind
 """
 
 # Who knows about a record, and why. Each branch is one kind of signal with a weight; the evidence
@@ -62,6 +66,13 @@ RETURN p.id AS person, 'discussed it' AS signal, 1 AS weight, c.id AS evidence, 
 UNION ALL
 MATCH (b:Person)-[:BACKS_UP]->(o:Person)-[:OWNS]->(x {id:$id})
 RETURN b.id AS person, 'backs up the owner' AS signal, 2 AS weight, o.id AS evidence, NULL AS ts
+UNION ALL
+MATCH (p:Person)-[:HAS_SKILL]->(x:Skill {id:$id})
+RETURN p.id AS person, 'has the skill' AS signal, 4 AS weight, x.name AS evidence, NULL AS ts
+UNION ALL
+MATCH (p:Person)<-[:ASSIGNED_TO]-(a:Action)-[:CONCERNS]->(x {id:$id})
+RETURN p.id AS person, CASE WHEN a.status = 'done' THEN 'finished work on it' ELSE 'working on it' END AS signal,
+       CASE WHEN a.status = 'done' THEN 3 ELSE 2 END AS weight, a.id AS evidence, coalesce(a.completed_at, a.created_at) AS ts
 """
 
 PERSON = """
@@ -107,7 +118,7 @@ ORDER BY mentions DESC LIMIT 12
 
 PERSON_RECENT = """
 MATCH (:Person {id:$id})<-[:SAID_BY]-(c:Chunk)-[:PART_OF]->(s:Source)
-WHERE c.retracted_at IS NULL
+WHERE c.retracted_at IS NULL AND NOT c.text STARTS WITH '#'
 RETURN c.id AS chunk, c.text AS text, c.ts AS ts, s.title AS title ORDER BY ts DESC LIMIT 6
 """
 
@@ -168,7 +179,7 @@ RETURN DISTINCT a.id AS id, a.title AS title, a.status AS status, p.name AS owne
 
 PROJECT_ACTIVITY = """
 MATCH (pr:Project {id:$id})
-MATCH (c:Chunk)-[:MENTIONS]->(x) WHERE (x = pr OR (pr)-[:COVERS]->(x)) AND c.retracted_at IS NULL
+MATCH (c:Chunk)-[:MENTIONS]->(x) WHERE (x = pr OR (pr)-[:COVERS]->(x)) AND c.retracted_at IS NULL AND NOT c.text STARTS WITH '#'
 MATCH (c)-[:PART_OF]->(s:Source)
 RETURN DISTINCT c.id AS chunk, c.text AS text, c.author AS author, c.ts AS ts, s.title AS title
 ORDER BY ts DESC LIMIT 8
@@ -177,7 +188,7 @@ ORDER BY ts DESC LIMIT 8
 # Recent activity across the company, newest first.
 CHANGES = """
 MATCH (c:Chunk)-[:PART_OF]->(s:Source)
-WHERE c.ts IS NOT NULL AND c.retracted_at IS NULL AND NOT c.id ENDS WITH '#title'
+WHERE c.ts IS NOT NULL AND c.retracted_at IS NULL AND NOT c.id ENDS WITH '#title' AND NOT c.text STARTS WITH '#'
   AND (s.kind IN ['chat', 'ticket'] OR c.ordinal = 1)
 RETURN CASE s.kind WHEN 'notice' THEN 'notice' WHEN 'doc' THEN 'document' ELSE 'message' END AS kind, c.ts AS at, c.author AS who, s.title AS what, c.text AS detail, c.id AS ref
 UNION ALL
@@ -302,3 +313,12 @@ def changes(graph: Graph, today: date | None = None, limit: int = 40) -> dict:
                          {"today": today.isoformat(), "soon": (today + timedelta(days=90)).isoformat()})
                  + t.run("unowned", UNOWNED, {}))
     return {"feed": feed[:limit], "attention": attention, "trace": t.steps}
+
+
+ACTION_ITEMS = """
+MATCH (ai:ActionItem)-[:FOR]->(p:Person)
+MATCH (ai)-[:FOUND_IN]->(c:Chunk)-[:PART_OF]->(s:Source)
+RETURN ai.id AS id, ai.task AS task, ai.due AS due, ai.quote AS quote, ai.status AS status, p.name AS owner,
+       c.id AS chunk, s.title AS meeting, c.ts AS at
+ORDER BY at DESC
+"""

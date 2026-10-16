@@ -1,0 +1,10 @@
+{
+  "channel": "#fw-team",
+  "export": "synthetic Slack-style export",
+  "messages": [
+    {"id": "m1", "ts": "2026-09-08T10:05:00+05:30", "user": "Nagarjun", "text": "Two PDU-28 Rev B units at Nilgiri browned out on a cold morning restart. Logged as SUP-1042. Is that the power-good timing again?"},
+    {"id": "m2", "ts": "2026-09-08T10:40:00+05:30", "user": "Sai", "text": "Looks like it. Rev B still runs firmware 2.2, which waits only 4 ms for power-good. pmic_seq.c in 2.3 waits 6 ms, tuned to the NB54360 soft-start (FW-233). I'll push 2.3.1 to the Nilgiri units."},
+    {"id": "m3", "ts": "2026-09-12T16:20:00+05:30", "user": "Sai", "text": "2.3.1 is on all 220 Nilgiri Rev B units. No brownouts since. Folding the cold-start test into the Firmware 2.4 release so it stays covered."},
+    {"id": "m4", "ts": "2026-09-15T11:00:00+05:30", "user": "Satish", "text": "Added a -20C cold-start step to TP-PSM-07 so any regulator change also re-checks power sequencing."}
+  ]
+}

@@ -56,7 +56,7 @@ def corpus(graph, updated: bool = False) -> list[dict]:
     return docs
 
 
-BASELINE_SYSTEM = ("You answer questions about Voltline Controls using ONLY the provided company records and "
+BASELINE_SYSTEM = ("You answer questions about Flyvi Technologies using ONLY the provided company records and "
                    "documents. If the answer is not in them, say it is not recorded. Be concise and cite ids.")
 
 

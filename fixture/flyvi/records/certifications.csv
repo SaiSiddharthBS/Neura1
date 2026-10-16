@@ -1,0 +1,4 @@
+id,name,standard,revision_id,status,valid_until,owner_id,retest_trigger_item
+CERT-PDU28C-461,PDU-28 Rev C EMI/EMC qualification,MIL-STD-461G,PDU-28-C,valid,2028-06-30,P-SATISH,PSM-28
+CERT-PDU28C-704,PDU-28 Rev C aircraft power compatibility,MIL-STD-704F,PDU-28-C,valid,2028-06-30,P-SATISH,PSM-28
+CERT-BCU24A-JSS,BCU-24 Rev A environmental qualification,JSS 55555,BCU-24-A,valid,2027-12-31,P-SATISH,PSM-28

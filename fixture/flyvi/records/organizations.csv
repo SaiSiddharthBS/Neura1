@@ -1,0 +1,3 @@
+id,name,kind,parent_id,note
+ORG-DATASOL,Datasol (Bangalore) Limited,parent company,,"Product design company in the Indian space and defence segments since 2001"
+ORG-FLYVI,Flyvi Technologies Pvt. Ltd.,subsidiary,ORG-DATASOL,"Power converters, power distribution units, battery chargers and embedded control systems"

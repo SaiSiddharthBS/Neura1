@@ -7,12 +7,12 @@ from neura1.ingest.unstructured import load_sources
 
 @pytest.fixture(scope="session")
 def graph():
-    g = get_graph("voltline_test")
+    g = get_graph("flyvi_test")
     try:
         g.delete()
     except Exception:
         pass
-    g = get_graph("voltline_test")
+    g = get_graph("flyvi_test")
     load_records(g)
     load_sources(g)
     yield g
@@ -22,12 +22,12 @@ def graph():
 @pytest.fixture
 def fresh_graph():
     """A separate, freshly loaded graph for tests that change company state (e.g. applying updates)."""
-    g = get_graph("voltline_test_fresh")
+    g = get_graph("flyvi_test_fresh")
     try:
         g.delete()
     except Exception:
         pass
-    g = get_graph("voltline_test_fresh")
+    g = get_graph("flyvi_test_fresh")
     load_records(g)
     load_sources(g)
     yield g

@@ -21,7 +21,12 @@ class BomCycleError(ValueError):
 
 def read_csv(path: Path) -> list[dict]:
     with path.open(newline="") as f:
-        return [{k: (v.strip() if v is not None else v) for k, v in row.items()} for row in csv.DictReader(f)]
+        out = []
+        for line, row in enumerate(csv.DictReader(f), start=2):
+            if None in row:
+                raise ValueError(f"{path.name} line {line}: more values than columns (quote values that contain commas)")
+            out.append({k: (v.strip() if v is not None else v) for k, v in row.items()})
+        return out
 
 
 def check_bom_cycles(bom: list[dict]) -> None:
@@ -64,11 +69,22 @@ INDEXES = [
     "CREATE INDEX FOR (n:Project) ON (n.id)",
     "CREATE INDEX FOR (n:Alias) ON (n.term)",
     "CREATE INDEX FOR (n:Certification) ON (n.id)",
+    "CREATE INDEX FOR (n:Organization) ON (n.id)",
+    "CREATE INDEX FOR (n:Skill) ON (n.name)",
+    "CREATE INDEX FOR (n:Action) ON (n.id)",
 ]
 
 # (csv file, cypher). Each row is passed as $r; $src is the export's source id.
 LOADERS: list[tuple[str, str]] = [
-    ("teams.csv", "MERGE (t:Team {id:$r.id}) SET t.name=$r.name, t.source=$src, t.authority=$auth"),
+    ("organizations.csv", """
+        MERGE (o:Organization {id:$r.id})
+        SET o.name=$r.name, o.kind=$r.kind, o.note=$r.note, o.source=$src, o.authority=$auth
+        WITH o OPTIONAL MATCH (parent:Organization {id:$r.parent_id})
+        FOREACH (_ IN CASE WHEN parent IS NULL THEN [] ELSE [1] END | MERGE (o)-[:SUBSIDIARY_OF]->(parent))"""),
+    ("teams.csv", """
+        MERGE (t:Team {id:$r.id}) SET t.name=$r.name, t.source=$src, t.authority=$auth
+        WITH t OPTIONAL MATCH (o:Organization {id:$r.org_id})
+        FOREACH (_ IN CASE WHEN o IS NULL THEN [] ELSE [1] END | MERGE (t)-[:PART_OF]->(o))"""),
     ("people.csv", """
         MERGE (p:Person {id:$r.id}) SET p.name=$r.name, p.role=$r.role, p.source=$src, p.authority=$auth
         WITH p MATCH (t:Team {id:$r.team_id}) MERGE (p)-[m:MEMBER_OF]->(t) SET m.source=$src"""),
@@ -140,6 +156,25 @@ LOADERS: list[tuple[str, str]] = [
     ("backups.csv", """
         MATCH (a:Person {id:$r.person_id}), (b:Person {id:$r.backup_id})
         MERGE (b)-[c:BACKS_UP]->(a) SET c.source=$src, c.authority=$auth"""),
+    ("org_roles.csv", """
+        MATCH (p:Person {id:$r.person_id}), (o:Organization {id:$r.org_id})
+        MERGE (p)-[r:HOLDS_ROLE {role:$r.role}]->(o) SET r.source=$src, r.authority=$auth"""),
+    ("skills.csv", """
+        MATCH (p:Person {id:$r.person_id})
+        MERGE (s:Skill {name:$r.skill}) ON CREATE SET s.id = 'SK-' + toUpper(replace($r.skill, ' ', '-'))
+        MERGE (p)-[h:HAS_SKILL]->(s) SET h.source=$src, h.authority=$auth"""),
+    # Work items exported from the company's tracker: what people are doing and have done.
+    ("tasks.csv", """
+        MERGE (a:Action {id:$r.id})
+        SET a.kind='work', a.title=$r.title, a.status=$r.status, a.created_at=$r.created,
+            a.completed_at=CASE WHEN coalesce($r.completed, '') = '' THEN NULL ELSE $r.completed END,
+            a.target=$r.target_id, a.source=$src, a.authority=$auth
+        WITH a OPTIONAL MATCH (p:Person {id:$r.assignee_id})
+        FOREACH (_ IN CASE WHEN p IS NULL THEN [] ELSE [1] END | MERGE (a)-[:ASSIGNED_TO]->(p))
+        WITH a OPTIONAL MATCH (pr:Project {id:$r.project_id})
+        FOREACH (_ IN CASE WHEN pr IS NULL THEN [] ELSE [1] END | MERGE (a)-[:IN_PROJECT]->(pr))
+        WITH a OPTIONAL MATCH (t {id:$r.target_id}) WHERE NOT t:Action
+        FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (a)-[:CONCERNS]->(t))"""),
     ("reports_to.csv", """
         MATCH (p:Person {id:$r.person_id}), (m:Person {id:$r.manager_id})
         MERGE (p)-[r:REPORTS_TO]->(m) SET r.source=$src, r.authority=$auth"""),
@@ -206,7 +241,7 @@ def existing_ids(graph: Graph) -> dict:
     labels = {"teams": "Team", "people": "Person", "items": "Item", "revisions": "Revision",
               "suppliers": "Supplier", "quotes": "Quote", "customers": "Customer", "builds": "Build",
               "orders": "Order", "shipments": "Shipment", "projects": "Project",
-              "certifications": "Certification"}
+              "certifications": "Certification", "organizations": "Organization", "tasks": "Action"}
     out: dict = {k: {r["id"] for r in rows(graph, f"MATCH (n:{label}) RETURN n.id AS id")}
                  for k, label in labels.items()}
     out["_mpn"] = {r["mpn"].upper(): r["id"] for r in rows(

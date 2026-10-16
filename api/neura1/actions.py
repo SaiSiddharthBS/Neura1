@@ -99,7 +99,7 @@ def create_task(graph: Graph, title: str, owner: str | None, target: str | None,
                 cites: list[str] = ()) -> dict:
     """A single task, e.g. drafted by the Ask agent and confirmed by a person. Idempotent like approvals.
 
-    The owner may be a first name ("Rahul"); it is assigned only when it identifies exactly one person.
+    The owner may be a first name ("Sai"); it is assigned only when it identifies exactly one person.
     """
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     action_id = "ACT-" + _key("task", title.strip().lower(), owner or "", target or "")

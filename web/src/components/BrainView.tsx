@@ -13,13 +13,15 @@ type Overview = {
   teams: { team: string; people: { name: string; role: string }[]; owns: string[] }[];
   sources: { id: string; kind: string; title: string; passages: number }[];
 };
-type Hit = { chunk: string; title: string; kind: string; text: string; author: string | null; page: number | null; score: number };
+type Hit = { chunk: string; title: string; kind: string; text: string; author: string | null; page: number | null; score: number;
+             mentions: { id: string; label: string }[] };
+type Search = { modes: string[]; hits: Hit[]; related: { id: string; label: string; passages: number }[] };
 
 export default function BrainView() {
   const params = useSearchParams();
   const [o, setO] = useState<Overview | null>(null);
   const [q, setQ] = useState("");
-  const [hits, setHits] = useState<Hit[] | null>(null);
+  const [hits, setHits] = useState<Search | null>(null);
   const [open, setOpen] = useState<string | null>(null);
 
   useEffect(() => { api<Overview>("/api/overview").then(setO); }, []);
@@ -28,7 +30,7 @@ export default function BrainView() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Company brain</h1>
-        <p className="mt-1 text-sm text-muted">One FalkorDB graph of Voltline&apos;s records, documents, chats, tickets, people and decisions.</p>
+        <p className="mt-1 text-sm text-muted">One FalkorDB graph of Flyvi&apos;s records, documents, chats, tickets, people and decisions.</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -46,22 +48,29 @@ export default function BrainView() {
       <WhoKnows key={params.get("who") ?? ""} onOpen={setOpen} initial={params.get("who") ?? undefined} />
 
       <section className="card p-4">
-        <form onSubmit={(e) => { e.preventDefault(); api<Hit[]>(`/api/search?q=${encodeURIComponent(q)}`).then(setHits); }}
+        <form onSubmit={(e) => { e.preventDefault(); api<Search>(`/api/search?q=${encodeURIComponent(q)}`).then(setHits); }}
               className="flex gap-2">
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search everything Voltline has written, e.g. thermal"
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search everything Flyvi has written, by meaning or words, e.g. units losing power when cold"
                  className="flex-1 rounded-md border border-line px-3 py-2 text-sm" />
           <button className="rounded-md bg-accent px-4 text-sm text-white">Search</button>
         </form>
         {hits && (
-          <ul className="mt-3 divide-y divide-line">
-            {hits.length === 0 && <li className="py-2 text-sm text-muted">No passages match.</li>}
-            {hits.map((h) => (
-              <li key={h.chunk} className="cursor-pointer py-2 text-sm hover:bg-bg" onClick={() => setOpen(h.chunk)}>
-                <div className="text-xs text-muted">{h.kind} · {h.title}{h.author ? ` · ${h.author}` : ""}{h.page ? ` · p.${h.page}` : ""}</div>
-                <div className="line-clamp-2">{h.text}</div>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-3">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+              <span>Matched by {hits.modes.join(" + ") || "nothing"}{!hits.modes.includes("semantic") ? " (semantic search needs an embedding model)" : ""}.</span>
+              {hits.related.length > 0 && <span>Related records:</span>}
+              {hits.related.map((r) => <span key={r.id} className="rounded-md bg-elev px-1.5 py-0.5 font-mono text-[11px] text-ink">{r.id}</span>)}
+            </div>
+            <ul className="mt-2 divide-y divide-line">
+              {hits.hits.length === 0 && <li className="py-2 text-sm text-muted">No passages match.</li>}
+              {hits.hits.map((h) => (
+                <li key={h.chunk} className="cursor-pointer py-2 text-sm hover:bg-elev" onClick={() => setOpen(h.chunk)}>
+                  <div className="text-xs text-muted">{h.kind} · {h.title}{h.author ? ` · ${h.author}` : ""}{h.page ? ` · p.${h.page}` : ""}</div>
+                  <div className="line-clamp-2">{h.text}</div>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </section>
 

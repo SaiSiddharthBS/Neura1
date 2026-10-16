@@ -30,7 +30,7 @@ def main() -> None:
         page = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
         page.goto(base)
         page.evaluate(f"""() => {{ localStorage.setItem('neura1-passcode', '{args.passcode}');
-                                  localStorage.setItem('neura1-reviewer', 'Kavya Menon'); }}""")
+                                  localStorage.setItem('neura1-reviewer', 'Hithesh'); }}""")
 
         def shot(name, full=False):
             path = OUT / f"{name}.png"
@@ -107,25 +107,41 @@ def main() -> None:
         shot("company-brain")
 
         # 7b The wider company brain
-        page.get_by_role("button", name="Kaveri", exact=True).click()
+        page.get_by_role("button", name="Nilgiri", exact=True).click()
         page.wait_for_timeout(1500)
         page.locator("section.card").nth(1).screenshot(path=str(OUT / "who-knows.png")); shots.append("who-knows.png")
-        for name, url, wait in (("people", "/people?id=P-RAHUL", "Knows about"),
-                                ("projects", "/projects?id=PRJ-KAVERI2", "Recent discussion"),
+        for name, url, wait in (("people", "/people?id=P-SAI", "Knows about"),
+                                ("projects", "/projects?id=PRJ-NILGIRI", "Recent discussion"),
                                 ("whats-new", "/changes", "Needs attention")):
             page.goto(base + url)
             page.wait_for_selector(f"text={wait}")
             shot(name)
 
         # 7c Company events beyond supplier changes, and the company overview
-        for name, url, wait in (("customer-escalation", "/customers?id=C-DECCAN", "Escalation plan"),
-                                ("absence-plan", "/people?id=P-PRIYA&absence=1", "Handover plan"),
+        for name, url, wait in (("customer-escalation", "/customers?id=C-KONKAN", "Escalation plan"),
+                                ("absence-plan", "/people?id=P-RAGHAVENDRA&absence=1", "Handover plan"),
                                 ("risk-radar", "/risk", "How work actually clusters"),
                                 ("overview", "/", "What needs attention today")):
             page.goto(base + url)
             page.wait_for_selector(f"text={wait}", timeout=120000)
             page.wait_for_timeout(1500)
             shot(name)
+
+        # 7d People and organisation, seen as the R&D head and then as a software engineer
+        page.evaluate("() => localStorage.setItem('neura1-viewer', 'P-VISHWAS')")
+        for name, url, wait in (("my-day", "/me", "Your work"),
+                                ("organisation", "/org", "Organisation"),
+                                ("employee-360", "/people?id=P-RAGHAVENDRA", "Working on now")):
+            page.goto(base + url)
+            page.wait_for_selector(f"text={wait}", timeout=120000)
+            page.wait_for_timeout(2500)
+            shot(name)
+        page.evaluate("() => localStorage.setItem('neura1-viewer', 'P-ANIRUDH')")
+        page.goto(base + "/people?id=P-RAGHAVENDRA")
+        page.wait_for_selector("text=Working on now")
+        page.wait_for_timeout(1500)
+        shot("employee-360-restricted")
+        page.evaluate("() => localStorage.setItem('neura1-viewer', 'P-HITHESH')")
 
         # 8 Investigations history
         page.goto(f"{base}/history")
@@ -136,10 +152,10 @@ def main() -> None:
         bad = OUT / "_kicad_bom_with_errors.csv"
         bad.write_text('"Reference","Value","Qty","Manufacturer","Manufacturer Part Number"\n'
                        '"U1,U2","Buck regulator","2","Northbridge Semi","NB54360"\n'
-                       '"PS1","Power module","1","Voltline","PSU-24"\n'
+                       '"PS1","Power module","1","Flyvi","PSM-28"\n'
                        '"C9","22uF","two","Corewind","CAP-22U-50"\n')
         page.goto(f"{base}/import")
-        page.fill("input[placeholder='e.g. VC-200-C']", "VC-200-D")
+        page.fill("input[placeholder='e.g. PDU-28-C']", "PDU-28-D")
         page.set_input_files("input[type=file]", str(bad))
         page.wait_for_selector("text=errors")
         shot("import-errors", full=True)

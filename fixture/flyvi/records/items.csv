@@ -1,0 +1,15 @@
+id,kind,name,mpn,manufacturer
+PDU-28,product,PDU-28 Power Distribution Unit,,
+BCU-24,product,BCU-24 Battery Charger Unit,,
+PSM-28,assembly,PSM-28 Power Stage Module,,
+NB54360,part,Buck regulator 3.3V 3A,NB54360,Northbridge Semi
+NB54361-L,part,Buck regulator 3.3V 3A (low-cost),NB54361-L,Northbridge Semi
+MX-3360,part,Buck regulator 3.3V 3A,MX-3360,Meridian Analog
+VX7-MCU,part,VX7 32-bit microcontroller,VX7-M480,Vexa Micro
+KP8081,part,Ethernet PHY 10/100,KP8081,Kestrel Phy
+MC-3812,part,Circular connector 12-pin,MC-3812,Anvil Connect
+CT-1051,part,CAN bus transceiver,CT-1051,Lumen Interface
+IND-4R7,part,Inductor 4.7uH 4A,IND-4R7,Corewind
+CAP-22U,part,Capacitor 22uF 50V,CAP-22U-50,Corewind
+FW-PMIC-SEQ,firmware,pmic_seq.c power sequencing module,,
+TP-PSM-07,test,TP-PSM-07 power stage thermal and load qualification,,

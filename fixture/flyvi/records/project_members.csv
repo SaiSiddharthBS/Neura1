@@ -1,0 +1,26 @@
+project_id,person_id,role
+PRJ-NILGIRI,P-PRAVEEN,lead
+PRJ-NILGIRI,P-KEERTHANA,account
+PRJ-NILGIRI,P-SHARATH,production
+PRJ-NILGIRI,P-NAGARJUN,integration
+PRJ-NILGIRI,P-HITHESH,sponsor
+PRJ-PDU48,P-VISHWAS,lead
+PRJ-PDU48,P-RAGHAVENDRA,power electronics
+PRJ-PDU48,P-PRAKUL,hardware design
+PRJ-PDU48,P-SAI,embedded software
+PRJ-PDU48,P-MANOJ,control firmware
+PRJ-PDU48,P-SATISH,qualification
+PRJ-COSTDOWN,P-AMBIKA,lead
+PRJ-COSTDOWN,P-RAGHAVENDRA,engineering review
+PRJ-COSTDOWN,P-PRADEEP,inventory
+PRJ-COSTDOWN,P-HITHESH,sponsor
+PRJ-FW24,P-SAI,lead
+PRJ-FW24,P-VINAY,CAN and comms
+PRJ-FW24,P-SACHIN,bootloader and field update
+PRJ-FW24,P-PRUTHVI,test automation
+PRJ-FW24,P-NAGARJUN,field validation
+PRJ-FW24,P-YOGISH,test
+PRJ-AS9100,P-GURUMURTHY,lead
+PRJ-AS9100,P-SHARMADA,traceability records
+PRJ-AS9100,P-SATISH,test records
+PRJ-AS9100,P-TEJASWINI,training records

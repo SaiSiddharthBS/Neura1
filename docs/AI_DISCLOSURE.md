@@ -10,7 +10,7 @@ Graph Hacks allows coding assistants if their use is disclosed. This is that dis
 - **Local open-source model inside the product** (not used for writing code): Qwen2.5-7B-Instruct through Ollama
   (and, when available, a DGX Spark). It reads supplier notices, extracts decisions from documents, and drives the
   Ask agent. Its outputs are verified by code before they enter the graph; raw outputs are saved in
-  `fixture/voltline/extracted/`.
+  `fixture/flyvi/extracted/`.
 
 ## What the participant did
 

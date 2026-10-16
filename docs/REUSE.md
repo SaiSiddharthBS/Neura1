@@ -12,7 +12,7 @@ event, including:
 - the change-impact service, cost engine, actions/investigations
 - model extraction with verbatim-quote verification
 - the web app
-- the synthetic Voltline fixture
+- the synthetic Flyvi fixture
 
 **Carried over from before the event:**
 - the Neura1 name;

@@ -1,0 +1,39 @@
+person_id,skill
+P-RAGHAVENDRA,Power stage design
+P-RAGHAVENDRA,Thermal derating
+P-RAGHAVENDRA,DC-DC converters
+P-PRAKUL,Schematic and PCB design
+P-PRAKUL,DC-DC converters
+P-VISHWAS,Power electronics architecture
+P-VISHWAS,MIL-STD-704
+P-SAI,Embedded C
+P-SAI,Power sequencing
+P-SAI,CAN bus
+P-VINAY,CAN bus
+P-VINAY,Embedded C
+P-SACHIN,Bootloaders
+P-SACHIN,Field firmware updates
+P-MANOJ,Digital control loops
+P-MANOJ,Embedded C
+P-ANIRUDH,Battery management firmware
+P-PRUTHVI,Test automation
+P-PRUTHVI,Python
+P-PRATHAM,Desktop tools and GUI
+P-TARUN,Data logging
+P-SHARMADA,Requirements traceability
+P-SATISH,MIL-STD-461 EMI/EMC testing
+P-SATISH,Environmental testing
+P-YOGISH,Environmental testing
+P-UDAY,Functional testing
+P-GURUMURTHY,AS9100D
+P-GURUMURTHY,Configuration management
+P-AMBIKA,Component sourcing
+P-AMBIKA,Obsolescence management
+P-PRADEEP,Inventory control
+P-SHARATH,Production planning
+P-DILEEP,Assembly and soldering
+P-KEERTHANA,Defence customer accounts
+P-NAGARJUN,System integration
+P-NAGARJUN,CAN bus
+P-TEJASWINI,HR policies
+P-PRAVEEN,Project planning

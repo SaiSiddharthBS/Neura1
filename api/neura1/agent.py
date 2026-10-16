@@ -17,14 +17,16 @@ from neura1.graph import rows
 from neura1.impact import ChangeEvent, Trace, analyse
 from neura1.llm import client
 
-SYSTEM = """You are Neura1, the company brain of Voltline Controls, an industrial electronics company.
+SYSTEM = """You are Neura1, the company brain of Flyvi Technologies, a Bengaluru company (part of Datasol (Bangalore)
+Limited) that designs and builds power distribution units, power converters, battery chargers and embedded control
+systems for aerospace and defence. The data you see is a synthetic demo of that company.
 Answer questions using ONLY the results of your tools. Rules:
 - Call tools to look things up; never answer from memory or assumptions.
 - Cite the ids you relied on (part numbers, revisions, orders, decisions like DEC-117, documents like TR-112).
 - If the tools return nothing relevant, say plainly that it is not recorded. Do not guess.
 - A part listed as an alternate is NOT approved unless its "approval" field says APPROVED. A passed bench test
   or a chat message is not an approval. Use the alternates tool and repeat its approval wording.
-- Use ids exactly as the tools return them (e.g. NB54360, VC-200-C).
+- Use ids exactly as the tools return them (e.g. NB54360, PDU-28-C).
 - Quantities and costs must come from tool results, not your own arithmetic, unless you show the formula.
 - Be concise: a short direct answer, then the supporting facts."""
 
@@ -106,11 +108,15 @@ TOOLS = [
     ("risk_radar", "Where the company is fragile: graph chokepoints (betweenness), single-sourced parts with order "
                    "value at risk, knowledge held by one person, customer concentration, workload, and how teams "
                    "actually cluster (community detection).", {}),
+    ("recall", "What has already been asked and answered about a record or topic, by anyone (shared memory of past "
+               "conversations). Use for 'did we discuss', 'what did we decide earlier', or before re-investigating.",
+     {"text": {"type": "string"}}),
     ("propose_task", "Draft a task for a person. It is NOT created until a human confirms it. Use when the user "
                      "asks to assign, follow up, or get something done.",
      {"owner": {"type": "string"}, "title": {"type": "string"}, "target": {"type": ["string", "null"]},
       "why": {"type": "string"}}),
-    ("search_documents", "Full-text search over chats, tickets, reports and notices.", {"query": {"type": "string"}}),
+    ("search_documents", "Search chats, tickets, reports and notices by meaning and keywords; also returns the records "
+                         "the passages mention.", {"query": {"type": "string"}}),
     ("read_only_cypher", "Run a read-only Cypher query on the company graph when no other tool fits. Labels: Item, "
                          "Revision, Supplier, Quote, Build, Order, Customer, Shipment, Person, Team, Source, Chunk, "
                          "Decision, Investigation, Action. See docs/data-model.md.",
@@ -146,7 +152,10 @@ def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
     if name == "quotes":
         return trace.run(name, Q.QUOTES, {"item_id": args["item_id"]})
     if name == "search_documents":
-        return trace.run(name, Q.SEARCH_PASSAGES, {"q": args["query"], "limit": 6})
+        from neura1.search import hybrid
+        r = hybrid(graph, args["query"], 6)
+        return {"modes": r["modes"], "hits": [{k: h[k] for k in ("chunk", "title", "author", "ts", "text", "mentions")}
+                                              for h in r["hits"]], "related": r["related"]}
     if name == "who_knows":
         r = brain.who_knows(graph, args["text"])
         trace.steps.extend(r.pop("trace"))
@@ -193,6 +202,9 @@ def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
         r = scenarios.risk_radar(graph)
         trace.steps.extend(r.pop("trace"))
         return r
+    if name == "recall":
+        from neura1 import memory
+        return memory.recall(graph, args["text"])
     if name == "propose_task":
         return {"draft": {k: args.get(k) for k in ("owner", "title", "target", "why")},
                 "note": "Draft only. A person must confirm it in Neura1 before it exists."}
@@ -261,7 +273,8 @@ def _finish(graph: Graph, answer: str, calls: list, trace: Trace, results: list)
             "sources": sources[:12], "drafts": drafts, "trace": trace.steps}
 
 
-def ask(graph: Graph, question: str, max_steps: int = 6) -> dict:
+def ask(graph: Graph, question: str, max_steps: int = 6, history: list[dict] | None = None,
+        on_step=None) -> dict:
     """Plan-act loop using JSON output only, so it works on any OpenAI-compatible server,
     including local models whose native tool-call parsing is unreliable."""
     from neura1.llm import _parse_json
@@ -269,8 +282,11 @@ def ask(graph: Graph, question: str, max_steps: int = 6) -> dict:
     c = client()
     trace = Trace(graph)
     calls, results = [], []
-    messages = [{"role": "system", "content": PLANNER.replace("{catalogue}", _catalogue())},
-                {"role": "user", "content": question}]
+    messages = [{"role": "system", "content": PLANNER.replace("{catalogue}", _catalogue())}]
+    for turn in history or []:  # earlier turns of this conversation, so follow-up questions make sense
+        messages.append({"role": "user", "content": turn["question"]})
+        messages.append({"role": "assistant", "content": json.dumps({"tool": "answer", "answer": turn["answer"]})})
+    messages.append({"role": "user", "content": question})
     for _ in range(max_steps):
         try:
             resp = c.chat.completions.create(
@@ -282,6 +298,8 @@ def ask(graph: Graph, question: str, max_steps: int = 6) -> dict:
         if step.get("tool") == "answer" or step.get("tool") not in {t[0] for t in TOOLS}:
             return _finish(graph, (step.get("answer") or "").strip() or "No answer.", calls, trace, results)
         args = step.get("args") or {}
+        if on_step:
+            on_step({"type": "tool", "tool": step["tool"], "args": args})
         try:
             result = run_tool(graph, trace, step["tool"], args)
         except Exception as exc:  # report tool errors back to the model instead of failing the request

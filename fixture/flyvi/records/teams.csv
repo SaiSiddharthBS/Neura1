@@ -1,0 +1,13 @@
+id,name,org_id
+T-LEAD,Leadership,ORG-FLYVI
+T-PM,Project Management,ORG-FLYVI
+T-HW,R&D Hardware,ORG-FLYVI
+T-FW,Software,ORG-FLYVI
+T-QA,Testing,ORG-FLYVI
+T-QAD,Quality Assurance,ORG-FLYVI
+T-OPS,Production,ORG-FLYVI
+T-SC,Purchase,ORG-FLYVI
+T-SALES,Business Development,ORG-FLYVI
+T-SUP,Field Integration,ORG-FLYVI
+T-HR,HR & Admin,ORG-FLYVI
+T-BOARD,Board,ORG-DATASOL

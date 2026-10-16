@@ -8,7 +8,7 @@ This is a deliberate choice. A "company brain for everyone" can't know what a BO
 cross-referenced part isn't approved, or that a late controller can trigger a penalty clause. A company brain
 for this business can.
 
-> Status: this is our target hypothesis. The demo company, Voltline Controls, is synthetic. We have not yet run
+> Status: this is our target hypothesis. The demo company, Flyvi Technologies, is synthetic. We have not yet run
 > interviews or pilots. See "What we still need to prove" below.
 
 ## The people and the moment

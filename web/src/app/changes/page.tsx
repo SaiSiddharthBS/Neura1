@@ -2,10 +2,12 @@
 
 import { AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
+import DraftTask from "@/components/DraftTask";
 import EvidenceDrawer from "@/components/EvidenceDrawer";
 import { api } from "@/lib/api";
 
 type Item = { kind: string; at: string; who: string | null; what: string; detail: string; ref: string };
+type ActionItem = { id: string; task: string; due: string | null; quote: string; owner: string; chunk: string; meeting: string; at: string };
 type Flag = { record: string; label: string; chunk: string | null; reason: string };
 
 const KIND: Record<string, string> = { message: "bg-bg", decision: "bg-danger/10 text-danger", investigation: "bg-accent/12 text-accent", quote: "bg-warn/10 text-warn" };
@@ -13,7 +15,11 @@ const KIND: Record<string, string> = { message: "bg-bg", decision: "bg-danger/10
 export default function Changes() {
   const [d, setD] = useState<{ feed: Item[]; attention: Flag[] } | null>(null);
   const [open, setOpen] = useState<string | null>(null);
-  useEffect(() => { api<{ feed: Item[]; attention: Flag[] }>("/api/changes").then(setD); }, []);
+  const [items, setItems] = useState<ActionItem[]>([]);
+  useEffect(() => {
+    api<{ feed: Item[]; attention: Flag[] }>("/api/changes").then(setD);
+    api<ActionItem[]>("/api/action-items").then(setItems).catch(() => {});
+  }, []);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
@@ -45,6 +51,17 @@ export default function Changes() {
           ))}
           {d && !d.attention.length && <li className="text-muted">Nothing stale right now.</li>}
         </ul>
+        <div className="mt-6 font-medium">Action items from meetings</div>
+        <p className="mt-1 text-xs text-muted">Found by the model in meeting notes, kept only with a word-for-word quote and a real owner.</p>
+        <div className="mt-3 space-y-2">
+          {items.map((a) => (
+            <div key={a.id} className="space-y-1">
+              <button onClick={() => setOpen(a.chunk)} className="text-left text-xs text-muted hover:underline">{a.meeting} · “{a.quote}”</button>
+              <DraftTask d={{ owner: a.owner, title: a.task, target: null, why: `From ${a.meeting}` }} />
+            </div>
+          ))}
+          {!items.length && <div className="text-sm text-muted">None extracted yet.</div>}
+        </div>
       </aside>
       {open && <EvidenceDrawer key={open} chunk={open} onClose={() => setOpen(null)} />}
     </div>

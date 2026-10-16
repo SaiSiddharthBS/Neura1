@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel
 from redis.exceptions import ConnectionError as RedisConnectionError, TimeoutError as RedisTimeout
 
-from neura1 import actions, agent, brain, queries as Q, scenarios
+from neura1 import access, actions, agent, brain, people as people_mod, queries as Q, scenarios
 from neura1.config import settings
 from neura1.graph import GraphUnavailable, get_graph, rows
 from neura1.impact import ChangeEvent, analyse
@@ -48,6 +48,20 @@ def require_passcode(x_demo_passcode: str | None = Header(default=None)):
 
 def graph():
     return get_graph()
+
+
+def current_viewer(x_neura1_as: str | None = Header(default=None), g=Depends(graph)) -> access.Viewer:
+    """The person the web app is acting for. Drives what money and leave details are visible."""
+    return access.viewer(g, x_neura1_as)
+
+
+def guard_money(payload, v: access.Viewer):
+    if v.sees_money:
+        return payload
+    out = access.redact_money(payload)
+    if isinstance(out, dict):
+        out["restricted"] = sorted(set(out.get("restricted", [])) | {"money"}) if isinstance(out.get("restricted"), list) else ["money"]
+    return out
 
 
 @app.get("/api/health")
@@ -165,7 +179,11 @@ class ChangeIn(BaseModel):
 
 
 @app.post("/api/impact")
-def impact(change: ChangeIn, g=Depends(graph)):
+def impact(change: ChangeIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    return guard_money(_impact(change, g), v)
+
+
+def _impact(change: ChangeIn, g):
     event = ChangeEvent(**change.model_dump(exclude={"as_of"}), as_of=change.as_of or date.today())
     report = analyse(g, event)
     if report["status"] != "ok":
@@ -199,14 +217,19 @@ def diff_snapshots(old: dict, new: dict) -> list[str]:
 
 
 @app.post("/api/impact/notice")
-def impact_from_notice(source_id: str, as_of: date | None = None, g=Depends(graph)):
+def impact_from_notice(source_id: str, as_of: date | None = None, g=Depends(graph),
+                       v: access.Viewer = Depends(current_viewer)):
+    return guard_money(_impact_from_notice(source_id, as_of, g), v)
+
+
+def _impact_from_notice(source_id: str, as_of: date | None, g):
     snap = _notice_snapshot(source_id)
     if snap is None:
         raise HTTPException(404, "This notice has not been extracted yet")
     if snap["problems"]:
         raise HTTPException(422, {"detail": "Extraction failed verification", "problems": snap["problems"]})
     n = snap["output"]
-    return impact(ChangeIn(item=n["part"], new_unit_price=n["new_unit_price"],
+    return _impact(ChangeIn(item=n["part"], new_unit_price=n["new_unit_price"],
                            currency=extract.normalise_currency(n.get("currency")) or "INR",
                            effective_date=n["effective_date"], lead_weeks=n["lead_weeks"], as_of=as_of,
                            source_id=source_id), g)
@@ -233,7 +256,9 @@ def evidence(chunk_id: str, g=Depends(graph)):
 
 @app.get("/api/search")
 def search(q: str, limit: int = 8, g=Depends(graph)):
-    return rows(g, Q.SEARCH_PASSAGES, {"q": q, "limit": min(limit, 25)})
+    """Hybrid semantic + keyword search, expanded to the records each passage mentions."""
+    from neura1 import search as hybrid_search
+    return hybrid_search.hybrid(g, q, min(limit, 25))
 
 
 # ---------- actions ----------
@@ -367,13 +392,61 @@ async def import_commit(files: list[UploadFile] = File(...), eda_parent_rev: str
 
 class AskIn(BaseModel):
     question: str
+    conversation_id: str | None = None
+
+
+def _ask(g, body: AskIn, v: access.Viewer, on_step=None) -> dict:
+    from neura1 import memory
+    if len(body.question) > 500:
+        raise HTTPException(400, "Question too long")
+    cid = body.conversation_id or memory.start(g, v.id, body.question)
+    result = agent.ask(g, body.question, history=memory.history(g, cid), on_step=on_step)
+    result |= memory.record(g, cid, body.question, result)
+    return guard_money(result, v)
 
 
 @app.post("/api/ask")
-def ask(body: AskIn, g=Depends(graph)):
-    if len(body.question) > 500:
-        raise HTTPException(400, "Question too long")
-    return agent.ask(g, body.question)
+def ask(body: AskIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    return _ask(g, body, v)
+
+
+@app.post("/api/ask/stream")
+def ask_stream(body: AskIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    """Server-sent events: each tool call as it happens, then the full answer."""
+    import queue
+    import threading
+    from fastapi.responses import StreamingResponse
+
+    q: queue.Queue = queue.Queue()
+
+    def work():
+        try:
+            q.put({"type": "answer", **_ask(g, body, v, on_step=q.put)})
+        except Exception as exc:  # surface model or graph errors to the client
+            q.put({"type": "error", "detail": getattr(exc, "detail", None) or str(exc)})
+        q.put(None)
+
+    threading.Thread(target=work, daemon=True).start()
+
+    def events():
+        yield "event: start\ndata: {}\n\n"
+        while (item := q.get()) is not None:
+            yield f"data: {json.dumps(item, default=str)}\n\n"
+
+    return StreamingResponse(events(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+@app.get("/api/conversations")
+def conversations(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import memory
+    return memory.conversations(g, v.id)
+
+
+@app.get("/api/conversations/{conversation_id}")
+def conversation(conversation_id: str, g=Depends(graph)):
+    from neura1 import memory
+    return memory.transcript(g, conversation_id)
 
 
 # ---------- the wider company brain ----------
@@ -394,8 +467,8 @@ def people(g=Depends(graph)):
 
 
 @app.get("/api/people/{person_id}")
-def person(person_id: str, g=Depends(graph)):
-    found = brain.person(g, person_id)
+def person(person_id: str, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    found = people_mod.person_360(g, person_id, v)
     if not found:
         raise HTTPException(404, "Unknown person")
     return found
@@ -464,21 +537,29 @@ def signals(g=Depends(graph)):
 
 
 @app.get("/api/scenarios/absence/{person_id}")
-def absence(person_id: str, start: str | None = None, end: str | None = None, g=Depends(graph)):
+def absence(person_id: str, start: str | None = None, end: str | None = None, g=Depends(graph),
+            v: access.Viewer = Depends(current_viewer)):
     r = scenarios.absence_impact(g, person_id, start, end)
     if r["status"] != "ok":
         raise HTTPException(404, "Unknown person")
+    if not v.sees_leave_of(person_id):
+        return {"status": "restricted", "person": {"name": r["person"]["name"]},
+                "detail": "Leave plans are visible to the person, their management chain, their backup, HR and leadership."}
     r["investigation"] = actions.find_investigation(g, person_id, _signal_for(g, "leave", person_id))
     return r
 
 
 @app.get("/api/customers")
-def customers(g=Depends(graph)):
-    return rows(g, scenarios.CUSTOMERS)
+def customers(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    return guard_money(rows(g, scenarios.CUSTOMERS), v)
 
 
 @app.get("/api/customers/{customer_id}")
-def customer(customer_id: str, g=Depends(graph)):
+def customer(customer_id: str, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    return guard_money(_customer(customer_id, g), v)
+
+
+def _customer(customer_id: str, g):
     r = scenarios.customer_360(g, customer_id)
     if r["status"] != "ok":
         raise HTTPException(404, "Unknown customer")
@@ -487,8 +568,8 @@ def customer(customer_id: str, g=Depends(graph)):
 
 
 @app.get("/api/risk")
-def risk(today: date | None = None, g=Depends(graph)):
-    return scenarios.risk_radar(g, today)
+def risk(today: date | None = None, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    return guard_money(scenarios.risk_radar(g, today), v)
 
 
 def _signal_for(g, kind: str, subject: str) -> str | None:
@@ -518,3 +599,89 @@ def approve_plan(body: PlanIn, g=Depends(graph)):
         raise HTTPException(404, "Unknown subject")
     return actions.approve(g, body.subject_id, source, r["actions"], body.approved_by, None, None, snapshot,
                            kind=body.kind)
+
+
+# ---------- people, organisation, my day ----------
+
+@app.get("/api/viewer")
+def who_am_i(v: access.Viewer = Depends(current_viewer)):
+    return v.describe()
+
+
+@app.get("/api/org")
+def org(g=Depends(graph)):
+    return people_mod.org_chart(g)
+
+
+@app.get("/api/me")
+def me(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    return guard_money(people_mod.my_day(g, v), v)
+
+
+class PersonPatch(BaseModel):
+    name: str | None = None
+    role: str | None = None
+    team_id: str | None = None
+    manager_id: str | None = None
+    backup_id: str | None = None
+    add_skills: list[str] = []
+    remove_skills: list[str] = []
+    absence: dict | None = None
+    by: str
+
+
+@app.patch("/api/people/{person_id}", dependencies=[Depends(require_passcode)])
+def edit_person(person_id: str, body: PersonPatch, g=Depends(graph)):
+    try:
+        return people_mod.update_person(g, person_id, body.model_dump(exclude={"by"}, exclude_none=True), body.by)
+    except KeyError:
+        raise HTTPException(404, "Unknown person")
+
+
+class PersonNew(BaseModel):
+    id: str
+    name: str
+    role: str
+    team_id: str | None = None
+    by: str
+
+
+@app.post("/api/people", dependencies=[Depends(require_passcode)])
+def new_person(body: PersonNew, g=Depends(graph)):
+    try:
+        return people_mod.add_person(g, body.id.strip().upper(), body.name, body.role, body.team_id, body.by)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc))
+
+
+@app.get("/api/teams")
+def teams(g=Depends(graph)):
+    return rows(g, "MATCH (t:Team) RETURN t.id AS id, t.name AS name ORDER BY name")
+
+
+# ---------- live ingestion ----------
+
+@app.post("/api/webhooks/slack")
+async def slack_webhook(request: Request, g=Depends(graph)):
+    from neura1 import webhooks
+    body = await request.body()
+    if settings.slack_signing_secret:
+        if not webhooks.verify_slack(settings.slack_signing_secret, request.headers.get("x-slack-request-timestamp", ""),
+                                     body, request.headers.get("x-slack-signature", "")):
+            raise HTTPException(401, "Bad Slack signature")
+    elif request.headers.get("x-neura1-webhook-secret") != settings.webhook_secret:
+        raise HTTPException(401, "Webhook secret required")
+    return webhooks.slack_event(g, json.loads(body or b"{}"))
+
+
+@app.post("/api/webhooks/jira")
+async def jira_webhook(request: Request, g=Depends(graph)):
+    from neura1 import webhooks
+    if request.headers.get("x-neura1-webhook-secret") != settings.webhook_secret:
+        raise HTTPException(401, "Webhook secret required")
+    return webhooks.jira_event(g, await request.json())
+
+
+@app.get("/api/action-items")
+def action_items(g=Depends(graph)):
+    return rows(g, brain.ACTION_ITEMS)

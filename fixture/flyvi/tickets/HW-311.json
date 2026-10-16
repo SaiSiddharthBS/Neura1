@@ -1,0 +1,15 @@
+{
+  "key": "HW-311",
+  "tracker": "synthetic Jira-style export",
+  "title": "Evaluate NB54361-L as cost-down for PSM-28 Rev 2",
+  "status": "Closed",
+  "resolution": "Won't Do",
+  "assignee": "Raghavendra",
+  "reporter": "Ambika",
+  "created": "2025-03-04",
+  "description": "Procurement proposes NB54361-L (₹190) in place of NB54360 (₹250) on PSM-28 Rev 2. Confirm electrical and thermal suitability for PDU-28 and BCU-24.",
+  "comments": [
+    {"author": "Raghavendra", "date": "2025-03-10", "body": "Thermal soak per TP-PSM-07 at 70C ambient, sealed enclosure: NB54361-L hit thermal shutdown at 68C under full load. See TR-112 page 4. Not suitable."},
+    {"author": "Vishwas", "date": "2025-03-12", "body": "Closing as Won't Do. Rejected per DEC-117. NB54360 remains the only approved regulator for PSM-28 Rev 2."}
+  ]
+}

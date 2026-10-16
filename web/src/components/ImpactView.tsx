@@ -204,7 +204,7 @@ function AlternateBanner({ a, part, onOpen }: { a: Alternate; part: string; onOp
               ))}
             </div>
             <div className="mt-2 text-xs text-muted">
-              Found by {d.extracted_by ?? "a model"} in Voltline&apos;s chats and tickets. Every quote was verified word for word
+              Found by {d.extracted_by ?? "a model"} in Flyvi&apos;s chats and tickets. Every quote was verified word for word
               against the source before it entered the graph. A person can confirm or overturn it.
             </div>
           </div>

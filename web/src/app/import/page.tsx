@@ -93,7 +93,7 @@ export default function ImportPage() {
         <label className="flex flex-wrap items-center gap-2 text-sm">
           <span className="text-muted">BOM exported from KiCad, Altium or another CAD tool? It belongs to revision</span>
           <input value={rev} onChange={(e) => setRev(e.target.value)} onBlur={() => files.length && check(files, rev)}
-                 placeholder="e.g. VC-200-C" className="w-40 rounded-md border border-line px-2 py-1 font-mono" />
+                 placeholder="e.g. PDU-28-C" className="w-40 rounded-md border border-line px-2 py-1 font-mono" />
         </label>
 
         {busy && <div className="text-sm text-muted">Checking…</div>}

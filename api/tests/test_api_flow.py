@@ -22,7 +22,7 @@ def test_full_flow(client):
     r = client.post("/api/impact", json=BODY).json()
     assert r["cost"]["total_delta"] in (37400, "37400")
 
-    approve = {"item_id": "NB54360", "approved_by": "Kavya Menon",
+    approve = {"item_id": "NB54360", "approved_by": "Hithesh",
                "new_unit_price": "320", "lead_weeks": 22}
     assert client.post("/api/actions/approve?as_of=2026-10-16", json=approve).status_code == 403
     first = client.post("/api/actions/approve?as_of=2026-10-16", json=approve, headers=pw).json()
@@ -30,7 +30,7 @@ def test_full_flow(client):
     assert again["created"] == [] and len(again["already_existed"]) == len(first["created"]) + len(first["already_existed"])
 
     reopened = client.post("/api/impact", json=BODY).json()
-    assert reopened["investigation"]["approved_by"] == "Kavya Menon"
+    assert reopened["investigation"]["approved_by"] == "Hithesh"
 
     assert client.post("/api/updates/apply", headers=pw).status_code == 200
     after = client.post("/api/impact", json=BODY).json()

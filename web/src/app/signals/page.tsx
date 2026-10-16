@@ -32,7 +32,7 @@ export default function Signals() {
       <section>
         <h1 className="text-2xl font-semibold tracking-tight">Signals</h1>
         <p className="mt-1 text-sm text-muted">
-          What arrives at Voltline: supplier notices, customer escalations, leave notices. Each one opens the analysis that fits it.
+          What arrives at Flyvi: supplier notices, customer escalations, leave notices. Each one opens the analysis that fits it.
         </p>
         <OtherSignals />
         {error && <p className="mt-4 text-sm text-danger">{error}</p>}
@@ -278,7 +278,7 @@ function DemoUpdates() {
     <aside className="card p-4 text-sm">
       <div className="font-medium">Demo: new information arrives</div>
       <p className="mt-1 text-muted">
-        17 Oct: Priya posts a bench result for MX-3360 in #hw-power, and Sahyadri Electronics sends a quote.
+        17 Oct: Raghavendra posts a bench result for MX-3360 in #hw-power, and Sahyadri Electronics sends a quote.
       </p>
       <button onClick={apply} className="mt-3 w-full rounded-lg border border-line px-3 py-1.5 hover:border-ink">Bring in the updates</button>
       {msg && <div className="mt-2 text-xs text-muted">{msg}</div>}

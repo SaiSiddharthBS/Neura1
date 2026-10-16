@@ -1,0 +1,14 @@
+{
+  "key": "SUP-1057",
+  "tracker": "synthetic Jira-style export",
+  "title": "Konkan Naval: BCU-24 CAN telemetry drops after cold start",
+  "status": "Open",
+  "assignee": "Nagarjun",
+  "reporter": "Keerthana",
+  "created": "2026-10-13",
+  "description": "Konkan Naval Electronics reports that 6 BCU-24 Rev A battery chargers stop reporting CAN telemetry to their power management system after a cold start, and only recover after a power cycle. They are evaluating whether to accept the 60 units on SO-884.",
+  "comments": [
+    {"author": "Nagarjun", "date": "2026-10-14", "body": "Logs show the CT-1051 CAN transceiver entering bus-off during the cold-start inrush. The firmware never requests bus-off recovery, so telemetry stays down."},
+    {"author": "Sai", "date": "2026-10-15", "body": "We can add automatic bus-off recovery with a watchdog that re-initialises the CT-1051 after 3 missed heartbeats. Can ship in Firmware 2.4 if it is prioritised."}
+  ]
+}

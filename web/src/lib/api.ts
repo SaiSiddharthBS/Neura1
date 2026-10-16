@@ -76,8 +76,16 @@ function passcode(): string {
   }
 }
 
+export function viewerId(): string {
+  try {
+    return localStorage.getItem("neura1-viewer") ?? "P-HITHESH";
+  } catch {
+    return "P-HITHESH";
+  }
+}
+
 export async function api<T>(path: string, init?: RequestInit & { write?: boolean }): Promise<T> {
-  const headers: Record<string, string> = { "content-type": "application/json" };
+  const headers: Record<string, string> = { "content-type": "application/json", "x-neura1-as": viewerId() };
   if (init?.write) headers["x-demo-passcode"] = passcode();
   const res = await fetch(path, { ...init, headers: { ...headers, ...(init?.headers as Record<string, string>) } });
   const body = await res.json().catch(() => null);

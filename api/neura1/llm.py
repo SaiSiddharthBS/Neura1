@@ -46,3 +46,11 @@ def chat_json(system: str, user: str, schema: dict, name: str) -> dict:
                                   + json.dumps(schema)}],
         )
     return _parse_json(resp.choices[0].message.content or "")
+
+
+def embed(texts: list[str]) -> list[list[float]]:
+    """Embeddings from the same OpenAI-compatible endpoint (Ollama, vLLM). Raises LLMUnavailable if not configured."""
+    if not settings.llm_embed_model:
+        raise LLMUnavailable("No embedding model configured (NEURA1_LLM_EMBED_MODEL)")
+    resp = client().embeddings.create(model=settings.llm_embed_model, input=texts)
+    return [d.embedding for d in resp.data]

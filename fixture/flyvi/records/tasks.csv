@@ -1,0 +1,34 @@
+id,title,assignee_id,project_id,target_id,status,created,completed
+WRK-101,Design PSM-28 Rev 2 output filter,P-RAGHAVENDRA,PRJ-PDU48,PSM-28,done,2026-07-20,2026-08-14
+WRK-102,Thermal model for PDU-48 power stage,P-RAGHAVENDRA,PRJ-PDU48,,in_progress,2026-09-02,
+WRK-103,Schematic review of PDU-48 channel protection,P-PRAKUL,PRJ-PDU48,,in_progress,2026-09-10,
+WRK-104,PCB layout for PDU-48 control board,P-PRAKUL,PRJ-PDU48,,open,2026-10-01,
+WRK-105,Power-good timing for MX-3360 candidate,P-SAI,PRJ-PDU48,FW-PMIC-SEQ,open,2026-10-12,
+WRK-106,Cold-start brownout fix in pmic_seq.c (FW 2.3.1),P-SAI,PRJ-FW24,FW-PMIC-SEQ,done,2026-09-08,2026-09-12
+WRK-107,CAN bus-off recovery for CT-1051,P-VINAY,PRJ-FW24,CT-1051,in_progress,2026-10-15,
+WRK-108,Signed bootloader for field updates,P-SACHIN,PRJ-FW24,,in_progress,2026-09-20,
+WRK-109,Automated regression rig for FW 2.4,P-PRUTHVI,PRJ-FW24,,in_progress,2026-09-22,
+WRK-110,Release notes and test report for FW 2.3.1,P-PRUTHVI,PRJ-FW24,,done,2026-09-12,2026-09-14
+WRK-111,Battery state-of-charge estimator update,P-ANIRUDH,PRJ-FW24,BCU-24-A,in_progress,2026-09-25,
+WRK-112,Configuration tool: export channel settings,P-PRATHAM,PRJ-FW24,,open,2026-10-05,
+WRK-113,Digital current-limit loop for PDU-48,P-MANOJ,PRJ-PDU48,,in_progress,2026-09-15,
+WRK-114,Black-box logging for BCU-24,P-TARUN,PRJ-FW24,BCU-24-A,open,2026-10-08,
+WRK-115,Requirements traceability matrix for FW 2.4,P-SHARMADA,PRJ-AS9100,,in_progress,2026-10-02,
+WRK-116,MIL-STD-461 pre-scan for PDU-28 Rev C,P-SATISH,PRJ-NILGIRI,PDU-28-C,done,2026-08-20,2026-09-03
+WRK-117,Environmental test plan for BCU-24 lot 2,P-YOGISH,PRJ-FW24,BCU-24-A,in_progress,2026-10-06,
+WRK-118,Functional test jig upgrade,P-UDAY,PRJ-NILGIRI,BO-0412,open,2026-10-09,
+WRK-119,Close AS9100D finding on calibration records,P-GURUMURTHY,PRJ-AS9100,,in_progress,2026-10-03,
+WRK-120,Configuration audit of PDU-28 Rev C drawings,P-GURUMURTHY,PRJ-AS9100,PDU-28-C,open,2026-10-10,
+WRK-121,Kit BO-0412 materials,P-PRADEEP,PRJ-NILGIRI,BO-0412,in_progress,2026-10-07,
+WRK-122,Pilot assembly of 5 PDU-28 Rev C units,P-DILEEP,PRJ-NILGIRI,BO-0412,done,2026-09-15,2026-09-26
+WRK-123,Production schedule for November builds,P-SHARATH,PRJ-NILGIRI,BO-0412,done,2026-09-20,2026-09-28
+WRK-124,Second-source search for NB54360,P-AMBIKA,PRJ-COSTDOWN,NB54360,in_progress,2026-09-05,
+WRK-125,Cost-down proposal for BCU-24 enclosure,P-AMBIKA,PRJ-COSTDOWN,BCU-24-A,open,2026-10-01,
+WRK-126,Nilgiri delivery and acceptance plan,P-PRAVEEN,PRJ-NILGIRI,SO-881,in_progress,2026-08-05,
+WRK-127,Monthly status report for Nilgiri,P-PRAVEEN,PRJ-NILGIRI,C-NILGIRI,done,2026-09-25,2026-09-30
+WRK-128,Konkan Naval quarterly review,P-KEERTHANA,,C-KONKAN,done,2026-09-10,2026-09-18
+WRK-129,Vindhya Rail tender response,P-KEERTHANA,,C-VINDHYA,in_progress,2026-10-03,
+WRK-130,Integrate PDU-28 at Nilgiri test bench,P-NAGARJUN,PRJ-NILGIRI,C-NILGIRI,open,2026-10-11,
+WRK-131,AS9100D awareness training records,P-TEJASWINI,PRJ-AS9100,,done,2026-09-01,2026-09-20
+WRK-132,PDU-48 architecture review,P-VISHWAS,PRJ-PDU48,,done,2026-07-18,2026-07-30
+WRK-133,Quarterly engineering review with Datasol board,P-HITHESH,,ORG-DATASOL,open,2026-10-10,

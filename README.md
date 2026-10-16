@@ -23,8 +23,8 @@ the whole company (people, projects, products, customers, decisions) and turns i
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white">
   <img alt="React Flow" src="https://img.shields.io/badge/React_Flow-ff0072">
   <img alt="Ollama" src="https://img.shields.io/badge/Ollama-Qwen2.5--7B-111111?logo=ollama&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-40_passing-2fd3a5">
-  <img alt="MCP" src="https://img.shields.io/badge/MCP-15_tools-5b6cff">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-45_passing-2fd3a5">
+  <img alt="MCP" src="https://img.shields.io/badge/MCP-16_tools-5b6cff">
   <img alt="Cost" src="https://img.shields.io/badge/running_cost-₹0-2fd3a5">
 </p>
 
@@ -37,28 +37,30 @@ the whole company (people, projects, products, customers, decisions) and turns i
 <img src="docs/readme/hero.svg" alt="Know what a change breaks before it breaks: 3 per unit, 3 of 3 builds at risk, ₹37,400, DEC-117 recalled" width="100%">
 
 > [!NOTE]
-> Everything about the demo company, **Voltline Controls**, is synthetic: its people, parts, suppliers and customers.
-> Every number in this README comes from the running system.
+> The demo company is **Flyvi Technologies Pvt. Ltd.** (part of Datasol (Bangalore) Limited), a real Bengaluru maker of
+> power distribution units, converters, battery chargers and embedded control systems for aerospace and defence.
+> **All of its data here is synthetic:** products, customers, orders, decisions, tasks and leave. People appear by
+> first name only, and customers are fictional. Every number in this README comes from the running system.
 
 <br>
 
 ## ✦ The 30-second story
 
-On 14 October 2026 a distributor emails Voltline. The **NB54360** 3.3 V regulator goes from **₹250 → ₹320**, and lead time
+On 14 October 2026 a distributor emails Flyvi. The **NB54360** 3.3 V regulator goes from **₹250 → ₹320**, and lead time
 from **6 → 22 weeks**. Answering "what does this mean for us?" usually takes a day of spreadsheets and Slack searches.
 Then someone suggests the cheaper, "pin-compatible" part that engineering rejected two years ago.
 
 Neura1 answers in one view:
 
-<img src="docs/readme/impact-path.svg" alt="NB54360 → PSU-24 Rev 2 (×2) → VC-200 Rev C (3 per unit) → BO-0412 (short 240) → SO-881 → Kaveri Water (penalty clause); NB54361-L rejected in DEC-117; firmware and test dependencies; draft and obsolete revisions excluded" width="100%">
+<img src="docs/readme/impact-path.svg" alt="NB54360 → PSM-28 Rev 2 (×2) → PDU-28 Rev C (3 per unit) → BO-0412 (short 240) → SO-881 → Nilgiri Aero (penalty clause); NB54361-L rejected in DEC-117; firmware and test dependencies; draft and obsolete revisions excluded" width="100%">
 
 | | What Neura1 finds | How |
 |---|---|---|
-| 🔩 | **3 regulators per VC-200 Rev C**: two inside the PSU-24 module, one directly on the board (U12). **1 per VG-50.** Draft Rev D and obsolete Rev B excluded, with the reason. | One variable-length Cypher traversal with `reduce()` |
+| 🔩 | **3 regulators per PDU-28 Rev C**: two inside the PSM-28 module, one directly on the board (U12). **1 per BCU-24.** Draft Rev D and obsolete Rev B excluded, with the reason. | One variable-length Cypher traversal with `reduce()` |
 | 🏭 | **3 of 3 planned builds at risk.** 60 free parts cover part of the first build; supply ordered today lands around 19 Mar 2027. | Graph + deterministic stock allocation |
-| 🤝 | **3 customer orders exposed.** Kaveri Water Utilities' SO-881 carries a late-delivery penalty (clause 9.2). | Build → order → customer → account manager |
+| 🤝 | **3 customer orders exposed.** Nilgiri Aero Systems' SO-881 carries a late-delivery penalty (clause 9.2). | Build → order → customer → account manager |
 | 💸 | **₹37,400 cost increase** = 420 × (₹320 − ₹250) + ₹8,000 requalification. The cheaper Q-099 quote expired on 30 June and is ignored. | `Decimal` maths in code, never the model |
-| 🧠 | **"Do not switch to NB54361-L."** Rejected as **DEC-117** by Arjun Mehta on 12 Mar 2025, for thermal shutdown at 68 °C. Found in both Slack *and* Jira, quoted word for word. | Local model extracts, code verifies quotes |
+| 🧠 | **"Do not switch to NB54361-L."** Rejected as **DEC-117** by Vishwas on 12 Mar 2025, for thermal shutdown at 68 °C. Found in both Slack *and* Jira, quoted word for word. | Local model extracts, code verifies quotes |
 | ✅ | **11 tasks for 7 people**, from the company's own change policy. Approve once, never duplicated, remembered next session. | Idempotent `Investigation` / `Action` nodes |
 
 <br>
@@ -71,12 +73,12 @@ Neura1 answers in one view:
     <td width="50%"><img src="docs/demo/risk-radar.png" alt="Risk radar"><br><sub><b>Risk radar</b>: FalkorDB betweenness centrality, community detection and traversals find the company's chokepoints, single-sourced parts, one-person knowledge and customer concentration.</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/demo/customer-escalation.png" alt="Customer escalation"><br><sub><b>Customer escalation</b>: Deccan Pharma threatens to hold acceptance of SO-884. Sales, support, firmware, production and the COO each get a task.</sub></td>
-    <td><img src="docs/demo/absence-plan.png" alt="Absence plan"><br><sub><b>People change</b>: Priya is away in November. Neura1 sees she was just assigned the PSU-24 review by the supplier-change plan, and hands it to Arjun.</sub></td>
+    <td><img src="docs/demo/customer-escalation.png" alt="Customer escalation"><br><sub><b>Customer escalation</b>: Konkan Naval threatens to hold acceptance of SO-884. Sales, support, firmware, production and the CTO each get a task.</sub></td>
+    <td><img src="docs/demo/absence-plan.png" alt="Absence plan"><br><sub><b>People change</b>: Raghavendra is away in November. Neura1 sees Raghavendra was just assigned the PSM-28 review by the supplier-change plan, and hands it to Vishwas.</sub></td>
   </tr>
   <tr>
     <td width="50%"><img src="docs/demo/impact-overview.png" alt="Impact workspace"><br><sub><b>Impact workspace</b>: headline numbers, the rejected-part banner, the evidence graph and who needs to do what.</sub></td>
-    <td width="50%"><img src="docs/demo/evidence-slack.png" alt="Evidence drawer"><br><sub><b>Evidence</b>: one click opens Arjun's Slack message, highlighted inside its thread.</sub></td>
+    <td width="50%"><img src="docs/demo/evidence-slack.png" alt="Evidence drawer"><br><sub><b>Evidence</b>: one click opens Vishwas's Slack message, highlighted inside its thread.</sub></td>
   </tr>
   <tr>
     <td><img src="docs/demo/after-update.png" alt="Changed since approval"><br><sub><b>New facts arrive</b>: a bench result and a new quote. The approved investigation lists exactly what changed.</sub></td>
@@ -123,9 +125,9 @@ gateways or instruments and build them in-house or at an EMS partner. [Why this 
 mindmap
   root((Neura1))
     Products
-      VC-200 PLC controller
-      VG-50 IIoT gateway
-      PSU-24 power module
+      PDU-28 power distribution unit
+      BCU-24 battery charger
+      PSM-28 power stage module
       Revisions and BOM lines
     Supply
       Suppliers and quotes
@@ -146,8 +148,8 @@ mindmap
       Test reports
       Change policy
     Projects
-      Kaveri Phase 2 rollout
-      VC-300 controller
+      Nilgiri Phase 2 rollout
+      PDU-48 controller
       FY27 cost-down
       Firmware 2.4
     Signals
@@ -178,8 +180,8 @@ through the same graph:
 | **People change** (leave, departure) | What they own, open tasks, projects they lead, knowledge the company relies on them for, conflicts with other plans, backup and manager | Handover, interim owners and leads, handover note, manager confirmation (HB-HR-02) |
 | **Every day** | Betweenness centrality, community detection and traversals across the whole graph | **Risk radar**: chokepoints, single-sourced parts, one-person knowledge, customer concentration, workload and leave |
 
-**Plans interact because they share one graph.** Approving the supplier-change plan assigns Priya the PSU-24 review. Her
-leave plan then flags the conflict and hands that review to Arjun. Separate tools for each department would miss this.
+**Plans interact because they share one graph.** Approving the supplier-change plan assigns Raghavendra the PSM-28 review. Her
+leave plan then flags the conflict and hands that review to Vishwas. Separate tools for each department would miss this.
 
 Track 03 asks for an agent that *understands how a company works*. Here is how Neura1 maps to each point:
 
@@ -191,22 +193,22 @@ Track 03 asks for an agent that *understands how a company works*. Here is how N
 | Tracing decisions to their source | DEC-117 links to the exact Slack message and Jira comment, quoted word for word | Red banner → evidence |
 | **Keeping knowledge current** | Re-imports update passages in place. Edited or removed evidence, decisions on obsolete revisions, expiring quotes and unowned records are flagged. | **What's new** |
 | Answers with clear sources | Every Ask answer lists the passages it relied on (clickable) and the Cypher it ran | **Ask** |
-| **Get work done** | Approve impact tasks; Ask drafts tasks ("Ask Rahul to review pmic_seq.c…") that a person confirms | Tasks panel · Ask |
+| **Get work done** | Approve impact tasks; Ask drafts tasks ("Ask Sai to review pmic_seq.c…") that a person confirms | Tasks panel · Ask |
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/demo/people.png" alt="People"><br><sub><b>People</b>: what Rahul owns, what he knows from what he wrote, his projects, and who covers for him.</sub></td>
+    <td width="50%"><img src="docs/demo/people.png" alt="People"><br><sub><b>People</b>: what Sai owns, what he knows from what he wrote, his projects, and who covers for him.</sub></td>
     <td width="50%"><img src="docs/demo/projects.png" alt="Projects"><br><sub><b>Projects</b>: members and roles, scope, decisions, open tasks, recent discussion.</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/demo/who-knows.png" alt="Who knows"><br><sub><b>Who knows about Kaveri</b>, ranked, with the reason for each person.</sub></td>
+    <td><img src="docs/demo/who-knows.png" alt="Who knows"><br><sub><b>Who knows about Nilgiri</b>, ranked, with the reason for each person.</sub></td>
     <td><img src="docs/demo/whats-new.png" alt="What's new"><br><sub><b>What's new</b>, and the knowledge that may no longer be true.</sub></td>
   </tr>
 </table>
 
 ### Use the brain from any agent (MCP)
 
-Neura1 is also an **MCP server** with 15 tools: `where_used`, `change_impact`, `who_knows`, `person`, `project`,
+Neura1 is also an **MCP server** with 16 tools, including `recall` for shared conversation memory: `where_used`, `change_impact`, `who_knows`, `person`, `project`,
 `list_projects`, `customer`, `absence_impact`, `risk_radar`, `decisions`, `alternates`, `search_documents`,
 `recent_changes`, `read_only_cypher` and `propose_task`.
 Any MCP client (Claude Desktop, IDEs, other agents) can pick the right graph tool for the question. All tools are
@@ -219,6 +221,22 @@ read-only, and tasks are drafts until a person confirms them.
   }
 }
 ```
+
+<br>
+
+## ✦ Everything a company brain needs
+
+| Capability | What Neura1 does | Where |
+|---|---|---|
+| **Organisation** | Datasol (parent, directors, shareholders) → Flyvi → 11 departments → 30 people, with reporting lines, backups and roles. The org chart shows open work and who is away today. | Organisation |
+| **Employee 360** | For anyone: reporting chain, current and finished work, leave, stated skills plus knowledge derived from their work, projects, ownership, decisions, team, recent messages | People |
+| **Roles your team can maintain** | Edit role, team, manager, backup, skills and leave in the app, or import CSVs. Every change is stored as an event in the graph. | People → Edit · Import |
+| **Permissions from the graph** | "Viewing as" any person. Leave details are visible to that person's management chain, backup, HR and leadership. Money is visible to leadership, BD, purchase and PM. Everyone else sees it redacted. | Sidebar → Viewing as |
+| **My day** | Your open work, decisions waiting for you, signals touching your areas, who in your team is away, and what changed in things you own | My day |
+| **Ask with memory** | Conversations stored per person as `Conversation → Turn` nodes, linked to the passages cited and the records discussed. Follow-ups work, and `recall` searches everyone's past answers (shared memory, Track 02). Each tool call streams live. | Ask & search |
+| **Semantic + keyword + graph search** | Local embeddings (`nomic-embed-text`) in FalkorDB's **vector index**, fused with the full-text index, then expanded to the records each passage mentions | Ask & search |
+| **Live ingestion** | Slack Events API and Jira webhooks in their real formats (Slack signature verified). New messages and ticket changes become linked passages immediately. | `POST /api/webhooks/slack`, `/jira` |
+| **Meetings → actions** | The model finds "who will do what" in meeting notes. Each item is kept only with a word-for-word quote and a real owner, then becomes a one-click task. | What's new |
 
 <br>
 
@@ -362,7 +380,7 @@ Full description, with authority rules and modelling choices, in **[docs/data-mo
 
 ```mermaid
 pie showData
-    title Voltline graph · 188 nodes · 421 relationships
+    title Flyvi graph · 188 nodes · 421 relationships
     "Document passages" : 79
     "Sources" : 41
     "Items" : 14
@@ -386,8 +404,8 @@ timeline
     4 Mar 2025 : Procurement proposes NB54361-L at ₹190 in Slack
                : Ticket HW-311 opened
     10 Mar 2025 : TR-112 thermal test
-                : shutdown at 68 °C in a sealed cabinet
-    12 Mar 2025 : Arjun Mehta rejects it as DEC-117
+                : shutdown at 68 °C in a sealed enclosure
+    12 Mar 2025 : Vishwas rejects it as DEC-117
                 : HW-311 closed as Won't Do
     14 Oct 2026 : NB54360 price and lead-time notice arrives
     16 Oct 2026 : Local model finds DEC-117 in Slack and in Jira
@@ -430,8 +448,8 @@ docker compose up -d falkordb                      # graph on :6380 · FalkorDB 
 cd api
 cp .env.example .env                               # set NEURA1_DEMO_PASSCODE
 uv sync
-uv run python -m neura1.cli load                   # load Voltline Controls + saved model extractions
-uv run pytest -q                                   # 40 tests
+uv run python -m neura1.cli load                   # load Flyvi Technologies + saved model extractions
+uv run pytest -q                                   # 45 tests
 uv run uvicorn neura1.main:app --port 8000
 
 cd ../web && pnpm install && pnpm dev              # http://localhost:3000
@@ -466,6 +484,7 @@ NEURA1_LLM_TIMEOUT=900                             # CPU models are slow; a GPU 
 uv run python -m neura1.cli check-model            # chat · structured JSON · tool calling
 uv run python -m neura1.cli extract                # read every document; raw outputs saved for replay
 uv run python -m neura1.cli load                   # verified decisions enter the graph
+uv run python -m neura1.cli embed                  # semantic search (NEURA1_LLM_EMBED_MODEL=nomic-embed-text)
 ```
 
 The agent uses a JSON plan-act loop, so it works even on servers whose native tool calling is unreliable.
@@ -478,7 +497,7 @@ The agent uses a JSON plan-act loop, so it works even on servers whose native to
 
 | Check | Result |
 |---|---|
-| Automated tests | **40 passing**: BOM roll-ups, revision applicability, cost edge cases, import validation, CAD BOMs, extraction verification, idempotent approvals, the HTTP flow end to end, and 503 when the graph is down |
+| Automated tests | **45 passing**: BOM roll-ups, revision applicability, cost edge cases, import validation, CAD BOMs, extraction verification, idempotent approvals, the HTTP flow end to end, and 503 when the graph is down |
 | Local model on real fixture documents | DEC-117 found in **Slack and Jira** ✓ · notice read correctly ✓ · MX-3360 bench result ✓ · TR-131 bench note **missed** ✗ · [full table](docs/DEMO.md#what-the-local-model-got-right-and-wrong) |
 | Mistakes caught and fixed | The agent once called MX-3360 "approved". That led to the approval wording in tool output and the rule-based check. |
 | Frozen evaluation | 43 ground-truth questions in [`api/eval/golden.yaml`](api/eval/golden.yaml), written before any model ran: graph agent vs search-only vs whole-corpus, same model. **Results pending GPU time; failures will be published, not hidden.** |
@@ -509,10 +528,15 @@ api/                 FastAPI service
   neura1/agent.py      Ask agent with bounded tools and guardrails
   neura1/brain.py      who knows what · people · projects · what changed
   neura1/scenarios.py  absence and escalation plans · risk radar (graph algorithms) · signals
+  neura1/people.py     employee 360 · organisation · my day · profile edits
+  neura1/access.py     permissions derived from the graph (reporting chain, team)
+  neura1/memory.py     conversation memory as graph nodes · recall
+  neura1/search.py     hybrid vector + full-text search with graph expansion
+  neura1/webhooks.py   Slack and Jira live ingestion
   neura1/mcp_server.py the graph's tools for any MCP client
-  tests/  eval/        40 tests · 43-question frozen evaluation
+  tests/  eval/        45 tests · 43-question frozen evaluation
 web/                 Next.js app: Inbox · Impact · Company brain · Investigations · Import
-fixture/voltline/    synthetic company: records · chats · tickets · docs · notice · updates · model extractions
+fixture/flyvi/    synthetic company: records · chats · tickets · docs · notice · updates · model extractions
 docs/                demo walkthrough · data model · queries · target customer · reuse · AI disclosure
 scripts/             Playwright demo capture
 ```
