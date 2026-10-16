@@ -64,7 +64,7 @@ graph LR
 | `Investigation`, `Action` | content-hash ids, `status`, `approved_by`, `created_at` | Idempotent: re-approving finds the same nodes |
 | `Project` | `name`, `status`, `start_date`, `target_date`, `summary` | Linked to people (`LEADS`, `WORKS_ON {role}`) and to whatever it covers |
 | `Alias` | `term` | Names people actually use in chat ("pmic_seq.c", "Nilgiri") that point at a record |
-| `Organization` | `name`, `kind` | Datasol (parent) and Flyvi (`SUBSIDIARY_OF`); people `HOLDS_ROLE {role}` (director, shareholder, CTO); teams are `PART_OF` an organisation |
+| `Organization` | `name`, `kind` | Datasol (parent) and Flyvi (`SUBSIDIARY_OF`); people `HOLDS_ROLE {role}` (Founder & Managing Director, President & Executive Officer, directors, COO, CTO, General Manager); teams are `PART_OF` an organisation |
 | `Skill` | `name` | `Person-HAS_SKILL->Skill`; stated skills sit alongside knowledge derived from work |
 | `Absence` | `start_date`, `end_date`, `kind` | `Person-HAS_ABSENCE->Absence`; visibility follows the reporting chain |
 | `Certification` | `standard`, `valid_until` | `CERTIFIES` a revision; `RETEST_IF_CHANGED` an item |

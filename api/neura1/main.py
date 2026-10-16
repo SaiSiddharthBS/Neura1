@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel
 from redis.exceptions import ConnectionError as RedisConnectionError, TimeoutError as RedisTimeout
 
-from neura1 import access, actions, agent, brain, people as people_mod, queries as Q, scenarios
+from neura1 import access, actions, agent, brain, chat, people as people_mod, queries as Q, scenarios
 from neura1.config import settings
 from neura1.graph import GraphUnavailable, get_graph, rows
 from neura1.impact import ChangeEvent, analyse
@@ -24,6 +24,26 @@ from neura1.viz import impact_subgraph
 
 app = FastAPI(title="Neura1", version="0.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+
+@app.middleware("http")
+async def hide_amounts_in_text(request: Request, call_next):
+    """Safety net under the per-endpoint rules: for anyone who may not see money, no rupee amount written in a
+    message, answer or note leaves the API, whichever page or query produced it."""
+    response = await call_next(request)
+    who = request.headers.get("x-neura1-as")
+    if not who or not request.url.path.startswith("/api/") or response.headers.get("content-type") != "application/json":
+        return response
+    try:
+        v = access.viewer(get_graph(), who)
+    except Exception:
+        return response
+    if v.sees_money:
+        return response
+    body = b"".join([chunk async for chunk in response.body_iterator])
+    data = access.redact_money_text(json.loads(body))
+    headers = {k: val for k, val in response.headers.items() if k.lower() != "content-length"}
+    return JSONResponse(data, status_code=response.status_code, headers=headers)
 
 
 @app.exception_handler(RedisConnectionError)
@@ -81,7 +101,7 @@ def overview(g=Depends(graph)):
                        OPTIONAL MATCH (p)-[:OWNS]->(x)
                        RETURN t.name AS team, collect(DISTINCT {name: p.name, role: p.role}) AS people,
                               collect(DISTINCT x.id) AS owns ORDER BY team""")
-    sources = rows(g, """MATCH (s:Source) WHERE s.kind <> 'export'
+    sources = rows(g, """MATCH (s:Source) WHERE NOT s.kind IN ['export', 'dm']
                          OPTIONAL MATCH (s)<-[:PART_OF]-(c:Chunk)
                          RETURN s.id AS id, s.kind AS kind, s.title AS title, count(c) AS passages ORDER BY id""")
     return {"labels": labels, "relationships": rels, "teams": teams, "sources": sources}
@@ -143,7 +163,12 @@ async def add_notice(text: str | None = Form(None), file: UploadFile | None = Fi
         model_error = str(exc)
     except Exception as exc:  # a model failure must not lose the notice; the user can enter the facts
         model_error = f"Model could not read the notice: {exc}"
-    return {"source_id": source_id, "extraction": _notice_snapshot(source_id), "model_error": model_error}
+    snap = _notice_snapshot(source_id)
+    part = (snap or {}).get("output", {}).get("part")
+    chat.notify(g, "supplier_change", f"A supplier notice arrived{f' about {part}' if part else ''}. "
+                + ("Its facts were read and checked." if snap else "Its facts still need entering."),
+                [{"label": "Signals", "href": "/signals"}])
+    return {"source_id": source_id, "extraction": snap, "model_error": model_error}
 
 
 class NoticeFields(BaseModel):
@@ -281,9 +306,15 @@ def approve(body: ApproveIn, as_of: date | None = None, g=Depends(graph)):
     if report["status"] != "ok":
         raise HTTPException(404, "Unknown item")
     cost = report["cost"]
-    return actions.approve(g, report["part"]["id"], body.source_id, report["actions"], body.approved_by,
-                           str(cost["total_delta"]) if cost else None, cost["currency"] if cost else None,
-                           actions.snapshot_of(report))
+    result = actions.approve(g, report["part"]["id"], body.source_id, report["actions"], body.approved_by,
+                             str(cost["total_delta"]) if cost else None, cost["currency"] if cost else None,
+                             actions.snapshot_of(report))
+    if result["created"]:
+        owners = sorted({a["owner"] for a in report["actions"] if a["owner"]})
+        chat.notify(g, "plan", f"{body.approved_by} approved the {report['part']['id']} change plan: "
+                    f"{len(result['created'])} tasks for {', '.join(owners)}.",
+                    [{"label": "Open impact", "href": f"/impact?item={report['part']['id']}"}, {"label": "Workboard", "href": "/board"}])
+    return result
 
 
 @app.get("/api/investigations")
@@ -320,6 +351,10 @@ def apply_updates(g=Depends(graph)):
         snap_path = extract.snapshot_path(sid, "decisions")
         if snap_path.exists():
             decisions[sid] = extract.load_decisions(g, json.loads(snap_path.read_text()))
+    found = [d for r in decisions.values() for d in r["written"]]
+    chat.notify(g, "evidence", f"New information arrived: {len(loaded)} sources"
+                + (f", including recorded evidence {', '.join(found)}" if found else "")
+                + ". Open plans that depend on it show what changed.", [{"label": "What's new", "href": "/changes"}])
     return {"loaded": loaded, "decisions": decisions}
 
 
@@ -400,7 +435,8 @@ def _ask(g, body: AskIn, v: access.Viewer, on_step=None) -> dict:
     if len(body.question) > 500:
         raise HTTPException(400, "Question too long")
     cid = body.conversation_id or memory.start(g, v.id, body.question)
-    result = agent.ask(g, body.question, history=memory.history(g, cid), on_step=on_step)
+    restrict = None if v.unrestricted else {"money": v.sees_money, "leave_of": v.sees_leave_of}
+    result = agent.ask(g, body.question, history=memory.history(g, cid), on_step=on_step, restrict=restrict)
     result |= memory.record(g, cid, body.question, result)
     return guard_money(result, v)
 
@@ -444,8 +480,12 @@ def conversations(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
 
 
 @app.get("/api/conversations/{conversation_id}")
-def conversation(conversation_id: str, g=Depends(graph)):
+def conversation(conversation_id: str, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
     from neura1 import memory
+    owner = rows(g, "MATCH (c:Conversation {id:$id}) OPTIONAL MATCH (p:Person)-[:STARTED]->(c) "
+                    "RETURN coalesce(c.private, false) AS private, p.id AS by", {"id": conversation_id})
+    if owner and owner[0]["private"] and not v.unrestricted and owner[0]["by"] != v.id:
+        raise HTTPException(403, "This conversation happened in a direct message")
     return memory.transcript(g, conversation_id)
 
 
@@ -522,7 +562,11 @@ class StatusIn(BaseModel):
 @app.post("/api/actions/{action_id}/status", dependencies=[Depends(require_passcode)])
 def move_task(action_id: str, body: StatusIn, g=Depends(graph)):
     try:
-        return actions.set_status(g, action_id, body.status, body.by, body.note)
+        moved = actions.set_status(g, action_id, body.status, body.by, body.note)
+        if body.status == "done":
+            title = rows(g, "MATCH (a:Action {id:$id}) RETURN a.title AS t", {"id": action_id})[0]["t"]
+            chat.notify(g, "task_done", f"Done: {title} ({body.by}).", [{"label": "Workboard", "href": "/board"}])
+        return moved
     except ValueError as exc:
         raise HTTPException(422, str(exc))
     except KeyError:
@@ -597,8 +641,16 @@ def approve_plan(body: PlanIn, g=Depends(graph)):
         raise HTTPException(422, "kind must be absence or escalation")
     if r["status"] != "ok":
         raise HTTPException(404, "Unknown subject")
-    return actions.approve(g, body.subject_id, source, r["actions"], body.approved_by, None, None, snapshot,
-                           kind=body.kind)
+    result = actions.approve(g, body.subject_id, source, r["actions"], body.approved_by, None, None, snapshot,
+                             kind=body.kind)
+    if result["created"]:
+        name = r["person"]["name"] if body.kind == "absence" else r["customer"]["name"]
+        what = "handover plan" if body.kind == "absence" else "escalation plan"
+        owners = sorted({a["owner"] for a in r["actions"] if a["owner"]})
+        chat.notify(g, "escalation" if body.kind == "escalation" else "absence",
+                    f"{body.approved_by} approved the {what} for {name}: {len(result['created'])} tasks for {', '.join(owners)}.",
+                    [{"label": "Workboard", "href": "/board"}])
+    return result
 
 
 # ---------- people, organisation, my day ----------
@@ -685,3 +737,75 @@ async def jira_webhook(request: Request, g=Depends(graph)):
 @app.get("/api/action-items")
 def action_items(g=Depends(graph)):
     return rows(g, brain.ACTION_ITEMS)
+
+
+# ---------- Neura1 Chat ----------
+
+@app.get("/api/chat/channels")
+def chat_channels(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    return [c for c in chat.channels(g, v.id) if v.sees_money or c["id"] not in chat.MONEY_CHANNELS]
+
+
+class DmIn(BaseModel):
+    person_id: str
+
+
+@app.post("/api/chat/dm")
+def chat_dm(body: DmIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    if not v.id:
+        raise HTTPException(400, "Choose who you are first")
+    return {"id": chat.dm_channel(g, v.id, body.person_id)}
+
+
+@app.get("/api/chat/messages")
+def chat_messages(channel: str, after: str | None = None, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    ch = rows(g, "MATCH (c:Channel {id:$id}) RETURN c.kind AS kind, c.members AS members", {"id": channel})
+    if not ch:
+        raise HTTPException(404, "Unknown channel")
+    _may_read_channel(ch[0], channel, v)
+    return chat.messages(g, channel, after)
+
+
+def _may_read_channel(ch: dict, channel: str, v: access.Viewer) -> None:
+    if ch["kind"] == "dm" and v.id not in (ch["members"] or []):
+        raise HTTPException(403, "Direct messages are visible to their two people only")
+    if channel in chat.MONEY_CHANNELS and not v.sees_money:
+        raise HTTPException(403, "This channel discusses prices and order values; it is open to leadership, BD and purchase")
+
+
+class ChatIn(BaseModel):
+    channel: str
+    text: str
+
+
+@app.post("/api/chat/messages", dependencies=[Depends(require_passcode)])
+def chat_post(body: ChatIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    if not v.id:
+        raise HTTPException(400, "Choose who you are first")
+    if not body.text.strip() or len(body.text) > 4000:
+        raise HTTPException(400, "Message is empty or too long")
+    chat.ensure_channels(g)
+    ch = rows(g, "MATCH (c:Channel {id:$id}) RETURN c.kind AS kind, c.members AS members", {"id": body.channel})
+    if not ch:
+        raise HTTPException(404, "Unknown channel")
+    _may_read_channel(ch[0], body.channel, v)
+    return chat.handle(g, body.channel, body.text.strip(), v.name, v.id)
+
+
+# ---------- graph explorer ----------
+
+@app.get("/api/explore")
+def explore(id: str, g=Depends(graph)):
+    from neura1 import explore as ex
+    return ex.neighborhood(g, id)
+
+
+@app.get("/api/timeline")
+def record_timeline(id: str, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import explore as ex
+    events = ex.timeline(g, id)
+    if not v.sees_leave_of(id):
+        events = [e for e in events if e["kind"] != "leave"]
+    if not v.sees_money:
+        events = [e if e["kind"] != "quote" else e | {"detail": "price hidden for your role"} for e in events]
+    return events

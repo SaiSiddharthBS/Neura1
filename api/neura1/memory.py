@@ -78,7 +78,7 @@ def transcript(graph: Graph, conversation_id: str) -> list[dict]:
 # Past turns about a record or matching words, across everyone's conversations (shared memory).
 RECALL = """
 MATCH (t:Turn)-[:ABOUT]->(x) WHERE x.id = $text OR toLower(coalesce(x.name, '')) = toLower($text)
-MATCH (c:Conversation)-[:HAS_TURN]->(t)
+MATCH (c:Conversation)-[:HAS_TURN]->(t) WHERE NOT coalesce(c.private, false)
 OPTIONAL MATCH (p:Person)-[:STARTED]->(c)
 RETURN t.question AS question, t.answer AS answer, t.at AS at, p.name AS asked_by
 ORDER BY at DESC LIMIT 5
@@ -94,7 +94,7 @@ def recall(graph: Graph, text: str) -> list[dict]:
         return []
     return rows(graph, """
         MATCH (c:Conversation)-[:HAS_TURN]->(t:Turn)
-        WHERE any(w IN $words WHERE toLower(t.question) CONTAINS w)
+        WHERE NOT coalesce(c.private, false) AND any(w IN $words WHERE toLower(t.question) CONTAINS w)
         OPTIONAL MATCH (p:Person)-[:STARTED]->(c)
         RETURN t.question AS question, t.answer AS answer, t.at AS at, p.name AS asked_by
         ORDER BY at DESC LIMIT 5

@@ -8,14 +8,15 @@ The viewer is a Person (sent as the X-Neura1-As header by the web app). Rules:
 With no viewer (internal calls, tests, MCP) everything is visible; the web app always sends a viewer.
 """
 
+import re
 from dataclasses import dataclass, field
 
 from falkordb import Graph
 
 from neura1.graph import rows
 
-MONEY_TEAMS = {"T-LEAD", "T-BOARD", "T-SALES", "T-SC", "T-PM"}
-LEAVE_TEAMS = {"T-LEAD", "T-BOARD", "T-HR"}
+MONEY_TEAMS = {"T-LEAD", "T-SALES", "T-SC"}
+LEAVE_TEAMS = {"T-LEAD", "T-HR"}
 
 VIEWER = """
 MATCH (p:Person {id:$id})
@@ -67,6 +68,20 @@ def viewer(graph: Graph, person_id: str | None) -> Viewer:
 
 
 RESTRICTED = {"restricted": True}
+
+
+MONEY_TEXT = re.compile(r"(₹|\bINR\s?|\bRs\.?\s?)\s?\d[\d,]*(\.\d+)?( lakh| crore)?", re.I)
+
+
+def redact_money_text(obj, note: str = "[amount hidden]"):
+    """Hide rupee amounts written inside any text (messages, answers, quotes) for people who may not see money."""
+    if isinstance(obj, str):
+        return MONEY_TEXT.sub(note, obj)
+    if isinstance(obj, dict):
+        return {k: redact_money_text(v, note) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [redact_money_text(x, note) for x in obj]
+    return obj
 
 
 def redact_money(obj, keys=("value", "unit_price", "max_penalty", "open_value", "value_at_risk", "total_delta",

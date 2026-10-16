@@ -9,7 +9,7 @@ type Hit = { id: string; label: string; name: string; kind: string | null };
 type Cmd = { key: string; title: string; hint: string; icon: React.ElementType; go: () => void };
 
 const PAGES = [
-  ["Overview", "/"], ["Signals", "/signals"], ["Workboard", "/board"], ["Plans", "/history"], ["Ask & search", "/brain"],
+  ["Overview", "/"], ["Chat", "/chat"], ["My day", "/me"], ["Organisation", "/org"], ["Signals", "/signals"], ["Workboard", "/board"], ["Plans", "/history"], ["Ask & search", "/brain"], ["Graph explorer", "/explore"],
   ["People", "/people"], ["Projects", "/projects"], ["Customers", "/customers"], ["Risk radar", "/risk"],
   ["What's new", "/changes"], ["Import", "/import"],
 ];
@@ -56,6 +56,7 @@ export default function CommandPalette() {
       else if (h.label === "Person") list.push({ key: h.id, title: h.name, hint: "Person", icon: User, go: go(`/people?id=${h.id}`) });
       else if (h.label === "Project") list.push({ key: h.id, title: h.name, hint: "Project", icon: FolderKanban, go: go(`/projects?id=${h.id}`) });
       else list.push({ key: `w-${h.id}`, title: `${h.id}`, hint: `${h.label} · ${h.name} · who knows`, icon: Box, go: go(`/brain?who=${encodeURIComponent(h.id)}`) });
+      list.push({ key: `x-${h.id}`, title: `Explore ${h.name}`, hint: "Connections and history", icon: Box, go: go(`/explore?id=${encodeURIComponent(h.id)}`) });
     }
     for (const [title, href] of PAGES)
       if (!text || title.toLowerCase().includes(text.toLowerCase()))

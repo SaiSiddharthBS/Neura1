@@ -284,8 +284,25 @@ def _finish(graph: Graph, answer: str, calls: list, trace: Trace, results: list)
             "sources": sources[:12], "drafts": drafts, "trace": trace.steps}
 
 
+def _restrict(name: str, result, restrict: dict | None):
+    """Remove what the reader may not see before the model ever reads it."""
+    if not restrict:
+        return result
+    from neura1.access import redact_money, redact_money_text
+    if not restrict.get("money"):
+        result = redact_money_text(redact_money(result))
+    if name == "absence_impact" and isinstance(result, dict) and result.get("person"):
+        pid = result["person"].get("id")
+        if not restrict.get("leave_of", lambda _p: True)(pid):
+            return {"person": result["person"].get("name"), "restricted": "leave dates and handover details are not "
+                    "visible to everyone reading this; point them to the person's page"}
+    if name == "person" and isinstance(result, dict):
+        result = {k: v for k, v in result.items() if k not in ("absences",)}
+    return result
+
+
 def ask(graph: Graph, question: str, max_steps: int = 6, history: list[dict] | None = None,
-        on_step=None) -> dict:
+        on_step=None, restrict: dict | None = None) -> dict:
     """Plan-act loop using JSON output only, so it works on any OpenAI-compatible server,
     including local models whose native tool-call parsing is unreliable."""
     from neura1.llm import _parse_json
@@ -312,7 +329,7 @@ def ask(graph: Graph, question: str, max_steps: int = 6, history: list[dict] | N
         if on_step:
             on_step({"type": "tool", "tool": step["tool"], "args": args})
         try:
-            result = run_tool(graph, trace, step["tool"], args)
+            result = _restrict(step["tool"], run_tool(graph, trace, step["tool"], args), restrict)
         except Exception as exc:  # report tool errors back to the model instead of failing the request
             result = {"error": str(exc)}
         calls.append({"tool": step["tool"], "args": args})

@@ -121,13 +121,26 @@ def main() -> None:
         for name, url, wait in (("customer-escalation", "/customers?id=C-KONKAN", "Escalation plan"),
                                 ("absence-plan", "/people?id=P-RAGHAVENDRA&absence=1", "Handover plan"),
                                 ("risk-radar", "/risk", "How work actually clusters"),
-                                ("overview", "/", "What needs attention today")):
+                                ("overview", "/", "What needs attention today"),
+                                ("graph-explorer", "/explore?id=NB54360", "History")):
             page.goto(base + url)
             page.wait_for_selector(f"text={wait}", timeout=120000)
             page.wait_for_timeout(1500)
             shot(name)
 
-        # 7d People and organisation, seen as the R&D head and then as a software engineer
+        # 7c2 Neura1 Chat: a slash command answered from the graph, redacted for the channel's audience
+        page.goto(f"{base}/chat")
+        box = page.get_by_placeholder("@neura1 to ask")
+        box.wait_for(timeout=60000)
+        for msg in ("Heads up: Northbridge just changed NB54360 pricing and lead time. Checking what it hits.", "/impact NB54360 320 22", "/who CAN bus"):
+            box.fill(msg)
+            box.press("Enter")
+            page.wait_for_timeout(2500)
+        page.wait_for_selector("text=PDU-28", timeout=60000)
+        page.wait_for_timeout(1500)
+        shot("chat")
+
+        # 7d People and organisation, seen as an R&D engineer and then as a software engineer
         page.evaluate("() => localStorage.setItem('neura1-viewer', 'P-VISHWAS')")
         for name, url, wait in (("my-day", "/me", "Your work"),
                                 ("organisation", "/org", "Organisation"),

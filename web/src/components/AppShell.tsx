@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Bell, Brain, Building2, Command, FolderKanban, History, Inbox, KanbanSquare, LayoutDashboard, Network, Radar, Sun, Upload, Users,
+  Bell, Brain, Building2, Command, MessageCircle, Waypoints, FolderKanban, History, Inbox, KanbanSquare, LayoutDashboard, Network, Radar, Sun, Upload, Users,
 } from "lucide-react";
 import CommandPalette from "@/components/CommandPalette";
 import ViewerSwitch from "@/components/ViewerSwitch";
@@ -12,6 +12,7 @@ import ViewerSwitch from "@/components/ViewerSwitch";
 const NAV = [
   { section: "Today", items: [
     { href: "/me", label: "My day", icon: Sun },
+    { href: "/chat", label: "Chat", icon: MessageCircle },
     { href: "/", label: "Overview", icon: LayoutDashboard },
     { href: "/signals", label: "Signals", icon: Inbox },
     { href: "/board", label: "Workboard", icon: KanbanSquare },
@@ -19,6 +20,7 @@ const NAV = [
   ]},
   { section: "Company brain", items: [
     { href: "/brain", label: "Ask & search", icon: Brain },
+    { href: "/explore", label: "Graph explorer", icon: Waypoints },
     { href: "/people", label: "People", icon: Users },
     { href: "/org", label: "Organisation", icon: Network },
     { href: "/projects", label: "Projects", icon: FolderKanban },

@@ -118,6 +118,23 @@ quotes, people, document search) and one guarded read-only Cypher tool. Every an
 
 ![Investigations](demo/investigations.png)
 
+Every record has a history too. The **graph explorer** opens any part, person, project, customer or decision,
+shows its live neighbourhood in FalkorDB (click a node to expand it) and, beside it, everything that happened to
+it, newest first: decisions, quotes, chat messages, tasks, status changes, investigations and leave.
+
+![Graph explorer](demo/graph-explorer.png)
+
+## 9b. Talk inside the brain
+
+![Neura1 Chat](demo/chat.png)
+
+**Neura1 Chat** is the team's own chat. Each message is stored as a passage linked to the parts, people and
+projects it mentions, so a message like "the CT-1051 bus-off test passes on the rig" immediately raises Pruthvi in
+*who knows CT-1051*. `/impact NB54360 320 22`, `/who CAN bus`, `/away Raghavendra` and `/risk` answer from the graph
+in milliseconds; `@neura1` runs the full agent in the thread. Replies only include what every member of the
+channel may see: in #engineering the impact reply has no rupee figures and `/away` gives no dates. When a plan is
+approved, a task finishes or a supplier notice arrives, Neura1 posts it to the channel that needs it.
+
 ## 10. Bring in a real company
 
 ![Import](demo/import-errors.png)

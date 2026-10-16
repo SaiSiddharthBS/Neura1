@@ -1,31 +1,31 @@
 id,name,role,team_id
-P-SURESH,Suresh,Director (Datasol),T-BOARD
-P-SATHISH,Sathish,Director (Datasol),T-BOARD
-P-JAYARAM,Jayaram,Director (Datasol),T-BOARD
-P-ANIL,Anil,Shareholder (Datasol),T-BOARD
-P-MARKANDE,Markande,Shareholder (Datasol),T-BOARD
+P-JAYARAM,Jayaram,Founder & Managing Director,T-LEAD
+P-ANIL,Anil,President & Executive Officer,T-LEAD
+P-SURESH,Suresh,Director - Business Development,T-LEAD
+P-SATHISH,Sathish,Director - Finance,T-LEAD
+P-MARKANDE,Markande,Chief Operating Officer,T-LEAD
 P-HITHESH,Hithesh,Chief Technology Officer,T-LEAD
-P-PRAVEEN,Praveen,Project Manager,T-PM
-P-VISHWAS,Vishwas,R&D Head,T-HW
-P-RAGHAVENDRA,Raghavendra,Power Electronics Lead,T-HW
-P-PRAKUL,Prakul,Hardware Design Engineer,T-HW
-P-SAI,Sai,Embedded Software Lead,T-FW
-P-ANIRUDH,Anirudh,Software Engineer,T-FW
-P-PRUTHVI,Pruthvi,Software Engineer,T-FW
-P-PRATHAM,Pratham,Software Engineer,T-FW
-P-VINAY,Vinay,Software Engineer,T-FW
-P-SACHIN,Sachin,Software Engineer,T-FW
-P-MANOJ,Manoj,Software Engineer,T-FW
-P-TARUN,Tarun,Software Engineer,T-FW
-P-SHARMADA,Sharmada,Software Engineer,T-FW
-P-SATISH,Satish,Testing Head,T-QA
-P-YOGISH,Yogish,Test Engineer,T-QA
-P-UDAY,Uday,Test Engineer,T-QA
-P-GURUMURTHY,Gurumurthy,Quality Assurance Engineer,T-QAD
-P-SHARATH,Sharath,Production Manager,T-OPS
-P-DILEEP,Dileep,Production Technician,T-OPS
-P-PRADEEP,Pradeep,Stores and Inventory,T-OPS
-P-AMBIKA,Ambika,Procurement Lead,T-SC
-P-KEERTHANA,Keerthana,Business Development Manager,T-SALES
-P-NAGARJUN,Nagarjun,Field Integration Engineer,T-SUP
-P-TEJASWINI,Tejaswini,HR and Admin,T-HR
+P-PRAVEEN,Praveen,General Manager,T-LEAD
+P-VISHWAS,Vishwas,Employee,T-HW
+P-RAGHAVENDRA,Raghavendra,Employee,T-HW
+P-PRAKUL,Prakul,Employee,T-HW
+P-SAI,Sai,Employee,T-FW
+P-ANIRUDH,Anirudh,Employee,T-FW
+P-PRUTHVI,Pruthvi,Employee,T-FW
+P-PRATHAM,Pratham,Employee,T-FW
+P-VINAY,Vinay,Employee,T-FW
+P-SACHIN,Sachin,Employee,T-FW
+P-MANOJ,Manoj,Employee,T-FW
+P-TARUN,Tarun,Employee,T-FW
+P-SHARMADA,Sharmada,Employee,T-FW
+P-SATISH,Satish,Employee,T-QA
+P-YOGISH,Yogish,Employee,T-QA
+P-UDAY,Uday,Employee,T-QA
+P-GURUMURTHY,Gurumurthy,Employee,T-QAD
+P-SHARATH,Sharath,Employee,T-OPS
+P-DILEEP,Dileep,Employee,T-OPS
+P-PRADEEP,Pradeep,Employee,T-OPS
+P-AMBIKA,Ambika,Employee,T-SC
+P-KEERTHANA,Keerthana,Employee,T-SALES
+P-NAGARJUN,Nagarjun,Employee,T-SUP
+P-TEJASWINI,Tejaswini,Employee,T-HR

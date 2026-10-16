@@ -128,7 +128,7 @@
   split: heldout
   category: policy
   question: Who has to approve a component change on a released product revision?
-  any: [[R&D Head, Vishwas]]
+  any: [[Chief Technology Officer, CTO, Hithesh]]
 - id: q25
   split: dev
   category: notice
@@ -239,8 +239,8 @@
 - id: q44
   split: heldout
   category: org
-  question: Who are the directors of Datasol (Bangalore) Limited?
-  all: [Suresh, Sathish, Jayaram]
+  question: Who is Flyvi's Managing Director, and who is the Director of Finance?
+  all: [Jayaram, Sathish]
 - id: q45
   split: heldout
   category: who_knows

@@ -23,7 +23,7 @@ the whole company (people, projects, products, customers, decisions) and turns i
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white">
   <img alt="React Flow" src="https://img.shields.io/badge/React_Flow-ff0072">
   <img alt="Ollama" src="https://img.shields.io/badge/Ollama-Qwen2.5--7B-111111?logo=ollama&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-47_passing-2fd3a5">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-58_passing-2fd3a5">
   <img alt="MCP" src="https://img.shields.io/badge/MCP-16_tools-5b6cff">
   <img alt="Cost" src="https://img.shields.io/badge/running_cost-₹0-2fd3a5">
 </p>
@@ -71,6 +71,10 @@ Neura1 answers in one view:
   <tr>
     <td width="50%"><img src="docs/demo/overview.png" alt="Overview"><br><sub><b>Overview</b>: today's signals (a supplier change, a customer escalation, a leave notice), the risk radar, work in flight, projects and the latest knowledge.</sub></td>
     <td width="50%"><img src="docs/demo/risk-radar.png" alt="Risk radar"><br><sub><b>Risk radar</b>: FalkorDB betweenness centrality, community detection and traversals find the company's chokepoints, single-sourced parts, one-person knowledge and customer concentration.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/demo/chat.png" alt="Neura1 Chat"><br><sub><b>Neura1 Chat</b>: the team talks inside the brain. Messages link to the parts and people they mention, slash commands answer from the graph, and approved plans post themselves.</sub></td>
+    <td><img src="docs/demo/graph-explorer.png" alt="Graph explorer"><br><sub><b>Graph explorer</b>: NB54360's live neighbourhood in FalkorDB, click to expand, with its full history beside it.</sub></td>
   </tr>
   <tr>
     <td><img src="docs/demo/customer-escalation.png" alt="Customer escalation"><br><sub><b>Customer escalation</b>: Konkan Naval threatens to hold acceptance of SO-884. Sales, support, firmware, production and the CTO each get a task.</sub></td>
@@ -228,10 +232,12 @@ read-only, and tasks are drafts until a person confirms them.
 
 | Capability | What Neura1 does | Where |
 |---|---|---|
-| **Organisation** | Datasol (parent, directors, shareholders) → Flyvi → 11 departments → 30 people, with reporting lines, backups and roles. The org chart shows open work and who is away today. | Organisation |
+| **Organisation** | Datasol (parent) → Flyvi, led by Jayaram (Founder & MD), Anil (President & EO), Suresh (Director BD), Sathish (Director Finance), Markande (COO), Hithesh (CTO) and Praveen (GM) → 10 teams → 30 people, with reporting lines, backups and roles. The org chart shows open work and who is away today. | Organisation |
 | **Employee 360** | For anyone: reporting chain, current and finished work, leave, stated skills plus knowledge derived from their work, projects, ownership, decisions, team, recent messages | People |
 | **Roles your team can maintain** | Edit role, team, manager, backup, skills and leave in the app, or import CSVs. Every change is stored as an event in the graph. | People → Edit · Import |
-| **Permissions from the graph** | "Viewing as" any person. Leave details are visible to that person's management chain, backup, HR and leadership. Money is visible to leadership, BD, purchase and PM. Everyone else sees it redacted. | Sidebar → Viewing as |
+| **Permissions from the graph** | "Viewing as" any person. Leave details are visible to that person's management chain, backup, HR and leadership. Money is visible to leadership, BD and purchase. Everyone else sees it redacted, including rupee amounts written inside messages and answers. | Sidebar → Viewing as |
+| **Neura1 Chat** | Built-in team chat (channels and DMs). Every message becomes a linked passage in the graph, so chat feeds search, "who knows" and timelines. `@neura1` answers in the thread with sources; `/impact`, `/who`, `/away`, `/risk` answer instantly without a model. Replies only show what *every* reader of that channel may see (money and leave are redacted per audience). #leadership and #supply are open only to people cleared for money, and direct messages stay private by construction: they are never turned into searchable company knowledge. Approved plans, finished tasks and new notices are posted to the right channel automatically. | Chat |
+| **Graph explorer + time travel** | Open any part, person, project, customer or decision and walk its connections live from FalkorDB, click to expand. Beside it, the record's full history: decisions, quotes, messages, tasks, status changes, investigations, leave, newest first. | Graph explorer |
 | **My day** | Your open work, decisions waiting for you, signals touching your areas, who in your team is away, and what changed in things you own | My day |
 | **Ask with memory** | Conversations stored per person as `Conversation → Turn` nodes, linked to the passages cited and the records discussed. Follow-ups work, and `recall` searches everyone's past answers (shared memory, Track 02). Each tool call streams live. | Ask & search |
 | **Semantic + keyword + graph search** | Local embeddings (`nomic-embed-text`) in FalkorDB's **vector index**, fused with the full-text index, then expanded to the records each passage mentions | Ask & search |
@@ -449,7 +455,7 @@ cd api
 cp .env.example .env                               # set NEURA1_DEMO_PASSCODE
 uv sync
 uv run python -m neura1.cli load                   # load Flyvi Technologies + saved model extractions
-uv run pytest -q                                   # 47 tests
+uv run pytest -q                                   # 58 tests
 uv run uvicorn neura1.main:app --port 8000
 
 cd ../web && pnpm install && pnpm dev              # http://localhost:3000
@@ -497,7 +503,7 @@ The agent uses a JSON plan-act loop, so it works even on servers whose native to
 
 | Check | Result |
 |---|---|
-| Automated tests | **47 passing**: BOM roll-ups, revision applicability, cost edge cases, import validation, CAD BOMs, extraction verification, idempotent approvals, the HTTP flow end to end, and 503 when the graph is down |
+| Automated tests | **58 passing**: BOM roll-ups, revision applicability, cost edge cases, import validation, CAD BOMs, extraction verification, idempotent approvals, the HTTP flow end to end, and 503 when the graph is down |
 | Local model on real fixture documents | DEC-117 found in **Slack and Jira** ✓ · notice read correctly ✓ · MX-3360 bench result ✓ · TR-131 bench note **missed** ✗ · [full table](docs/DEMO.md#what-the-local-model-got-right-and-wrong) |
 | Mistakes caught and fixed | The agent once called MX-3360 "approved", which led to the approval wording in tool output and the rule-based check. That check then flagged the incumbent part by mistake, and was narrowed to alternates only. A small model passed two part numbers in one lookup, so the lookup now splits them. |
 | Frozen evaluation | 48 ground-truth questions in [`api/eval/golden.yaml`](api/eval/golden.yaml), written before any model ran: graph agent vs search-only vs whole-corpus, same model. **Results pending GPU time; failures will be published, not hidden.** |
@@ -534,7 +540,7 @@ api/                 FastAPI service
   neura1/search.py     hybrid vector + full-text search with graph expansion
   neura1/webhooks.py   Slack and Jira live ingestion
   neura1/mcp_server.py the graph's tools for any MCP client
-  tests/  eval/        47 tests · 48-question frozen evaluation
+  tests/  eval/        58 tests · 48-question frozen evaluation
 web/                 Next.js app: Inbox · Impact · Company brain · Investigations · Import
 fixture/flyvi/    synthetic company: records · chats · tickets · docs · notice · updates · model extractions
 docs/                demo walkthrough · data model · queries · target customer · reuse · AI disclosure

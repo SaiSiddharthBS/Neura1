@@ -2,7 +2,7 @@
 
 Synthetic document. Flyvi Technologies engineering handbook. Owner: Vishwas.
 
-1. Any component change on a released revision needs an engineering change review, approved by the R&D Head.
+1. Any component change on a released revision needs an engineering change review, approved by the Chief Technology Officer.
 2. A substitute part is never approved on cross-reference or pin compatibility alone. It needs qualification evidence under the relevant test procedure.
 3. Changes to power-path components need a firmware review by the owner of any module that depends on the part.
 4. Quality must requalify under the governing test procedure before the change is released.

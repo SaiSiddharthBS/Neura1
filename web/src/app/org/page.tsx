@@ -42,14 +42,12 @@ export default function OrgChart() {
     for (const org of o.organizations) {
       cards.push({ id: org.id, title: org.name, sub: org.kind, tone: "border-violet/50 bg-violet/15" });
       if (org.parent_id) edges.push([org.parent_id, org.id]);
-      for (const off of org.officers.filter((x) => x.role !== "Chief Technology Officer")) {
-        cards.push({ id: `${off.id}@${org.id}`, title: off.name, sub: off.role, tone: "border-line2 bg-elev" });
-        edges.push([org.id, `${off.id}@${org.id}`]);
-      }
+      // Officers are people in the reporting tree below, so they are not drawn twice.
     }
     const managed = new Set(o.reporting.map((r) => r.person));
-    for (const p of o.people.filter((x) => x.team !== "Board")) {
-      cards.push({ id: p.id, title: p.name, sub: p.role, tone: p.away_now ? "border-warn/50 bg-warn/10" : "border-line bg-panel", away: p.away_now, work: p.open_work });
+    for (const p of o.people) {
+      const lead = p.team_id === "T-LEAD";
+      cards.push({ id: p.id, title: p.name, sub: lead ? p.role : `${p.team}`, tone: p.away_now ? "border-warn/50 bg-warn/10" : lead ? "border-accent/50 bg-accent/10" : "border-line bg-panel", away: p.away_now, work: p.open_work });
       if (!managed.has(p.id)) edges.push(["ORG-FLYVI", p.id]);
     }
     for (const r of o.reporting) edges.push([r.manager, r.person]);
@@ -68,7 +66,7 @@ export default function OrgChart() {
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Organisation</h1>
-        <p className="mt-1 text-sm text-muted">Datasol (Bangalore) Limited, its board, and Flyvi Technologies&apos; reporting lines, from the graph. Open work and who is away today are live. Click anyone for their full profile.</p>
+        <p className="mt-1 text-sm text-muted">Datasol (Bangalore) Limited, Flyvi Technologies&apos; leadership and every reporting line, from the graph. Open work and who is away today are live. Click anyone for their full profile.</p>
       </div>
       <div className="card h-[72vh] overflow-hidden">
         {flow && (

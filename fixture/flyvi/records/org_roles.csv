@@ -1,7 +1,8 @@
 person_id,org_id,role
-P-SURESH,ORG-DATASOL,Director
-P-SATHISH,ORG-DATASOL,Director
-P-JAYARAM,ORG-DATASOL,Director
-P-ANIL,ORG-DATASOL,Shareholder
-P-MARKANDE,ORG-DATASOL,Shareholder
+P-JAYARAM,ORG-FLYVI,Founder & Managing Director
+P-ANIL,ORG-FLYVI,President & Executive Officer
+P-SURESH,ORG-FLYVI,Director - Business Development
+P-SATHISH,ORG-FLYVI,Director - Finance
+P-MARKANDE,ORG-FLYVI,Chief Operating Officer
 P-HITHESH,ORG-FLYVI,Chief Technology Officer
+P-PRAVEEN,ORG-FLYVI,General Manager

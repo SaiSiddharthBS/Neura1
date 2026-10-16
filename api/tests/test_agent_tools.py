@@ -56,3 +56,14 @@ def test_incumbent_part_called_approved_is_not_flagged(graph):
     from neura1.agent import check_approval_claims
 
     assert check_approval_claims(graph, "The only approved part for this application is NB54360.") == []
+
+
+def test_restricted_reader_gets_no_leave_dates_or_money_from_tools(graph):
+    from neura1.agent import _restrict
+
+    t = Trace(graph)
+    away = run_tool(graph, t, "absence_impact", {"name": "Raghavendra"})
+    hidden = _restrict("absence_impact", away, {"money": False, "leave_of": lambda _p: False})
+    assert "absence" not in hidden and hidden["restricted"]
+    cust = run_tool(graph, t, "customer", {"text": "Nilgiri"})
+    assert _restrict("customer", cust, {"money": False, "leave_of": lambda _p: True})["open_value"] is None
