@@ -80,6 +80,16 @@ def main() -> None:
         page.wait_for_selector("text=0 tasks created")
         shot("approved-again")
 
+        # 5b The workboard: move one task forward, as a person would
+        page.goto(f"{base}/board")
+        page.wait_for_selector("text=Process")
+        page.locator("article", has_text="Firmware review").get_by_role("button", name="In progress").click()
+        page.wait_for_selector("text=Moved")
+        page.locator("article", has_text="Confirm pricing").get_by_role("button", name="Done").click()
+        page.wait_for_timeout(1200)
+        page.evaluate("window.scrollTo(0, 0)")
+        shot("workboard")
+
         # 6 New information arrives, then the impact view shows what changed
         page.goto(base)
         page.get_by_role("button", name="Bring in the updates").click()

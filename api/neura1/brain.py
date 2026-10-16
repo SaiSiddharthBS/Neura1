@@ -21,6 +21,16 @@ MATCH (a:Alias)-[:REFERS_TO]->(x) WHERE toLower(a.term) = toLower($text)
 RETURN x.id AS id, labels(x)[0] AS label, coalesce(x.name, x.id) AS name
 """
 
+# Fast lookup for the command palette: anything whose id, name or part number contains the text.
+LOOKUP = """
+MATCH (x)
+WHERE (x:Item OR x:Project OR x:Person OR x:Customer OR x:Order OR x:Build OR x:Revision)
+  AND (toLower(x.id) CONTAINS toLower($q) OR toLower(coalesce(x.name, '')) CONTAINS toLower($q)
+       OR toLower(coalesce(x.mpn, '')) CONTAINS toLower($q))
+RETURN x.id AS id, labels(x)[0] AS label, coalesce(x.name, x.id) AS name, x.kind AS kind
+LIMIT 12
+"""
+
 # Who knows about a record, and why. Each branch is one kind of signal with a weight; the evidence
 # column names the record or passage that supports it.
 WHO_KNOWS = """
@@ -81,7 +91,7 @@ ORDER BY decided_at DESC
 """
 
 PERSON_TASKS = """
-MATCH (:Person {id:$id})<-[:ASSIGNED_TO]-(a:Action)
+MATCH (:Person {id:$id})<-[:ASSIGNED_TO]-(a:Action) WHERE coalesce(a.status, 'open') <> 'done'
 OPTIONAL MATCH (inv:Investigation)-[:PRODUCED]->(a)
 RETURN a.id AS id, a.title AS title, a.status AS status, a.created_at AS created_at, inv.id AS investigation
 ORDER BY created_at DESC
@@ -151,7 +161,7 @@ RETURN DISTINCT d.id AS id, d.outcome AS outcome, s.id AS subject, d.summary AS 
 # Open tasks that touch the project's scope, directly or through the builds and orders it covers.
 PROJECT_TASKS = """
 MATCH (:Project {id:$id})-[:COVERS]->(x)
-MATCH (a:Action)-[:CONCERNS]->(x)
+MATCH (a:Action)-[:CONCERNS]->(x) WHERE coalesce(a.status, 'open') <> 'done'
 OPTIONAL MATCH (a)-[:ASSIGNED_TO]->(p:Person)
 RETURN DISTINCT a.id AS id, a.title AS title, a.status AS status, p.name AS owner, x.id AS via
 """
@@ -178,6 +188,10 @@ UNION ALL
 MATCH (inv:Investigation)-[:CONCERNS]->(i:Item)
 RETURN 'investigation' AS kind, inv.created_at AS at, inv.approved_by AS who, 'Impact of ' + i.id + ' approved' AS what,
        'Cost increase ' + coalesce(inv.cost_total, 'unknown') AS detail, inv.id AS ref
+UNION ALL
+MATCH (e:Event {kind:'status_change'})-[:ON]->(a:Action)
+RETURN 'task' AS kind, e.at AS at, e.by AS who, a.title AS what,
+       'moved from ' + e.from + ' to ' + e.to AS detail, a.id AS ref
 UNION ALL
 MATCH (s:Supplier)-[:QUOTED]->(q:Quote)-[:FOR]->(i:Item)
 RETURN 'quote' AS kind, q.valid_from AS at, s.name AS who, q.id + ' for ' + i.id AS what,

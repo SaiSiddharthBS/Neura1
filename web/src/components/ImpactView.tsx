@@ -104,7 +104,7 @@ export default function ImpactView({ source, item, price, lead, asOf }: Props) {
       </section>
 
       {r.changes_since_approval?.length > 0 && (
-        <section className="rounded-xl border border-accent/40 bg-teal-50 p-4 text-sm">
+        <section className="rounded-xl border border-accent/40 bg-accent/12 p-4 text-sm">
           <div className="font-medium text-accent">Changed since this was approved ({r.investigation?.created_at.slice(0, 10)})</div>
           <ul className="mt-1 list-disc pl-5">
             {r.changes_since_approval.map((c) => <li key={c}>{c}</li>)}
@@ -182,7 +182,7 @@ function AlternateBanner({ a, part, onOpen }: { a: Alternate; part: string; onOp
   if (a.status === "rejected") {
     const d = a.decisions.find((x) => x.outcome === "rejected")!;
     return (
-      <div className="rounded-xl border border-danger/40 bg-red-50 p-4">
+      <div className="rounded-xl border border-danger/40 bg-danger/10 p-4">
         <div className="flex items-start gap-3">
           <ShieldX className="mt-0.5 shrink-0 text-danger" size={20} />
           <div className="min-w-0 flex-1">
@@ -198,7 +198,7 @@ function AlternateBanner({ a, part, onOpen }: { a: Alternate; part: string; onOp
             <div className="mt-2 flex flex-wrap gap-2">
               {d.evidence.map((e) => (
                 <button key={e.chunk} onClick={() => onOpen({ chunk: e.chunk, quote: e.quote })}
-                        className="flex items-center gap-1.5 rounded-md border border-danger/30 bg-white px-2 py-1 text-xs hover:border-danger">
+                        className="flex items-center gap-1.5 rounded-md border border-danger/30 bg-elev px-2 py-1 text-xs hover:border-danger">
                   <FileText size={12} /> {e.title}{e.page ? ` p.${e.page}` : ""}{e.author ? ` · ${e.author}` : ""}
                 </button>
               ))}
@@ -215,7 +215,7 @@ function AlternateBanner({ a, part, onOpen }: { a: Alternate; part: string; onOp
   if (a.status === "pending_review") {
     const d = a.decisions[0];
     return (
-      <div className="rounded-xl border border-warn/40 bg-amber-50 p-4 text-sm">
+      <div className="rounded-xl border border-warn/40 bg-warn/10 p-4 text-sm">
         <div className="flex items-start gap-3">
           <AlertTriangle className="mt-0.5 shrink-0 text-warn" size={20} />
           <div>
@@ -224,7 +224,7 @@ function AlternateBanner({ a, part, onOpen }: { a: Alternate; part: string; onOp
             <div className="mt-2 flex flex-wrap gap-2">
               {d?.evidence.map((e) => (
                 <button key={e.chunk} onClick={() => onOpen({ chunk: e.chunk, quote: e.quote })}
-                        className="flex items-center gap-1.5 rounded-md border border-warn/30 bg-white px-2 py-1 text-xs">
+                        className="flex items-center gap-1.5 rounded-md border border-warn/30 bg-elev px-2 py-1 text-xs">
                   <FileText size={12} /> {e.title}{e.author ? ` · ${e.author}` : ""}
                 </button>
               ))}
@@ -236,7 +236,7 @@ function AlternateBanner({ a, part, onOpen }: { a: Alternate; part: string; onOp
   }
   if (a.status === "approved") {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-accent/40 bg-teal-50 p-3 text-sm">
+      <div className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/12 p-3 text-sm">
         <CheckCircle2 className="text-accent" size={18} /> {a.id} is an approved alternate. {price}.
       </div>
     );
@@ -335,7 +335,7 @@ function ActionsPanel({ report: r, onDone, onOpen }: { report: ImpactReport; onD
             <li key={i} className="rounded-lg border border-line p-3 text-sm">
               <div className="flex items-start justify-between gap-2">
                 <span className="font-medium">{a.title}</span>
-                {saved && <span className="shrink-0 rounded bg-teal-50 px-1.5 py-0.5 text-[10px] text-accent">{saved.status}</span>}
+                {saved && <span className="shrink-0 rounded bg-accent/12 px-1.5 py-0.5 text-[10px] text-accent">{saved.status}</span>}
               </div>
               <div className="mt-1 text-xs text-muted">{a.owner ?? "No owner recorded"} · {a.why}</div>
               {a.cites.length > 0 && (
@@ -354,7 +354,7 @@ function ActionsPanel({ report: r, onDone, onOpen }: { report: ImpactReport; onD
       </ol>
       <div className="border-t border-line p-4">
         <button onClick={approve} disabled={busy}
-                className="w-full rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white hover:bg-black disabled:opacity-50">
+                className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-50">
           {inv ? "Approve again (no duplicates)" : "Approve and assign tasks"}
         </button>
         <div className="mt-2 flex gap-2">

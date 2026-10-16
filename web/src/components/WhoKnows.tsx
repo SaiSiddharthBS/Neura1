@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Users } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 
 type Signal = { signal: string; evidence: string; ts: string | null };
@@ -16,9 +16,14 @@ type Result = {
 
 const EXAMPLES = ["NB54360", "pmic_seq.c", "Kaveri", "VC-300", "PSU-24"];
 
-export default function WhoKnows({ onOpen }: { onOpen?: (chunk: string) => void }) {
+export default function WhoKnows({ onOpen, initial }: { onOpen?: (chunk: string) => void; initial?: string }) {
   const [q, setQ] = useState("");
   const [r, setR] = useState<Result | null>(null);
+
+  const started = useRef(false);
+  useEffect(() => {
+    if (initial && !started.current) { started.current = true; run(initial); }
+  }, [initial]);
 
   async function run(text: string) {
     setQ(text);
@@ -31,7 +36,7 @@ export default function WhoKnows({ onOpen }: { onOpen?: (chunk: string) => void 
       <form onSubmit={(e) => { e.preventDefault(); if (q.trim()) run(q.trim()); }} className="mt-3 flex gap-2">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="A part, project, customer, or a name people use in chat"
                className="flex-1 rounded-md border border-line px-3 py-2 text-sm" />
-        <button className="rounded-md bg-ink px-4 text-sm text-white">Find</button>
+        <button className="rounded-md bg-accent px-4 text-sm text-white">Find</button>
       </form>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {EXAMPLES.map((x) => (

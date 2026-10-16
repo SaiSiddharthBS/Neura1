@@ -14,7 +14,11 @@ event, including:
 - the web app
 - the synthetic Voltline fixture
 
-**Carried over from before the event:** the Neura1 name, the company-brain idea, and planning notes.
+**Carried over from before the event:**
+- the Neura1 name;
+- the logo;
+- the company-brain idea and planning notes;
+- the visual design language: dark "obsidian glass" palette, azure accent, Inter/JetBrains Mono pairing and a floating sidebar. It was re-implemented here as new Tailwind tokens and components; no stylesheet or component code was copied.
 **Not carried over:** no source code, UI, database schema, or data from the earlier codebase.
 
 Third-party libraries are listed in `api/pyproject.toml` and `web/package.json`.

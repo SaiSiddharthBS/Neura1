@@ -16,7 +16,7 @@ type Detail = {
   activity: { chunk: string; text: string; author: string; ts: string; title: string }[];
 };
 
-const STATUS: Record<string, string> = { active: "bg-teal-50 text-accent", design: "bg-indigo-50 text-indigo-700", done: "bg-bg text-muted" };
+const STATUS: Record<string, string> = { active: "bg-accent/12 text-accent", design: "bg-violet/12 text-violet", done: "bg-bg text-muted" };
 
 export default function ProjectsView() {
   const params = useSearchParams();

@@ -8,7 +8,7 @@ import { api } from "@/lib/api";
 type Item = { kind: string; at: string; who: string | null; what: string; detail: string; ref: string };
 type Flag = { record: string; label: string; chunk: string | null; reason: string };
 
-const KIND: Record<string, string> = { message: "bg-bg", decision: "bg-red-50 text-danger", investigation: "bg-teal-50 text-accent", quote: "bg-amber-50 text-warn" };
+const KIND: Record<string, string> = { message: "bg-bg", decision: "bg-danger/10 text-danger", investigation: "bg-accent/12 text-accent", quote: "bg-warn/10 text-warn" };
 
 export default function Changes() {
   const [d, setD] = useState<{ feed: Item[]; attention: Flag[] } | null>(null);
@@ -38,7 +38,7 @@ export default function Changes() {
         <p className="mt-1 text-xs text-muted">Knowledge that may no longer be true, found from the graph&apos;s structure.</p>
         <ul className="mt-3 space-y-2 text-sm">
           {d?.attention.map((a, i) => (
-            <li key={i} className="rounded-lg border border-warn/30 bg-amber-50 p-2">
+            <li key={i} className="rounded-lg border border-warn/30 bg-warn/10 p-2">
               <b className="font-mono text-xs">{a.record}</b> <span className="text-xs text-muted">{a.label}</span>
               <div>{a.reason}</div>
             </li>

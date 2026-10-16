@@ -36,3 +36,20 @@ def test_task_from_a_draft_is_assigned_by_first_name_and_not_duplicated(fresh_gr
     assert first["new"] is True and first["owner"] == "Rahul Iyer"
     assert again["new"] is False and again["id"] == first["id"]
     assert create_task(fresh_graph, "Something", "Nobody", None, "", "Kavya")["owner"] is None
+
+
+def test_moving_tasks_on_the_board_records_history(fresh_graph):
+    from neura1.actions import board, create_task, set_status
+
+    t = create_task(fresh_graph, "Requalify MX-3360", "Ananya", "TP-PSU-07", "bench pass", "Kavya")
+    assert [x["id"] for x in board(fresh_graph)["columns"]["open"]] == [t["id"]]
+    set_status(fresh_graph, t["id"], "in_progress", "Ananya Rao")
+    set_status(fresh_graph, t["id"], "done", "Ananya Rao", "TR-140 passed")
+    b = board(fresh_graph)
+    assert [x["id"] for x in b["columns"]["done"]] == [t["id"]] and b["pipeline"]["done"] == 1
+    moves = fresh_graph.ro_query("MATCH (e:Event)-[:ON]->(:Action {id:$id}) RETURN e.from, e.to ORDER BY e.at",
+                                 {"id": t["id"]}).result_set
+    assert sorted(moves) == sorted([["open", "in_progress"], ["in_progress", "done"]])
+    import pytest
+    with pytest.raises(ValueError):
+        set_status(fresh_graph, t["id"], "archived", "x")

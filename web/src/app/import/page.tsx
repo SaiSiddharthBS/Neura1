@@ -75,7 +75,7 @@ export default function ImportPage() {
           onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
           onDragLeave={() => setDrag(false)}
           onDrop={(e) => { e.preventDefault(); setDrag(false); check([...files, ...Array.from(e.dataTransfer.files)]); }}
-          className={`card flex cursor-pointer flex-col items-center justify-center gap-2 border-2 border-dashed p-10 text-center ${drag ? "border-accent bg-teal-50" : ""}`}>
+          className={`card flex cursor-pointer flex-col items-center justify-center gap-2 border-2 border-dashed p-10 text-center ${drag ? "border-accent bg-accent/12" : ""}`}>
           <FileUp className="text-muted" />
           <div className="font-medium">Drop files here or click to choose</div>
           <div className="text-xs text-muted">.csv for records · .pdf .md .txt for documents · .json for Slack exports and tickets</div>
@@ -100,7 +100,7 @@ export default function ImportPage() {
 
         {report && !busy && (
           <div className="card">
-            <div className={`flex items-center justify-between border-b border-line p-4 ${report.ok ? "" : "bg-red-50"}`}>
+            <div className={`flex items-center justify-between border-b border-line p-4 ${report.ok ? "" : "bg-danger/10"}`}>
               <div>
                 <div className="font-medium">{report.ok ? "Ready to import" : "Fix these before importing"}</div>
                 <div className="text-xs text-muted">
@@ -119,7 +119,7 @@ export default function ImportPage() {
                 <tbody>
                   {report.issues.map((i, k) => (
                     <tr key={k} className="border-t border-line">
-                      <td className="px-4 py-2"><span className={`rounded px-1.5 py-0.5 text-[10px] ${i.level === "error" ? "bg-red-100 text-danger" : "bg-amber-100 text-warn"}`}>{i.level}</span></td>
+                      <td className="px-4 py-2"><span className={`rounded px-1.5 py-0.5 text-[10px] ${i.level === "error" ? "bg-danger/15 text-danger" : "bg-warn/15 text-warn"}`}>{i.level}</span></td>
                       <td className="px-4 py-2 font-mono text-xs">{i.file}</td>
                       <td className="px-4 py-2">{i.row ?? ""}</td>
                       <td className="px-4 py-2 font-mono text-xs">{i.column ?? ""}</td>
@@ -132,7 +132,7 @@ export default function ImportPage() {
             {report.skipped.map((s) => <div key={s} className="border-t border-line px-4 py-2 text-sm text-warn">Skipped {s}</div>)}
             <div className="border-t border-line p-4">
               <button disabled={!report.ok} onClick={commit}
-                      className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white disabled:opacity-40">
+                      className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white disabled:opacity-40">
                 Import into the company graph
               </button>
               {result && <div className="mt-2 text-sm">{result}</div>}

@@ -121,3 +121,62 @@ def create_task(graph: Graph, title: str, owner: str | None, target: str | None,
     """, {"id": action_id, "title": title, "why": why, "target": target, "now": now, "by": created_by,
           "owner": owner, "cites": list(cites)}, read_only=False)
     return res[0] if res else {"id": action_id, "new": False, "owner": None}
+
+
+STATUSES = ("open", "in_progress", "blocked", "done")
+
+BOARD = """
+MATCH (a:Action)
+OPTIONAL MATCH (a)-[:ASSIGNED_TO]->(p:Person)
+OPTIONAL MATCH (inv:Investigation)-[:PRODUCED]->(a)
+OPTIONAL MATCH (inv)-[:CONCERNS]->(part:Item)
+OPTIONAL MATCH (a)-[:CONCERNS]->(t)
+OPTIONAL MATCH (pr:Project)-[:COVERS]->(t)
+OPTIONAL MATCH (a)-[c:CITES]->(:Chunk)
+RETURN a.id AS id, a.title AS title, a.kind AS kind, a.why AS why, a.status AS status,
+       a.created_at AS created_at, a.updated_at AS updated_at, a.target AS target,
+       p.id AS owner_id, p.name AS owner, inv.id AS investigation, part.id AS part,
+       collect(DISTINCT pr.id) AS projects, count(DISTINCT c) AS sources
+ORDER BY created_at
+"""
+
+PIPELINE = """
+MATCH (s:Source {kind:'notice'})
+OPTIONAL MATCH (inv:Investigation)-[:TRIGGERED_BY]->(s)
+RETURN s.id AS id, s.title AS title, inv.id AS investigation
+"""
+
+
+def board(graph: Graph) -> dict:
+    tasks = rows(graph, BOARD)
+    notices = rows(graph, PIPELINE)
+    investigations = rows(graph, "MATCH (i:Investigation) RETURN count(i) AS n")[0]["n"]
+    by_status = {s: [t for t in tasks if (t["status"] or "open") == s] for s in STATUSES}
+    return {
+        "columns": by_status,
+        "pipeline": {
+            "notices": len(notices),
+            "awaiting_analysis": [n for n in notices if not n["investigation"]],
+            "investigations": investigations,
+            "open": len(by_status["open"]), "in_progress": len(by_status["in_progress"]),
+            "blocked": len(by_status["blocked"]), "done": len(by_status["done"]),
+        },
+    }
+
+
+def set_status(graph: Graph, action_id: str, status: str, by: str, note: str | None = None) -> dict:
+    """Move a task. Every move is kept as an Event node, so the history is part of the graph."""
+    if status not in STATUSES:
+        raise ValueError(f"status must be one of {', '.join(STATUSES)}")
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    res = rows(graph, """
+        MATCH (a:Action {id:$id})
+        WITH a, coalesce(a.status, 'open') AS previous
+        SET a.status=$status, a.updated_at=$now
+        CREATE (e:Event {kind:'status_change', from:previous, to:$status, at:$now, by:$by, note:$note})
+        CREATE (e)-[:ON]->(a)
+        RETURN a.id AS id, previous, a.status AS status
+    """, {"id": action_id, "status": status, "now": now, "by": by, "note": note}, read_only=False)
+    if not res:
+        raise KeyError(action_id)
+    return res[0]

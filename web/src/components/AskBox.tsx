@@ -1,7 +1,7 @@
 "use client";
 
 import { ClipboardCheck, FileText, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, ApiError, type TraceStep } from "@/lib/api";
 
 type Draft = { owner: string; title: string; target: string | null; why: string };
@@ -15,11 +15,16 @@ const EXAMPLES = [
   "Ask Rahul to review pmic_seq.c for MX-3360",
 ];
 
-export default function AskBox({ onOpen }: { onOpen?: (chunk: string) => void }) {
+export default function AskBox({ onOpen, initial }: { onOpen?: (chunk: string) => void; initial?: string }) {
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
   const [a, setA] = useState<Answer | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const started = useRef(false);
+  useEffect(() => {
+    if (initial && !started.current) { started.current = true; ask(initial); }
+  }, [initial]);
 
   async function ask(question: string) {
     setQ(question);
@@ -43,7 +48,7 @@ export default function AskBox({ onOpen }: { onOpen?: (chunk: string) => void })
       <form onSubmit={(e) => { e.preventDefault(); if (q.trim()) ask(q.trim()); }} className="mt-3 flex gap-2">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask anything about Voltline's products, parts, people and decisions"
                className="flex-1 rounded-md border border-line px-3 py-2 text-sm" />
-        <button disabled={busy} className="rounded-md bg-ink px-4 text-sm text-white disabled:opacity-50">{busy ? "Thinking…" : "Ask"}</button>
+        <button disabled={busy} className="rounded-md bg-accent px-4 text-sm text-white disabled:opacity-50">{busy ? "Thinking…" : "Ask"}</button>
       </form>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {EXAMPLES.map((x) => (
@@ -55,7 +60,7 @@ export default function AskBox({ onOpen }: { onOpen?: (chunk: string) => void })
       {a && (
         <div className="mt-4 space-y-3">
           {a.warnings?.map((w) => (
-            <div key={w} className="rounded-lg border border-danger/40 bg-red-50 p-3 text-sm text-danger">{w}</div>
+            <div key={w} className="rounded-lg border border-danger/40 bg-danger/10 p-3 text-sm text-danger">{w}</div>
           ))}
           <div className="whitespace-pre-wrap rounded-lg bg-bg p-3 text-sm leading-relaxed">{a.answer}</div>
           {a.sources && a.sources.length > 0 && (
@@ -109,12 +114,12 @@ function DraftTask({ d }: { d: Draft }) {
     }
   }
   return (
-    <div className="rounded-lg border border-accent/40 bg-teal-50 p-3 text-sm">
+    <div className="rounded-lg border border-accent/40 bg-accent/12 p-3 text-sm">
       <div className="flex items-center gap-2 font-medium text-accent"><ClipboardCheck size={15} /> Draft task, not created yet</div>
       <div className="mt-1"><b>{d.title}</b> → {d.owner}{d.target ? ` · ${d.target}` : ""}</div>
       {d.why && <div className="text-xs text-muted">{d.why}</div>}
       {state ? <div className="mt-2 text-xs">{state}</div> :
-        <button onClick={create} className="mt-2 rounded-md bg-ink px-3 py-1 text-xs text-white">Create task</button>}
+        <button onClick={create} className="mt-2 rounded-md bg-accent px-3 py-1 text-xs text-white">Create task</button>}
     </div>
   );
 }

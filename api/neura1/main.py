@@ -378,6 +378,11 @@ def ask(body: AskIn, g=Depends(graph)):
 
 # ---------- the wider company brain ----------
 
+@app.get("/api/lookup")
+def lookup(q: str, g=Depends(graph)):
+    return rows(g, brain.LOOKUP, {"q": q[:80]}) if len(q.strip()) >= 2 else []
+
+
 @app.get("/api/brain/who-knows")
 def who_knows(q: str, g=Depends(graph)):
     return brain.who_knows(g, q)
@@ -426,3 +431,26 @@ class TaskIn(BaseModel):
 @app.post("/api/tasks", dependencies=[Depends(require_passcode)])
 def create_task(body: TaskIn, g=Depends(graph)):
     return actions.create_task(g, body.title, body.owner, body.target, body.why, body.created_by, body.cites)
+
+
+# ---------- workboard ----------
+
+@app.get("/api/board")
+def board(g=Depends(graph)):
+    return actions.board(g)
+
+
+class StatusIn(BaseModel):
+    status: str
+    by: str
+    note: str | None = None
+
+
+@app.post("/api/actions/{action_id}/status", dependencies=[Depends(require_passcode)])
+def move_task(action_id: str, body: StatusIn, g=Depends(graph)):
+    try:
+        return actions.set_status(g, action_id, body.status, body.by, body.note)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    except KeyError:
+        raise HTTPException(404, "Unknown task")

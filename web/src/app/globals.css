@@ -1,36 +1,83 @@
 @import "tailwindcss";
 
+/* Neura1 design language: obsidian glass. Dark by design; every colour is a token. */
 :root {
-  --bg: #f6f7f9;
-  --panel: #ffffff;
-  --ink: #111827;
-  --muted: #6b7280;
-  --line: #e5e7eb;
-  --accent: #0f766e;
-  --danger: #b91c1c;
-  --warn: #b45309;
+  color-scheme: dark;
+  --bg: #04060c;
+  --panel: rgba(12, 17, 31, 0.62);
+  --elev: rgba(255, 255, 255, 0.045);
+  --ink: #eef3fb;
+  --muted: rgba(226, 233, 245, 0.58);
+  --line: rgba(255, 255, 255, 0.08);
+  --line2: rgba(255, 255, 255, 0.16);
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  --cyan: #5ad1e6;
+  --violet: #a78bfa;
+  --success: #34d399;
+  --danger: #f87171;
+  --warn: #fbbf24;
+  --spring: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @theme inline {
   --color-bg: var(--bg);
   --color-panel: var(--panel);
+  --color-elev: var(--elev);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-line: var(--line);
+  --color-line2: var(--line2);
   --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-cyan: var(--cyan);
+  --color-violet: var(--violet);
+  --color-success: var(--success);
   --color-danger: var(--danger);
   --color-warn: var(--warn);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
 body {
-  background: var(--bg);
+  background-color: var(--bg);
   color: var(--ink);
+  background-image:
+    radial-gradient(1200px 600px at 8% -10%, rgba(37, 99, 235, 0.22), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(90, 209, 230, 0.10), transparent 60%),
+    radial-gradient(900px 700px at 70% 110%, rgba(124, 58, 237, 0.12), transparent 60%),
+    linear-gradient(180deg, #060913 0%, #03050a 100%);
+  background-attachment: fixed;
 }
 
 .card {
   background: var(--panel);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 16px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 12px 40px rgba(0, 0, 0, 0.35);
+  transition: border-color 300ms var(--spring), transform 400ms var(--spring);
 }
+
+.glow {
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.35), 0 0 32px rgba(59, 130, 246, 0.25);
+}
+
+input, textarea, select {
+  background: var(--elev);
+  color: var(--ink);
+}
+input::placeholder, textarea::placeholder { color: var(--muted); }
+
+:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 999px; }
+
+.react-flow { --xy-background-color: transparent; }
+.react-flow__controls button { background: rgba(255, 255, 255, 0.06); border-color: var(--line); color: var(--ink); fill: var(--ink); }
+
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.rise { animation: rise 500ms var(--spring) both; }
+@media (prefers-reduced-motion: reduce) { .rise { animation: none; } .card { transition: none; } }

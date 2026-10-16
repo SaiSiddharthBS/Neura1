@@ -47,7 +47,7 @@ export default function Inbox() {
                 </div>
                 {n.extraction && !n.extraction.problems.length ? (
                   <Link href={`/impact?source=${encodeURIComponent(n.id)}`}
-                        className="shrink-0 rounded-lg bg-ink px-4 py-2 text-sm text-white hover:bg-black">
+                        className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover">
                     Trace impact
                   </Link>
                 ) : null}
@@ -122,7 +122,7 @@ function AddNotice({ onAdded }: { onAdded: () => void }) {
 
   if (!open) return (
     <div className="mt-4">
-      <button onClick={() => setOpen(true)} className="rounded-lg border border-ink px-4 py-2 text-sm font-medium hover:bg-ink hover:text-white">
+      <button onClick={() => setOpen(true)} className="rounded-lg border border-ink px-4 py-2 text-sm font-medium hover:bg-accent hover:text-white hover:border-accent">
         + Add a supplier notice
       </button>
       {msg && <span className="ml-3 text-sm text-muted">{msg}</span>}
@@ -137,7 +137,7 @@ function AddNotice({ onAdded }: { onAdded: () => void }) {
       <div className="flex flex-wrap items-center gap-3">
         <input type="file" accept=".pdf,.txt,.md" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="text-xs" />
         <button disabled={busy || (!text.trim() && !file)} onClick={submit}
-                className="ml-auto rounded-lg bg-ink px-4 py-2 text-white disabled:opacity-40">{busy ? "Working…" : "Add notice"}</button>
+                className="ml-auto rounded-lg bg-accent px-4 py-2 text-white disabled:opacity-40">{busy ? "Working…" : "Add notice"}</button>
         <button onClick={() => setOpen(false)} className="text-muted">Cancel</button>
       </div>
       {msg && <div className="text-muted">{msg}</div>}
@@ -179,7 +179,7 @@ function ManualFacts({ sourceId, onSaved }: { sourceId: string; onSaved: () => v
         <input value={lead} onChange={(e) => setLead(e.target.value)} placeholder="Lead time (weeks)" inputMode="numeric" className="rounded-md border border-line px-2 py-1.5" />
         <input value={eff} onChange={(e) => setEff(e.target.value)} placeholder="Effective (YYYY-MM-DD)" className="rounded-md border border-line px-2 py-1.5" />
       </div>
-      <button disabled={!part} onClick={save} className="mt-2 rounded-md bg-ink px-3 py-1.5 text-white disabled:opacity-40">Save facts</button>
+      <button disabled={!part} onClick={save} className="mt-2 rounded-md bg-accent px-3 py-1.5 text-white disabled:opacity-40">Save facts</button>
       {msg && <div className="mt-2 text-danger">Check failed: {msg}</div>}
     </div>
   );
@@ -219,7 +219,7 @@ function WhatIf() {
                    className="mt-1 w-full rounded-md border border-line px-3 py-2" />
           </label>
         </div>
-        <button className="w-full rounded-lg border border-ink px-4 py-2 font-medium hover:bg-ink hover:text-white">
+        <button className="w-full rounded-lg border border-ink px-4 py-2 font-medium hover:bg-accent hover:text-white hover:border-accent">
           Trace
         </button>
       </form>

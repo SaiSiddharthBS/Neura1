@@ -16,7 +16,7 @@ function Highlight({ text, quote }: { text: string; quote?: string }) {
   return (
     <>
       {text.slice(0, i)}
-      <mark className="rounded bg-amber-200 px-0.5">{quote}</mark>
+      <mark className="rounded bg-warn/40 px-0.5">{quote}</mark>
       {text.slice(i + quote.length)}
     </>
   );
@@ -31,7 +31,7 @@ export default function EvidenceDrawer({ chunk, quote, onClose }: { chunk: strin
   }, [chunk]);
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-black/20" onClick={onClose}>
+    <div className="fixed inset-0 z-40 flex justify-end bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <aside className="h-full w-full max-w-xl overflow-y-auto bg-panel p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -43,7 +43,7 @@ export default function EvidenceDrawer({ chunk, quote, onClose }: { chunk: strin
         </div>
         {error && <p className="mt-4 text-sm text-danger">{error}</p>}
         {p?.stale && (
-          <p className="mt-3 rounded-md bg-amber-50 p-2 text-xs text-warn">
+          <p className="mt-3 rounded-md bg-warn/10 p-2 text-xs text-warn">
             This source has changed since this passage was linked. Re-check before relying on it.
           </p>
         )}
@@ -51,7 +51,7 @@ export default function EvidenceDrawer({ chunk, quote, onClose }: { chunk: strin
           <div className="mt-4 space-y-2">
             {p.context.map((c) => (
               <div key={c.id}
-                   className={`rounded-lg border p-3 text-sm ${c.id === p.id ? "border-ink bg-white shadow-sm" : "border-line bg-bg text-muted"}`}>
+                   className={`rounded-lg border p-3 text-sm ${c.id === p.id ? "border-ink bg-elev shadow-sm" : "border-line bg-bg text-muted"}`}>
                 {(c.author || c.ts || c.page) && (
                   <div className="mb-1 text-xs text-muted">
                     {[c.author, c.ts?.replace("T", " ").slice(0, 16), c.page ? `page ${c.page}` : null].filter(Boolean).join(" · ")}
