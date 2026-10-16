@@ -91,6 +91,15 @@ def _markdown(text: str) -> list[Segment]:
 
 SUPPORTED = (".json", ".md", ".txt", ".pdf")
 
+# What arrives in the inbox: the file name says what kind of signal it is.
+SIGNAL_KINDS = {"escalation": "escalation", "leave": "leave", "notice": "notice"}
+
+
+def inbox_kind(path: Path) -> str | None:
+    if path.parent.name != "inbox":
+        return None
+    return SIGNAL_KINDS.get(path.stem.split("_")[0].split("-")[0].lower(), "notice")
+
 
 def parse_source(path: Path, root: Path) -> tuple[dict, list[Segment]]:
     blob = path.read_bytes()
@@ -103,7 +112,7 @@ def parse_source(path: Path, root: Path) -> tuple[dict, list[Segment]]:
         "ref": ref_match.group(1) if ref_match else None,
     }
     if path.suffix == ".pdf":
-        meta |= {"kind": "notice" if path.parts[-2] == "inbox" else "doc", "title": path.stem.replace("_", " ")}
+        meta |= {"kind": inbox_kind(path) or "doc", "title": path.stem.replace("_", " ")}
         return meta, _pdf(path)
     raw = blob.decode("utf-8", errors="replace")
     if path.suffix == ".json":
@@ -115,10 +124,10 @@ def parse_source(path: Path, root: Path) -> tuple[dict, list[Segment]]:
             meta |= {"kind": "chat", "title": f"Slack {data['channel']}"}
             return meta, _slack(data)
         meta |= {"kind": "ticket", "title": f"{data['key']}: {data['title']}", "ref": data["key"],
-                 "status": data.get("status")}
+                 "status": data.get("status"), "assignee": data.get("assignee"), "created": data.get("created")}
         return meta, _ticket(data)
     title = raw.splitlines()[0].lstrip("# ").strip()
-    meta |= {"kind": "notice" if path.parts[-2] == "inbox" else "doc", "title": title}
+    meta |= {"kind": inbox_kind(path) or "doc", "title": title}
     return meta, _markdown(raw)
 
 
@@ -218,5 +227,10 @@ def load_sources(graph: Graph, root: Path | None = None, dirs=UNSTRUCTURED_DIRS,
             FOREACH (_ IN CASE WHEN cited = 0 THEN [1] ELSE [] END | DETACH DELETE c)
             FOREACH (_ IN CASE WHEN cited > 0 THEN [1] ELSE [] END | SET c.retracted_at = $now)
         """, {"sid": meta["id"], "keep": keep, "now": now})
+        if meta.get("assignee"):
+            graph.query("""
+                MATCH (s:Source {id:$sid}) OPTIONAL MATCH (s)-[old:ASSIGNED_TO]->() DELETE old
+                WITH DISTINCT s MATCH (p:Person {name:$who}) MERGE (s)-[:ASSIGNED_TO]->(p)
+            """, {"sid": meta["id"], "who": meta["assignee"]})
         counts[meta["id"]] = len(segments)
     return counts

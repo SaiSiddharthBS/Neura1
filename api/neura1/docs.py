@@ -34,13 +34,14 @@ USED_BY = {
 
 def main() -> None:
     out = ["# Cypher queries Neura1 depends on", "",
-           "Generated from [`api/neura1/queries.py`](../api/neura1/queries.py) (change impact) and "
-           "[`api/neura1/brain.py`](../api/neura1/brain.py) (company-wide questions) by `uv run python -m neura1.docs`.",
+           "Generated from [`queries.py`](../api/neura1/queries.py), [`brain.py`](../api/neura1/brain.py) and "
+           "[`scenarios.py`](../api/neura1/scenarios.py) by `uv run python -m neura1.docs`.",
            "All queries are parameterised and run read-only (`GRAPH.RO_QUERY`). Writes happen only in the loaders",
            "(`api/neura1/ingest/`) and in `api/neura1/actions.py`.", ""]
-    for module in ("queries.py", "brain.py"):
+    for module in ("queries.py", "brain.py", "scenarios.py"):
         src = (REPO_ROOT / "api" / "neura1" / module).read_text()
-        out += _section(src, "Change impact" if module == "queries.py" else "The wider company brain")
+        out += _section(src, {"queries.py": "Change impact", "brain.py": "The wider company brain",
+                              "scenarios.py": "Company events and the risk radar"}[module])
     (REPO_ROOT / "docs").mkdir(exist_ok=True)
     (REPO_ROOT / "docs" / "queries.md").write_text("\n".join(out))
     print("wrote docs/queries.md")

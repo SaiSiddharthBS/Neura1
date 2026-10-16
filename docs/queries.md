@@ -1,6 +1,6 @@
 # Cypher queries Neura1 depends on
 
-Generated from [`api/neura1/queries.py`](../api/neura1/queries.py) (change impact) and [`api/neura1/brain.py`](../api/neura1/brain.py) (company-wide questions) by `uv run python -m neura1.docs`.
+Generated from [`queries.py`](../api/neura1/queries.py), [`brain.py`](../api/neura1/brain.py) and [`scenarios.py`](../api/neura1/scenarios.py) by `uv run python -m neura1.docs`.
 All queries are parameterised and run read-only (`GRAPH.RO_QUERY`). Writes happen only in the loaders
 (`api/neura1/ingest/`) and in `api/neura1/actions.py`.
 
@@ -585,4 +585,346 @@ RETURN b.id AS record, 'Build' AS label, NULL AS chunk, 'no planner recorded' AS
 UNION ALL
 MATCH (c:Customer) WHERE NOT (:Person)-[:OWNS]->(c)
 RETURN c.id AS record, 'Customer' AS label, NULL AS chunk, 'no account manager recorded' AS reason
+```
+
+# Company events and the risk radar
+
+## `PERSON_ABSENCES`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (p:Person {id:$id})-[:HAS_ABSENCE]->(a:Absence)
+RETURN a.start_date AS start_date, a.end_date AS end_date, a.kind AS kind, a.note AS note ORDER BY start_date
+```
+
+## `PERSON_LINE`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (p:Person {id:$id})
+OPTIONAL MATCH (p)-[:REPORTS_TO]->(m:Person)
+OPTIONAL MATCH (r:Person)-[:REPORTS_TO]->(p)
+OPTIONAL MATCH (b:Person)-[:BACKS_UP]->(p)
+RETURN p.name AS name, p.role AS role, m.id AS manager_id, m.name AS manager,
+       collect(DISTINCT r.name) AS reports, b.id AS backup_id, b.name AS backup
+```
+
+## `OWNED_WORK`
+
+What the person owns, and what is scheduled or due on those things.
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (p:Person {id:$id})-[:OWNS]->(x)
+OPTIONAL MATCH (a:Action)-[:CONCERNS]->(x) WHERE coalesce(a.status, 'open') <> 'done'
+RETURN x.id AS id, labels(x)[0] AS label, coalesce(x.name, x.id) AS name,
+       x.planned_date AS planned_date, x.valid_until AS valid_until,
+       collect(DISTINCT a.title) AS open_tasks_on_it
+```
+
+## `OPEN_TASKS`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (:Person {id:$id})<-[:ASSIGNED_TO]-(a:Action) WHERE coalesce(a.status, 'open') <> 'done'
+OPTIONAL MATCH (inv:Investigation)-[:PRODUCED]->(a)
+RETURN a.id AS id, a.title AS title, coalesce(a.status, 'open') AS status, inv.id AS investigation
+```
+
+## `LED_PROJECTS`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (:Person {id:$id})-[:LEADS]->(pr:Project) RETURN pr.id AS id, pr.name AS name, pr.target_date AS target_date
+```
+
+## `SOLE_KNOWLEDGE`
+
+Things this person talks about that nobody else discusses or owns: knowledge that leaves with them.
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (p:Person {id:$id})<-[:SAID_BY]-(c:Chunk)-[:MENTIONS]->(x)
+WHERE NOT x:Person AND NOT x:Source AND c.retracted_at IS NULL
+WITH p, x, count(c) AS mine
+OPTIONAL MATCH (o:Person)<-[:SAID_BY]-(:Chunk)-[:MENTIONS]->(x) WHERE o <> p
+WITH p, x, mine, count(DISTINCT o) AS others
+OPTIONAL MATCH (o2:Person)-[:OWNS]->(x) WHERE o2 <> p
+WITH x, mine, others, count(DISTINCT o2) AS other_owners
+WHERE others = 0
+RETURN x.id AS id, labels(x)[0] AS label, mine, other_owners
+ORDER BY mine DESC
+```
+
+## `DECISIONS_MADE`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (:Person {id:$id})<-[:DECIDED_BY]-(d:Decision)-[:ABOUT]->(s:Item)
+RETURN d.id AS id, d.outcome AS outcome, s.id AS subject, d.summary AS summary
+```
+
+## `HANDOVER_POLICY`
+
+
+
+**Parameters:** none  
+**Used by:** —
+
+```cypher
+MATCH (ch:Chunk)-[:PART_OF]->(:Source {ref:'HB-HR-02'}) WHERE ch.text CONTAINS '1. '
+RETURN ch.id AS chunk LIMIT 1
+```
+
+## `CUSTOMER`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (c:Customer {id:$id})
+OPTIONAL MATCH (am:Person)-[:OWNS]->(c)
+OPTIONAL MATCH (b:Person)-[:BACKS_UP]->(am)
+RETURN c.id AS id, c.name AS name, am.id AS manager_id, am.name AS account_manager, b.name AS backup
+```
+
+## `CUSTOMER_ORDERS`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (c:Customer {id:$id})-[:PLACED]->(o:Order)
+OPTIONAL MATCH (o)-[:FULFILLED_BY]->(b:Build)-[:BUILDS]->(r:Revision)
+OPTIONAL MATCH (planner:Person)-[:OWNS]->(b)
+OPTIONAL MATCH (a:Action)-[:CONCERNS]->(t) WHERE (t = o OR t = b) AND coalesce(a.status, 'open') <> 'done'
+RETURN o.id AS id, o.qty AS qty, o.due_date AS due, o.unit_price AS unit_price,
+       o.penalty_pct_per_week AS penalty_pct, o.penalty_cap_pct AS penalty_cap, o.penalty_note AS penalty_note,
+       b.id AS build, b.planned_date AS build_date, r.id AS revision, planner.name AS planner,
+       collect(DISTINCT a.title) AS open_tasks
+ORDER BY due
+```
+
+## `CUSTOMER_FIELD`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (s:Shipment)-[:SHIPPED_TO]->(:Customer {id:$id})
+MATCH (s)-[:OF_REV]->(r:Revision)
+RETURN s.id AS id, s.qty AS qty, s.shipped_on AS shipped_on, r.id AS revision, r.status AS status
+```
+
+## `CUSTOMER_SIGNALS`
+
+Tickets, escalations and conversations that mention the customer, its orders, or its field units.
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (c:Customer {id:$id})
+MATCH (ch:Chunk)-[:MENTIONS]->(x)
+WHERE x = c OR (c)-[:PLACED]->(x)
+MATCH (ch)-[:PART_OF]->(s:Source)
+OPTIONAL MATCH (s)-[:ASSIGNED_TO]->(who:Person)
+RETURN DISTINCT s.id AS source, s.kind AS kind, s.title AS title, s.status AS status, who.name AS assignee,
+       max(ch.ts) AS last
+ORDER BY last DESC
+```
+
+## `CUSTOMER_PROJECTS`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (pr:Project)-[:COVERS]->(x) WHERE x.id = $id OR (:Customer {id:$id})-[:PLACED]->(x)
+OPTIONAL MATCH (lead:Person)-[:LEADS]->(pr)
+RETURN DISTINCT pr.id AS id, pr.name AS name, pr.status AS status, lead.name AS lead
+```
+
+## `ORDER_BOOK`
+
+
+
+**Parameters:** none  
+**Used by:** —
+
+```cypher
+MATCH (c:Customer)-[:PLACED]->(o:Order)
+RETURN c.id AS customer, sum(coalesce(o.unit_price, 0) * o.qty) AS value
+```
+
+## `FIX_PATH`
+
+Products a ticket or escalation is about, and the projects and firmware leads that can fix them.
+
+**Parameters:** `$source`  
+**Used by:** —
+
+```cypher
+MATCH (s:Source {id:$source})<-[:PART_OF]-(:Chunk)-[:MENTIONS]->(prod:Item {kind:'product'})
+MATCH (prod)-[:HAS_REV]->(r:Revision)<-[:COVERS]-(pr:Project)<-[:LEADS]-(lead:Person)
+RETURN DISTINCT prod.id AS product, pr.id AS project, pr.name AS project_name, lead.name AS lead
+```
+
+## `TOP_OF_CHAIN`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (p:Person {id:$id})-[:REPORTS_TO*1..4]->(top:Person) WHERE NOT (top)-[:REPORTS_TO]->()
+RETURN top.name AS name LIMIT 1
+```
+
+## `CUSTOMERS`
+
+
+
+**Parameters:** none  
+**Used by:** —
+
+```cypher
+MATCH (c:Customer)
+OPTIONAL MATCH (am:Person)-[:OWNS]->(c)
+OPTIONAL MATCH (c)-[:PLACED]->(o:Order)
+RETURN c.id AS id, c.name AS name, am.name AS account_manager, count(o) AS orders,
+       sum(coalesce(o.unit_price, 0) * coalesce(o.qty, 0)) AS value
+ORDER BY value DESC
+```
+
+## `CHOKEPOINTS`
+
+
+
+**Parameters:** `$labels`, `$rels`  
+**Used by:** —
+
+```cypher
+CALL algo.betweenness({nodeLabels:$labels, relationshipTypes:$rels}) YIELD node, score
+WHERE score > 0
+RETURN node.id AS id, labels(node)[0] AS label, coalesce(node.name, node.id) AS name, score
+ORDER BY score DESC LIMIT 8
+```
+
+## `COMMUNITIES`
+
+
+
+**Parameters:** none  
+**Used by:** —
+
+```cypher
+CALL algo.labelPropagation({nodeLabels:['Person', 'Project', 'Item', 'Customer'],
+                            relationshipTypes:['OWNS', 'WORKS_ON', 'LEADS', 'COVERS']})
+YIELD node, communityId
+OPTIONAL MATCH (node)-[:MEMBER_OF]->(t:Team)
+RETURN communityId AS community, collect(node.id) AS members, collect(DISTINCT t.name) AS teams,
+       collect(CASE WHEN node:Person THEN node.name END) AS people
+```
+
+## `SUPPLIERS_PER_PART`
+
+
+
+**Parameters:** `$today`  
+**Used by:** —
+
+```cypher
+MATCH (i:Item {kind:'part'})
+OPTIONAL MATCH (s:Supplier)-[:QUOTED]->(q:Quote)-[:FOR]->(i) WHERE q.valid_until >= $today
+RETURN i.id AS id, i.name AS name, count(DISTINCT s) AS suppliers
+```
+
+## `ORDER_VALUE_BY_REVISION`
+
+
+
+**Parameters:** none  
+**Used by:** —
+
+```cypher
+MATCH (o:Order)-[:FULFILLED_BY]->(:Build)-[:BUILDS]->(r:Revision)
+RETURN r.id AS revision, sum(coalesce(o.unit_price, 0) * o.qty) AS value, collect(DISTINCT o.id) AS orders
+```
+
+## `KNOWLEDGE_SUBJECTS`
+
+
+
+**Parameters:** none  
+**Used by:** —
+
+```cypher
+MATCH (x) WHERE (x:Item AND x.kind IN ['part', 'assembly', 'firmware', 'test']) OR x:Project OR x:Customer
+RETURN x.id AS id, labels(x)[0] AS label
+```
+
+## `LOAD`
+
+
+
+**Parameters:** `$today`  
+**Used by:** —
+
+```cypher
+MATCH (p:Person)
+OPTIONAL MATCH (p)<-[:ASSIGNED_TO]-(a:Action) WHERE coalesce(a.status, 'open') <> 'done'
+OPTIONAL MATCH (p)-[:HAS_ABSENCE]->(ab:Absence) WHERE ab.end_date >= $today
+RETURN p.id AS id, p.name AS name, count(DISTINCT a) AS open_tasks,
+       collect(DISTINCT ab.start_date + ' → ' + ab.end_date) AS upcoming_absence
+ORDER BY open_tasks DESC
+```
+
+## `SIGNALS`
+
+
+
+**Parameters:** none  
+**Used by:** —
+
+```cypher
+MATCH (s:Source) WHERE s.kind IN ['notice', 'escalation', 'leave']
+OPTIONAL MATCH (s)<-[:PART_OF]-(c:Chunk)-[:MENTIONS]->(x)
+OPTIONAL MATCH (inv:Investigation)-[:TRIGGERED_BY]->(s)
+RETURN s.id AS id, s.kind AS kind, s.title AS title, max(c.ts) AS date,
+       collect(DISTINCT {id: x.id, label: labels(x)[0]}) AS mentions, inv.id AS investigation
+ORDER BY date DESC
 ```

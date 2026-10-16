@@ -205,3 +205,32 @@
   category: project
   question: Which customer order is part of the Kaveri Phase 2 project?
   all: [SO-881]
+
+# Added 2026-10-16 with company events beyond supplier changes. Written before running any model.
+- id: q39
+  split: heldout
+  category: absence
+  question: Who should take over Priya Nair's work while she is on leave in November?
+  all: [Arjun Mehta]
+- id: q40
+  split: heldout
+  category: escalation
+  question: What is Deccan Pharma unhappy about, and which order is at stake?
+  all: [SO-884]
+  any: [[LTE, link drop, connectivity]]
+- id: q41
+  split: heldout
+  category: risk
+  question: Which part in released products has only one supplier, and how much open order value depends on it?
+  all: [NB54360]
+  any: [["6960000", "69.6", "69.60"]]
+- id: q42
+  split: dev
+  category: risk
+  question: Which customer is the largest by open order value?
+  all: [Kaveri]
+- id: q43
+  split: heldout
+  category: org
+  question: Who reports to Arjun Mehta?
+  all: [Priya Nair, Rahul Iyer, Ananya Rao]

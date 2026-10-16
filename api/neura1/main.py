@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel
 from redis.exceptions import ConnectionError as RedisConnectionError, TimeoutError as RedisTimeout
 
-from neura1 import actions, agent, brain, queries as Q
+from neura1 import actions, agent, brain, queries as Q, scenarios
 from neura1.config import settings
 from neura1.graph import GraphUnavailable, get_graph, rows
 from neura1.impact import ChangeEvent, analyse
@@ -264,10 +264,10 @@ def approve(body: ApproveIn, as_of: date | None = None, g=Depends(graph)):
 @app.get("/api/investigations")
 def investigations(g=Depends(graph)):
     return rows(g, """
-        MATCH (inv:Investigation)-[:CONCERNS]->(i:Item)
+        MATCH (inv:Investigation)-[:CONCERNS]->(i)
         OPTIONAL MATCH (inv)-[:TRIGGERED_BY]->(s:Source)
         OPTIONAL MATCH (inv)-[:PRODUCED]->(a:Action)
-        RETURN inv.id AS id, i.id AS item, s.id AS source, s.title AS source_title, inv.created_at AS created_at,
+        RETURN inv.id AS id, i.id AS item, coalesce(inv.kind, 'supplier_change') AS kind, labels(i)[0] AS label, s.id AS source, s.title AS source_title, inv.created_at AS created_at,
                inv.approved_by AS approved_by, inv.cost_total AS cost_total, inv.currency AS currency,
                count(a) AS actions ORDER BY created_at DESC""")
 
@@ -454,3 +454,67 @@ def move_task(action_id: str, body: StatusIn, g=Depends(graph)):
         raise HTTPException(422, str(exc))
     except KeyError:
         raise HTTPException(404, "Unknown task")
+
+
+# ---------- company events beyond supplier changes ----------
+
+@app.get("/api/signals")
+def signals(g=Depends(graph)):
+    return scenarios.signals(g)
+
+
+@app.get("/api/scenarios/absence/{person_id}")
+def absence(person_id: str, start: str | None = None, end: str | None = None, g=Depends(graph)):
+    r = scenarios.absence_impact(g, person_id, start, end)
+    if r["status"] != "ok":
+        raise HTTPException(404, "Unknown person")
+    r["investigation"] = actions.find_investigation(g, person_id, _signal_for(g, "leave", person_id))
+    return r
+
+
+@app.get("/api/customers")
+def customers(g=Depends(graph)):
+    return rows(g, scenarios.CUSTOMERS)
+
+
+@app.get("/api/customers/{customer_id}")
+def customer(customer_id: str, g=Depends(graph)):
+    r = scenarios.customer_360(g, customer_id)
+    if r["status"] != "ok":
+        raise HTTPException(404, "Unknown customer")
+    r["investigation"] = actions.find_investigation(g, customer_id, r["escalation"])
+    return r
+
+
+@app.get("/api/risk")
+def risk(today: date | None = None, g=Depends(graph)):
+    return scenarios.risk_radar(g, today)
+
+
+def _signal_for(g, kind: str, subject: str) -> str | None:
+    return next((s["id"] for s in scenarios.signals(g) if s["kind"] == kind and s["subject"] == subject), None)
+
+
+class PlanIn(BaseModel):
+    kind: str
+    subject_id: str
+    approved_by: str
+
+
+@app.post("/api/plans/approve", dependencies=[Depends(require_passcode)])
+def approve_plan(body: PlanIn, g=Depends(graph)):
+    """Approve the plan for a person's absence or a customer escalation; recomputed on the server."""
+    if body.kind == "absence":
+        r = scenarios.absence_impact(g, body.subject_id)
+        source = _signal_for(g, "leave", body.subject_id)
+        snapshot = {"tasks": [a["title"] for a in r.get("actions", [])]}
+    elif body.kind == "escalation":
+        r = scenarios.customer_360(g, body.subject_id)
+        source = r.get("escalation")
+        snapshot = {"tasks": [a["title"] for a in r.get("actions", [])]}
+    else:
+        raise HTTPException(422, "kind must be absence or escalation")
+    if r["status"] != "ok":
+        raise HTTPException(404, "Unknown subject")
+    return actions.approve(g, body.subject_id, source, r["actions"], body.approved_by, None, None, snapshot,
+                           kind=body.kind)

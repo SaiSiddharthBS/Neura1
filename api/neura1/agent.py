@@ -11,7 +11,7 @@ from decimal import Decimal
 
 from falkordb import Graph
 
-from neura1 import brain, queries as Q
+from neura1 import brain, queries as Q, scenarios
 from neura1.config import settings
 from neura1.graph import rows
 from neura1.impact import ChangeEvent, Trace, analyse
@@ -97,6 +97,15 @@ TOOLS = [
     ("list_projects", "All projects with status, lead and target date.", {}),
     ("recent_changes", "What changed recently across the company, and knowledge that may be out of date "
                        "(edited evidence, decisions on obsolete revisions, expiring quotes).", {}),
+    ("absence_impact", "What happens if a person is away: what they own, open tasks, projects they lead, knowledge "
+                       "only they hold, conflicts, and the handover plan. Pass the person's name.",
+     {"name": {"type": "string"}}),
+    ("customer", "Everything about a customer: orders and their value, penalties, field units, tickets and "
+                 "escalations, projects, who knows them, and the escalation plan. Pass the customer name or id.",
+     {"text": {"type": "string"}}),
+    ("risk_radar", "Where the company is fragile: graph chokepoints (betweenness), single-sourced parts with order "
+                   "value at risk, knowledge held by one person, customer concentration, workload, and how teams "
+                   "actually cluster (community detection).", {}),
     ("propose_task", "Draft a task for a person. It is NOT created until a human confirms it. Use when the user "
                      "asks to assign, follow up, or get something done.",
      {"owner": {"type": "string"}, "title": {"type": "string"}, "target": {"type": ["string", "null"]},
@@ -162,6 +171,26 @@ def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
         return trace.run(name, brain.PROJECTS, {})
     if name == "recent_changes":
         r = brain.changes(graph, limit=15)
+        trace.steps.extend(r.pop("trace"))
+        return r
+    if name == "absence_impact":
+        found = trace.run("find_person", """MATCH (p:Person) WHERE toLower(p.name) CONTAINS toLower($t)
+                                             OR p.id = $t RETURN p.id AS id""", {"t": args["name"]})
+        if len(found) != 1:
+            return {"error": f"{len(found)} people match {args['name']!r}"}
+        r = scenarios.absence_impact(graph, found[0]["id"])
+        trace.steps.extend(r.pop("trace"))
+        return r
+    if name == "customer":
+        found = trace.run("find_customer", """MATCH (c:Customer) WHERE toLower(c.name) CONTAINS toLower($t)
+                                               OR toUpper(c.id) = toUpper($t) RETURN c.id AS id""", {"t": args["text"]})
+        if len(found) != 1:
+            return {"error": f"{len(found)} customers match {args['text']!r}"}
+        r = scenarios.customer_360(graph, found[0]["id"])
+        trace.steps.extend(r.pop("trace"))
+        return r
+    if name == "risk_radar":
+        r = scenarios.risk_radar(graph)
         trace.steps.extend(r.pop("trace"))
         return r
     if name == "propose_task":

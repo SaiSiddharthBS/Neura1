@@ -9,7 +9,8 @@
 ### Know what a change breaks before it breaks.
 
 The company brain for industrial electronics makers, built on **FalkorDB**.<br>
-One supplier notice in. Every affected product, build, customer, decision and owner out, with the source for each.
+A supplier changes a part, a customer escalates, a key engineer goes on leave: Neura1 traces each one through<br>
+the whole company (people, projects, products, customers, decisions) and turns it into a plan, with a source for every claim.
 
 <p>
   <img alt="FalkorDB" src="https://img.shields.io/badge/graph-FalkorDB-0e8fb0?style=for-the-badge&labelColor=0b1820">
@@ -22,8 +23,8 @@ One supplier notice in. Every affected product, build, customer, decision and ow
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white">
   <img alt="React Flow" src="https://img.shields.io/badge/React_Flow-ff0072">
   <img alt="Ollama" src="https://img.shields.io/badge/Ollama-Qwen2.5--7B-111111?logo=ollama&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-36_passing-2fd3a5">
-  <img alt="MCP" src="https://img.shields.io/badge/MCP-12_tools-5b6cff">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-40_passing-2fd3a5">
+  <img alt="MCP" src="https://img.shields.io/badge/MCP-15_tools-5b6cff">
   <img alt="Cost" src="https://img.shields.io/badge/running_cost-₹0-2fd3a5">
 </p>
 
@@ -65,6 +66,14 @@ Neura1 answers in one view:
 ## ✦ See it
 
 <table>
+  <tr>
+    <td width="50%"><img src="docs/demo/overview.png" alt="Overview"><br><sub><b>Overview</b>: today's signals (a supplier change, a customer escalation, a leave notice), the risk radar, work in flight, projects and the latest knowledge.</sub></td>
+    <td width="50%"><img src="docs/demo/risk-radar.png" alt="Risk radar"><br><sub><b>Risk radar</b>: FalkorDB betweenness centrality, community detection and traversals find the company's chokepoints, single-sourced parts, one-person knowledge and customer concentration.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/demo/customer-escalation.png" alt="Customer escalation"><br><sub><b>Customer escalation</b>: Deccan Pharma threatens to hold acceptance of SO-884. Sales, support, firmware, production and the COO each get a task.</sub></td>
+    <td><img src="docs/demo/absence-plan.png" alt="Absence plan"><br><sub><b>People change</b>: Priya is away in November. Neura1 sees she was just assigned the PSU-24 review by the supplier-change plan, and hands it to Arjun.</sub></td>
+  </tr>
   <tr>
     <td width="50%"><img src="docs/demo/impact-overview.png" alt="Impact workspace"><br><sub><b>Impact workspace</b>: headline numbers, the rejected-part banner, the evidence graph and who needs to do what.</sub></td>
     <td width="50%"><img src="docs/demo/evidence-slack.png" alt="Evidence drawer"><br><sub><b>Evidence</b>: one click opens Arjun's Slack message, highlighted inside its thread.</sub></td>
@@ -141,6 +150,10 @@ mindmap
       VC-300 controller
       FY27 cost-down
       Firmware 2.4
+    Signals
+      Supplier changes
+      Customer escalations
+      People changes
     Decisions
       Rejected substitutes
       Bench evidence
@@ -155,8 +168,20 @@ mindmap
 
 ## ✦ The whole company, one graph
 
-Supplier changes are the sharpest problem, so they lead the demo. But Track 03 asks for an agent that *understands how a
-company works*, and the same graph answers questions about any part of Voltline:
+A company is disrupted by more than part changes. Neura1 treats each kind of disruption as a **signal** and traces it
+through the same graph:
+
+| Signal | What Neura1 traces | Plan it proposes |
+|---|---|---|
+| **Supplier change** (price, lead time, end of life) | BOM where-used → builds → orders → customers · firmware and test dependencies · certifications · past decisions | Engineering, firmware, quality, procurement, production and sales tasks (HB-ENG-04) |
+| **Customer escalation** | Orders and their value, penalty exposure, field units, open tickets, the products involved, the project that can fix them, account rank | Account reply, root cause, fix decision, acceptance criteria, executive brief for top accounts |
+| **People change** (leave, departure) | What they own, open tasks, projects they lead, knowledge the company relies on them for, conflicts with other plans, backup and manager | Handover, interim owners and leads, handover note, manager confirmation (HB-HR-02) |
+| **Every day** | Betweenness centrality, community detection and traversals across the whole graph | **Risk radar**: chokepoints, single-sourced parts, one-person knowledge, customer concentration, workload and leave |
+
+**Plans interact because they share one graph.** Approving the supplier-change plan assigns Priya the PSU-24 review. Her
+leave plan then flags the conflict and hands that review to Arjun. Separate tools for each department would miss this.
+
+Track 03 asks for an agent that *understands how a company works*. Here is how Neura1 maps to each point:
 
 | Track 03 asks for | Neura1 | Try it |
 |---|---|---|
@@ -181,8 +206,9 @@ company works*, and the same graph answers questions about any part of Voltline:
 
 ### Use the brain from any agent (MCP)
 
-Neura1 is also an **MCP server** with 12 tools: `where_used`, `change_impact`, `who_knows`, `person`, `project`,
-`list_projects`, `decisions`, `alternates`, `search_documents`, `recent_changes`, `read_only_cypher` and `propose_task`.
+Neura1 is also an **MCP server** with 15 tools: `where_used`, `change_impact`, `who_knows`, `person`, `project`,
+`list_projects`, `customer`, `absence_impact`, `risk_radar`, `decisions`, `alternates`, `search_documents`,
+`recent_changes`, `read_only_cypher` and `propose_task`.
 Any MCP client (Claude Desktop, IDEs, other agents) can pick the right graph tool for the question. All tools are
 read-only, and tasks are drafts until a person confirms them.
 
@@ -295,6 +321,7 @@ and the people who said them.
 <img src="docs/readme/numbers.svg" alt="Parts needed per build vs free stock; 13 Cypher queries totalling 25.6 ms" width="100%">
 
 **FalkorDB features in use:**
+- graph algorithms: `algo.betweenness` (chokepoints) and `algo.labelPropagation` (how work actually clusters);
 - variable-length paths;
 - `reduce()` and list comprehensions over `nodes(p)` and `relationships(p)`;
 - the full-text index (`db.idx.fulltext`) over every document passage;
@@ -335,16 +362,18 @@ Full description, with authority rules and modelling choices, in **[docs/data-mo
 
 ```mermaid
 pie showData
-    title Voltline graph · 125 nodes · 222 relationships
-    "Document passages" : 48
-    "Sources" : 24
+    title Voltline graph · 188 nodes · 421 relationships
+    "Document passages" : 79
+    "Sources" : 41
     "Items" : 14
-    "People" : 9
-    "Teams" : 8
+    "People and teams" : 17
+    "Aliases" : 7
     "Revisions" : 6
-    "Builds, orders, customers" : 9
+    "Projects" : 4
+    "Customers, orders, builds" : 9
+    "Certifications" : 3
     "Quotes and suppliers" : 5
-    "Shipments and decisions" : 2
+    "Shipments, absences, decisions" : 3
 ```
 
 <br>
@@ -402,7 +431,7 @@ cd api
 cp .env.example .env                               # set NEURA1_DEMO_PASSCODE
 uv sync
 uv run python -m neura1.cli load                   # load Voltline Controls + saved model extractions
-uv run pytest -q                                   # 36 tests
+uv run pytest -q                                   # 40 tests
 uv run uvicorn neura1.main:app --port 8000
 
 cd ../web && pnpm install && pnpm dev              # http://localhost:3000
@@ -449,10 +478,10 @@ The agent uses a JSON plan-act loop, so it works even on servers whose native to
 
 | Check | Result |
 |---|---|
-| Automated tests | **36 passing**: BOM roll-ups, revision applicability, cost edge cases, import validation, CAD BOMs, extraction verification, idempotent approvals, the HTTP flow end to end, and 503 when the graph is down |
+| Automated tests | **40 passing**: BOM roll-ups, revision applicability, cost edge cases, import validation, CAD BOMs, extraction verification, idempotent approvals, the HTTP flow end to end, and 503 when the graph is down |
 | Local model on real fixture documents | DEC-117 found in **Slack and Jira** ✓ · notice read correctly ✓ · MX-3360 bench result ✓ · TR-131 bench note **missed** ✗ · [full table](docs/DEMO.md#what-the-local-model-got-right-and-wrong) |
 | Mistakes caught and fixed | The agent once called MX-3360 "approved". That led to the approval wording in tool output and the rule-based check. |
-| Frozen evaluation | 38 ground-truth questions in [`api/eval/golden.yaml`](api/eval/golden.yaml), written before any model ran: graph agent vs search-only vs whole-corpus, same model. **Results pending GPU time; failures will be published, not hidden.** |
+| Frozen evaluation | 43 ground-truth questions in [`api/eval/golden.yaml`](api/eval/golden.yaml), written before any model ran: graph agent vs search-only vs whole-corpus, same model. **Results pending GPU time; failures will be published, not hidden.** |
 
 <br>
 
@@ -479,8 +508,9 @@ api/                 FastAPI service
   neura1/ingest/       loaders · validator · document passages · verified extraction
   neura1/agent.py      Ask agent with bounded tools and guardrails
   neura1/brain.py      who knows what · people · projects · what changed
+  neura1/scenarios.py  absence and escalation plans · risk radar (graph algorithms) · signals
   neura1/mcp_server.py the graph's tools for any MCP client
-  tests/  eval/        36 tests · 38-question frozen evaluation
+  tests/  eval/        40 tests · 43-question frozen evaluation
 web/                 Next.js app: Inbox · Impact · Company brain · Investigations · Import
 fixture/voltline/    synthetic company: records · chats · tickets · docs · notice · updates · model extractions
 docs/                demo walkthrough · data model · queries · target customer · reuse · AI disclosure

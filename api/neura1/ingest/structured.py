@@ -63,6 +63,7 @@ INDEXES = [
     "CREATE INDEX FOR (n:Decision) ON (n.id)",
     "CREATE INDEX FOR (n:Project) ON (n.id)",
     "CREATE INDEX FOR (n:Alias) ON (n.term)",
+    "CREATE INDEX FOR (n:Certification) ON (n.id)",
 ]
 
 # (csv file, cypher). Each row is passed as $r; $src is the export's source id.
@@ -111,7 +112,12 @@ LOADERS: list[tuple[str, str]] = [
         WITH b MATCH (v:Revision {id:$r.rev_id}) MERGE (b)-[:BUILDS]->(v)"""),
     ("orders.csv", """
         MERGE (o:Order {id:$r.id})
-        SET o.qty=toInteger($r.qty), o.due_date=$r.due_date, o.penalty_note=$r.penalty_note, o.source=$src, o.authority=$auth
+        SET o.qty=toInteger($r.qty), o.due_date=$r.due_date, o.penalty_note=$r.penalty_note,
+            o.unit_price=CASE WHEN coalesce($r.unit_price, '') = '' THEN NULL ELSE toFloat($r.unit_price) END,
+            o.penalty_pct_per_week=CASE WHEN coalesce($r.penalty_pct_per_week, '') = '' THEN NULL
+                                        ELSE toFloat($r.penalty_pct_per_week) END,
+            o.penalty_cap_pct=CASE WHEN coalesce($r.penalty_cap_pct, '') = '' THEN NULL ELSE toFloat($r.penalty_cap_pct) END,
+            o.source=$src, o.authority=$auth
         WITH o MATCH (c:Customer {id:$r.customer_id}), (b:Build {id:$r.build_id})
         MERGE (c)-[:PLACED]->(o) MERGE (o)-[:FULFILLED_BY]->(b)"""),
     ("shipments.csv", """
@@ -134,6 +140,24 @@ LOADERS: list[tuple[str, str]] = [
     ("backups.csv", """
         MATCH (a:Person {id:$r.person_id}), (b:Person {id:$r.backup_id})
         MERGE (b)-[c:BACKS_UP]->(a) SET c.source=$src, c.authority=$auth"""),
+    ("reports_to.csv", """
+        MATCH (p:Person {id:$r.person_id}), (m:Person {id:$r.manager_id})
+        MERGE (p)-[r:REPORTS_TO]->(m) SET r.source=$src, r.authority=$auth"""),
+    ("absences.csv", """
+        MATCH (p:Person {id:$r.person_id})
+        MERGE (a:Absence {id:$r.person_id + ':' + $r.start_date})
+        SET a.start_date=$r.start_date, a.end_date=$r.end_date, a.kind=$r.kind, a.note=$r.note,
+            a.source=$src, a.authority=$auth
+        MERGE (p)-[:HAS_ABSENCE]->(a)"""),
+    ("certifications.csv", """
+        MERGE (c:Certification {id:$r.id})
+        SET c.name=$r.name, c.standard=$r.standard, c.status=$r.status, c.valid_until=$r.valid_until,
+            c.source=$src, c.authority=$auth
+        WITH c MATCH (r:Revision {id:$r.revision_id}) MERGE (c)-[:CERTIFIES]->(r)
+        WITH c OPTIONAL MATCH (o:Person {id:$r.owner_id})
+        FOREACH (_ IN CASE WHEN o IS NULL THEN [] ELSE [1] END | MERGE (o)-[:OWNS]->(c))
+        WITH c OPTIONAL MATCH (t:Item {id:$r.retest_trigger_item})
+        FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (c)-[:RETEST_IF_CHANGED]->(t))"""),
     # Other names people use for a record in chats and documents (e.g. "pmic_seq.c" for FW-PMIC-SEQ).
     ("aliases.csv", """
         MATCH (x {id:$r.target_id})
@@ -181,7 +205,8 @@ def existing_ids(graph: Graph) -> dict:
 
     labels = {"teams": "Team", "people": "Person", "items": "Item", "revisions": "Revision",
               "suppliers": "Supplier", "quotes": "Quote", "customers": "Customer", "builds": "Build",
-              "orders": "Order", "shipments": "Shipment", "projects": "Project"}
+              "orders": "Order", "shipments": "Shipment", "projects": "Project",
+              "certifications": "Certification"}
     out: dict = {k: {r["id"] for r in rows(graph, f"MATCH (n:{label}) RETURN n.id AS id")}
                  for k, label in labels.items()}
     out["_mpn"] = {r["mpn"].upper(): r["id"] for r in rows(

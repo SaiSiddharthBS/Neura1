@@ -1,0 +1,4 @@
+id,name,standard,revision_id,status,valid_until,owner_id,retest_trigger_item
+CERT-VC200C-CE,VC-200 Rev C CE (EMC + LVD),EN 61131-2 / EN 61326-1,VC-200-C,valid,2028-06-30,P-ANANYA,PSU-24
+CERT-VG50A-CE,VG-50 Rev A CE and RED,EN 61326-1 / EN 301 489,VG-50-A,valid,2028-09-30,P-ANANYA,PSU-24
+CERT-VC200C-UL,VC-200 Rev C UL 61010-1,UL 61010-1,VC-200-C,valid,2027-12-31,P-ANANYA,PSU-24

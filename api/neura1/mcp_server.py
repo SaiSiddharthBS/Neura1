@@ -97,6 +97,24 @@ def read_only_cypher(query: str) -> str:
 
 
 @mcp.tool()
+def absence_impact(name: str) -> str:
+    """What happens if a person is away: ownership, open tasks, knowledge only they hold, handover plan."""
+    return _call("absence_impact", name=name)
+
+
+@mcp.tool()
+def customer(text: str) -> str:
+    """A customer's orders, value, penalties, field units, tickets, escalations and escalation plan."""
+    return _call("customer", text=text)
+
+
+@mcp.tool()
+def risk_radar() -> str:
+    """Where the company is fragile: chokepoints, single-sourced parts, one-person knowledge, concentration."""
+    return _call("risk_radar")
+
+
+@mcp.tool()
 def propose_task(owner: str, title: str, why: str, target: str | None = None) -> str:
     """Draft a task for a person. It is not created until someone confirms it in Neura1."""
     return _call("propose_task", owner=owner, title=title, why=why, target=target)

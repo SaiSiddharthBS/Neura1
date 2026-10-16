@@ -39,8 +39,8 @@ def main() -> None:
             shots.append(path.name)
             print("captured", path.name)
 
-        # 1 Inbox
-        page.goto(base)
+        # 1 Signals: what arrives at the company
+        page.goto(f"{base}/signals")
         page.wait_for_selector("text=Supplier notice")
         shot("inbox")
 
@@ -91,7 +91,7 @@ def main() -> None:
         shot("workboard")
 
         # 6 New information arrives, then the impact view shows what changed
-        page.goto(base)
+        page.goto(f"{base}/signals")
         page.get_by_role("button", name="Bring in the updates").click()
         page.wait_for_selector("text=new sources")
         page.goto(url)
@@ -115,6 +115,16 @@ def main() -> None:
                                 ("whats-new", "/changes", "Needs attention")):
             page.goto(base + url)
             page.wait_for_selector(f"text={wait}")
+            shot(name)
+
+        # 7c Company events beyond supplier changes, and the company overview
+        for name, url, wait in (("customer-escalation", "/customers?id=C-DECCAN", "Escalation plan"),
+                                ("absence-plan", "/people?id=P-PRIYA&absence=1", "Handover plan"),
+                                ("risk-radar", "/risk", "How work actually clusters"),
+                                ("overview", "/", "What needs attention today")):
+            page.goto(base + url)
+            page.wait_for_selector(f"text={wait}", timeout=120000)
+            page.wait_for_timeout(1500)
             shot(name)
 
         # 8 Investigations history

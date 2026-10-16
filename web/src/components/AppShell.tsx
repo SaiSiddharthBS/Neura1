@@ -4,20 +4,23 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Bell, Brain, Command, FolderKanban, History, Inbox, KanbanSquare, Upload, Users,
+  Bell, Brain, Building2, Command, FolderKanban, History, Inbox, KanbanSquare, LayoutDashboard, Radar, Upload, Users,
 } from "lucide-react";
 import CommandPalette from "@/components/CommandPalette";
 
 const NAV = [
-  { section: "Work", items: [
-    { href: "/", label: "Inbox", icon: Inbox },
+  { section: "Today", items: [
+    { href: "/", label: "Overview", icon: LayoutDashboard },
+    { href: "/signals", label: "Signals", icon: Inbox },
     { href: "/board", label: "Workboard", icon: KanbanSquare },
-    { href: "/history", label: "Investigations", icon: History },
+    { href: "/history", label: "Plans", icon: History },
   ]},
   { section: "Company brain", items: [
     { href: "/brain", label: "Ask & search", icon: Brain },
-    { href: "/projects", label: "Projects", icon: FolderKanban },
     { href: "/people", label: "People", icon: Users },
+    { href: "/projects", label: "Projects", icon: FolderKanban },
+    { href: "/customers", label: "Customers", icon: Building2 },
+    { href: "/risk", label: "Risk radar", icon: Radar },
     { href: "/changes", label: "What's new", icon: Bell },
   ]},
   { section: "Data", items: [
@@ -28,7 +31,7 @@ const NAV = [
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const active = (href: string) => (href === "/" ? path === "/" : path.startsWith(href)) ||
-    (href === "/" && path.startsWith("/impact"));
+    (href === "/signals" && path.startsWith("/impact"));
 
   return (
     <div className="flex min-h-screen gap-5 p-3 lg:p-5">

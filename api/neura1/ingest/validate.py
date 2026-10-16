@@ -68,10 +68,11 @@ SPECS: dict[str, Spec] = {s.name: s for s in [
     Spec("builds", "Planned builds", ("id", "rev_id", "qty", "planned_date", "status"), ("id", "rev_id", "qty", "planned_date"),
          ints=("qty",), positive=("qty",), dates=("planned_date",), refs={"rev_id": "revisions"},
          example=("BO-0412", "VC-200-C", "100", "2026-11-03", "planned")),
-    Spec("orders", "Customer orders", ("id", "customer_id", "build_id", "qty", "due_date", "penalty_note"),
+    Spec("orders", "Customer orders", ("id", "customer_id", "build_id", "qty", "due_date", "penalty_note",
+                                         "unit_price", "penalty_pct_per_week", "penalty_cap_pct"),
          ("id", "customer_id", "qty", "due_date"), ints=("qty",), positive=("qty",), dates=("due_date",),
          refs={"customer_id": "customers", "build_id": "builds"},
-         example=("SO-881", "C-KAVERI", "BO-0412", "80", "2026-11-20", "Penalty per clause 9.2")),
+         example=("SO-881", "C-KAVERI", "BO-0412", "80", "2026-11-20", "Penalty per clause 9.2", "42000", "0.5", "5")),
     Spec("projects", "Projects", ("id", "name", "status", "lead_id", "start_date", "target_date", "summary"),
          ("id", "name", "status"), dates=("start_date", "target_date"), refs={"lead_id": "people"},
          example=("PRJ-VC300", "VC-300 controller", "design", "P-ARJUN", "2026-07-15", "2027-06-30", "Successor")),
@@ -84,19 +85,29 @@ SPECS: dict[str, Spec] = {s.name: s for s in [
          refs={"person_id": "people", "backup_id": "people"}, example=("P-PRIYA", "P-ARJUN")),
     Spec("aliases", "Aliases (names used in chats)", ("term", "target_id"), ("term", "target_id"), key="term",
          refs={"target_id": "*"}, example=("pmic_seq.c", "FW-PMIC-SEQ")),
+    Spec("reports_to", "Reporting lines", ("person_id", "manager_id"), ("person_id", "manager_id"), key="person_id",
+         refs={"person_id": "people", "manager_id": "people"}, example=("P-PRIYA", "P-ARJUN")),
+    Spec("absences", "Planned absences", ("person_id", "start_date", "end_date", "kind", "note"),
+         ("person_id", "start_date", "end_date"), key=None, dates=("start_date", "end_date"),
+         refs={"person_id": "people"}, example=("P-PRIYA", "2026-11-02", "2026-11-27", "planned leave", "")),
+    Spec("certifications", "Product certifications",
+         ("id", "name", "standard", "revision_id", "status", "valid_until", "owner_id", "retest_trigger_item"),
+         ("id", "name", "revision_id"), dates=("valid_until",),
+         refs={"revision_id": "revisions", "owner_id": "people", "retest_trigger_item": "items"},
+         example=("CERT-VC200C-CE", "VC-200 Rev C CE", "EN 61326-1", "VC-200-C", "valid", "2028-06-30", "P-ANANYA", "PSU-24")),
     Spec("shipments", "Shipped units", ("id", "customer_id", "rev_id", "qty", "shipped_on"),
          ("id", "customer_id", "rev_id", "qty"), ints=("qty",), dates=("shipped_on",),
          refs={"customer_id": "customers", "rev_id": "revisions"},
          example=("SH-2024-07", "C-KAVERI", "VC-200-B", "220", "2024-07-18")),
 ]}
 
-NOUN = {"projects": "project", "teams": "team", "people": "person", "items": "item", "revisions": "revision", "suppliers": "supplier",
+NOUN = {"certifications": "certification", "projects": "project", "teams": "team", "people": "person", "items": "item", "revisions": "revision", "suppliers": "supplier",
         "quotes": "quote", "customers": "customer", "builds": "build", "orders": "order", "shipments": "shipment"}
 
 # Load order respects references.
 ORDER = ["teams", "people", "items", "revisions", "bom", "alternates", "dependencies", "suppliers", "quotes",
          "stock", "customers", "builds", "orders", "shipments", "projects", "project_members", "project_scope",
-         "backups", "aliases", "ownership"]
+         "backups", "aliases", "reports_to", "absences", "certifications", "ownership"]
 
 
 def template_csv(name: str) -> str:

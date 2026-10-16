@@ -55,18 +55,20 @@ def snapshot_of(report: dict) -> dict:
 
 
 def approve(graph: Graph, item_id: str, source_id: str | None, actions: list[dict], approved_by: str,
-            cost_total: str | None, currency: str | None, snapshot: dict | None = None) -> dict:
+            cost_total: str | None, currency: str | None, snapshot: dict | None = None,
+            kind: str = "supplier_change") -> dict:
+    """Store an approved plan. `item_id` is the subject of any kind: a part, a person, or a customer."""
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     inv_id = investigation_id(item_id, source_id)
     graph.query("""
         MERGE (inv:Investigation {id:$id})
         ON CREATE SET inv.created_at=$now, inv.approved_by=$by, inv.cost_total=$cost, inv.currency=$cur,
-                      inv.snapshot=$snap
-        WITH inv MATCH (i:Item {id:$item}) MERGE (inv)-[:CONCERNS]->(i)
+                      inv.snapshot=$snap, inv.kind=$kind
+        WITH inv MATCH (i {id:$item}) WHERE NOT i:Action AND NOT i:Investigation MERGE (inv)-[:CONCERNS]->(i)
         WITH inv OPTIONAL MATCH (s:Source {id:$src})
         FOREACH (_ IN CASE WHEN s IS NULL THEN [] ELSE [1] END | MERGE (inv)-[:TRIGGERED_BY]->(s))
     """, {"id": inv_id, "now": now, "by": approved_by, "cost": cost_total, "cur": currency,
-          "item": item_id, "src": source_id, "snap": json.dumps(snapshot) if snapshot else None})
+          "item": item_id, "src": source_id, "snap": json.dumps(snapshot) if snapshot else None, "kind": kind})
 
     created, existing = [], []
     for a in actions:
@@ -129,13 +131,14 @@ BOARD = """
 MATCH (a:Action)
 OPTIONAL MATCH (a)-[:ASSIGNED_TO]->(p:Person)
 OPTIONAL MATCH (inv:Investigation)-[:PRODUCED]->(a)
-OPTIONAL MATCH (inv)-[:CONCERNS]->(part:Item)
+OPTIONAL MATCH (inv)-[:CONCERNS]->(part)
 OPTIONAL MATCH (a)-[:CONCERNS]->(t)
 OPTIONAL MATCH (pr:Project)-[:COVERS]->(t)
 OPTIONAL MATCH (a)-[c:CITES]->(:Chunk)
 RETURN a.id AS id, a.title AS title, a.kind AS kind, a.why AS why, a.status AS status,
        a.created_at AS created_at, a.updated_at AS updated_at, a.target AS target,
        p.id AS owner_id, p.name AS owner, inv.id AS investigation, part.id AS part,
+       coalesce(inv.kind, 'supplier_change') AS plan_kind, labels(part)[0] AS subject_label,
        collect(DISTINCT pr.id) AS projects, count(DISTINCT c) AS sources
 ORDER BY created_at
 """

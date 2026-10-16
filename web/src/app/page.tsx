@@ -1,257 +1,149 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { ArrowUpRight, Brain, CalendarOff, CircleCheck, FolderKanban, KanbanSquare, MessageSquareWarning, PackageSearch, Radar, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api, inr } from "@/lib/api";
 
-type Notice = {
-  id: string;
-  title: string;
-  version: string;
-  extraction: null | {
-    model: string;
-    extracted_at: string;
-    problems: string[];
-    output: { part: string; change_types: string[]; new_unit_price: number | null; currency: string | null;
-              effective_date: string | null; lead_weeks: number | null; last_time_buy?: string | null; supplier?: string | null };
-  };
+type Signal = { id: string; kind: "notice" | "escalation" | "leave"; title: string; date: string | null; subject: string | null; investigation: string | null };
+type Board = { pipeline: { notices: number; investigations: number; open: number; in_progress: number; blocked: number; done: number } };
+type Risk = {
+  single_source: { id: string; value_at_risk: number }[];
+  bus_factor: { id: string; person: string; share: number; away: string[] }[];
+  concentration: { customer: string; share: number }[];
+  chokepoints: { id: string; name: string; label: string }[];
+};
+type Project = { id: string; name: string; status: string; lead: string; target_date: string };
+type Feed = { feed: { kind: string; at: string; who: string | null; what: string }[]; attention: { record: string; reason: string }[] };
+
+const SIGNAL = {
+  notice: { icon: PackageSearch, label: "Supplier change", tone: "text-cyan", href: (s: Signal) => `/impact?source=${encodeURIComponent(s.id)}` },
+  escalation: { icon: MessageSquareWarning, label: "Customer escalation", tone: "text-danger", href: (s: Signal) => `/customers?id=${s.subject}` },
+  leave: { icon: CalendarOff, label: "People change", tone: "text-warn", href: (s: Signal) => `/people?id=${s.subject}&absence=1` },
 };
 
-export default function Inbox() {
-  const [notices, setNotices] = useState<Notice[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+export default function Overview() {
+  const [signals, setSignals] = useState<Signal[]>([]);
+  const [board, setBoard] = useState<Board | null>(null);
+  const [risk, setRisk] = useState<Risk | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [feed, setFeed] = useState<Feed | null>(null);
 
-  const reload = () => api<Notice[]>("/api/notices").then(setNotices).catch((e) => setError(e.message));
   useEffect(() => {
-    api<Notice[]>("/api/notices").then(setNotices).catch((e) => setError(e.message));
+    api<Signal[]>("/api/signals").then(setSignals);
+    api<Board>("/api/board").then(setBoard);
+    api<Risk>("/api/risk").then(setRisk);
+    api<Project[]>("/api/projects").then(setProjects);
+    api<Feed>("/api/changes").then(setFeed);
   }, []);
+  const p = board?.pipeline;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-      <section>
-        <h1 className="text-2xl font-semibold tracking-tight">Inbox</h1>
-        <p className="mt-1 text-sm text-muted">
-          Supplier notices arriving at Voltline. Open one to trace what it changes across the company.
-        </p>
-        {error && <p className="mt-4 text-sm text-danger">{error}</p>}
-        <AddNotice onAdded={reload} />
-        <div className="mt-4 space-y-3">
-          {notices?.map((n) => (
-            <div key={n.id} className="card p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="text-xs uppercase tracking-wide text-muted">Supplier notice</div>
-                  <div className="mt-0.5 font-medium">{n.title}</div>
-                  <div className="mt-1 font-mono text-xs text-muted">{n.id}</div>
-                </div>
-                {n.extraction && !n.extraction.problems.length ? (
-                  <Link href={`/impact?source=${encodeURIComponent(n.id)}`}
-                        className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover">
-                    Trace impact
-                  </Link>
-                ) : null}
+    <div className="space-y-5">
+      <section className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-cyan">Voltline Controls · company brain</div>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">What needs attention today</h1>
+          <p className="mt-1 max-w-2xl text-sm text-muted">One graph of Voltline&apos;s people, projects, products, customers, suppliers, documents and decisions. Every change below is traced through all of it.</p>
+        </div>
+        <button onClick={() => window.dispatchEvent(new Event("neura1:palette"))}
+                className="flex items-center gap-2 rounded-xl border border-line bg-elev px-4 py-2.5 text-sm text-muted hover:border-line2 hover:text-ink">
+          <Sparkles size={15} className="text-cyan" /> Ask anything about the company <kbd className="ml-2 rounded border border-line px-1.5 font-mono text-[11px]">⌘K</kbd>
+        </button>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-3">
+        {signals.map((s) => {
+          const k = SIGNAL[s.kind];
+          return (
+            <Link key={s.id} href={k.href(s)} className="card group p-5 hover:border-line2">
+              <div className="flex items-center justify-between">
+                <span className={`flex items-center gap-2 text-xs font-medium uppercase tracking-wide ${k.tone}`}><k.icon size={15} /> {k.label}</span>
+                <ArrowUpRight size={16} className="text-muted transition group-hover:text-ink" />
               </div>
-              {n.extraction ? (
-                <div className="mt-3 rounded-lg bg-bg p-3 text-sm">
-                  <div className="flex flex-wrap gap-x-6 gap-y-1">
-                    <span><b>{n.extraction.output.part}</b></span>
-                    <span>{n.extraction.output.change_types.join(", ")}</span>
-                    <span>new price {n.extraction.output.new_unit_price ?? "—"} {n.extraction.output.currency}</span>
-                    <span>lead time {n.extraction.output.lead_weeks ?? "—"} wk</span>
-                    <span>effective {n.extraction.output.effective_date ?? "—"}</span>
-                  </div>
-                  <div className="mt-2 text-xs text-muted">
-                    {n.extraction.model.startsWith("entered by") ? `Facts ${n.extraction.model}` : `Read by ${n.extraction.model}`} at{" "}
-                    {n.extraction.extracted_at.replace("T", " ").slice(0, 16)}. Every number was checked against the notice text.
-                  </div>
-                  {n.extraction.problems.map((p) => (
-                    <div key={p} className="mt-1 text-xs text-danger">Verification failed: {p}</div>
-                  ))}
-                </div>
-              ) : (
-                <ManualFacts sourceId={n.id} onSaved={reload} />
-              )}
+              <div className="mt-3 font-medium leading-snug">{s.title}</div>
+              <div className="mt-1 text-xs text-muted">{s.date?.slice(0, 10)} · {s.subject}</div>
+              <div className={`mt-4 inline-flex rounded-full px-2.5 py-0.5 text-[11px] ${s.investigation ? "bg-success/15 text-success" : "bg-warn/15 text-warn"}`}>
+                {s.investigation ? "Plan approved" : "Needs analysis"}
+              </div>
+            </Link>
+          );
+        })}
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
+        <div className="card p-5">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-2 font-medium"><Radar size={16} className="text-accent-hover" /> Risk radar</span>
+            <Link href="/risk" className="text-xs text-muted hover:text-ink">Open →</Link>
+          </div>
+          {risk && (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <Tile title="Single-sourced part" value={risk.single_source[0]?.id ?? "none"} note={risk.single_source[0] ? `${inr(risk.single_source[0].value_at_risk)} of orders depend on it` : ""} tone="danger" />
+              <Tile title="Biggest chokepoint" value={risk.chokepoints[0]?.name ?? "—"} note={`${risk.chokepoints[0]?.label ?? ""} · betweenness centrality`} tone="accent" />
+              <Tile title="One-person knowledge" value={`${risk.bus_factor.length} subjects`} note={risk.bus_factor.slice(0, 2).map((b) => `${b.id} → ${b.person}`).join(" · ")} tone="warn" />
+              <Tile title="Largest customer" value={`${Math.round((risk.concentration[0]?.share ?? 0) * 100)}%`} note={`${risk.concentration[0]?.customer ?? ""} of open order value`} tone="violet" />
             </div>
-          ))}
+          )}
+        </div>
+        <div className="card p-5">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-2 font-medium"><KanbanSquare size={16} className="text-accent-hover" /> Work in flight</span>
+            <Link href="/board" className="text-xs text-muted hover:text-ink">Workboard →</Link>
+          </div>
+          {p && (
+            <div className="mt-4 grid grid-cols-4 gap-2 text-center">
+              {[["To do", p.open, "text-ink"], ["In progress", p.in_progress, "text-accent-hover"], ["Blocked", p.blocked, "text-danger"], ["Done", p.done, "text-success"]].map(([l, n, c]) => (
+                <div key={l as string} className="rounded-xl bg-elev py-3"><div className={`text-2xl font-semibold tabular-nums ${c}`}>{n}</div><div className="text-[11px] text-muted">{l}</div></div>
+              ))}
+            </div>
+          )}
+          <div className="mt-4 space-y-1.5 text-sm">
+            {feed?.attention.slice(0, 3).map((a, i) => (
+              <div key={i} className="flex gap-2 text-xs"><CircleCheck size={13} className="mt-0.5 shrink-0 text-warn" /><span><b className="font-mono">{a.record}</b> {a.reason}</span></div>
+            ))}
+          </div>
         </div>
       </section>
-      <div className="space-y-4">
-        <WhatIf />
-        <DemoUpdates />
-      </div>
-    </div>
-  );
-}
 
-function getPass(): string {
-  let pass = "";
-  try { pass = localStorage.getItem("neura1-passcode") ?? ""; } catch {}
-  pass = pass || prompt("Demo passcode") || "";
-  try { if (pass) localStorage.setItem("neura1-passcode", pass); } catch {}
-  return pass;
-}
-
-function AddNotice({ onAdded }: { onAdded: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [text, setText] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [msg, setMsg] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  async function submit() {
-    const pass = getPass();
-    if (!pass) return;
-    const f = new FormData();
-    if (file) f.append("file", file);
-    else f.append("text", text);
-    setBusy(true);
-    setMsg("Saving. If a model is connected it reads the notice, which can take a minute on a CPU…");
-    const res = await fetch("/api/notices", { method: "POST", body: f, headers: { "x-demo-passcode": pass } });
-    const body = await res.json();
-    setBusy(false);
-    if (!res.ok) {
-      if (res.status === 403) try { localStorage.removeItem("neura1-passcode"); } catch {}
-      return setMsg(`Could not add: ${body.detail ?? res.status}`);
-    }
-    setMsg(body.extraction ? "Added and read. Check the extracted facts below." :
-      "Added. No model read it, so enter the facts below. They are checked against the notice text.");
-    setText(""); setFile(null); setOpen(false);
-    onAdded();
-  }
-
-  if (!open) return (
-    <div className="mt-4">
-      <button onClick={() => setOpen(true)} className="rounded-lg border border-ink px-4 py-2 text-sm font-medium hover:bg-accent hover:text-white hover:border-accent">
-        + Add a supplier notice
-      </button>
-      {msg && <span className="ml-3 text-sm text-muted">{msg}</span>}
-    </div>
-  );
-  return (
-    <div className="card mt-4 space-y-3 p-4 text-sm">
-      <div className="font-medium">Paste the supplier email, or upload the notice</div>
-      <textarea value={text} onChange={(e) => setText(e.target.value)} rows={6} disabled={!!file}
-                placeholder={"From: your distributor\nSubject: price change\n\nPart XYZ123 unit price changes to ₹410 from 2026-12-01, lead time 16 weeks…"}
-                className="w-full rounded-md border border-line p-3 font-mono text-xs" />
-      <div className="flex flex-wrap items-center gap-3">
-        <input type="file" accept=".pdf,.txt,.md" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="text-xs" />
-        <button disabled={busy || (!text.trim() && !file)} onClick={submit}
-                className="ml-auto rounded-lg bg-accent px-4 py-2 text-white disabled:opacity-40">{busy ? "Working…" : "Add notice"}</button>
-        <button onClick={() => setOpen(false)} className="text-muted">Cancel</button>
-      </div>
-      {msg && <div className="text-muted">{msg}</div>}
-    </div>
-  );
-}
-
-function ManualFacts({ sourceId, onSaved }: { sourceId: string; onSaved: () => void }) {
-  const [part, setPart] = useState("");
-  const [price, setPrice] = useState("");
-  const [lead, setLead] = useState("");
-  const [eff, setEff] = useState("");
-  const [msg, setMsg] = useState<string | null>(null);
-
-  async function save() {
-    const pass = getPass();
-    if (!pass) return;
-    let name = "";
-    try { name = localStorage.getItem("neura1-reviewer") ?? ""; } catch {}
-    name = name || prompt("Your name (recorded with the facts)") || "";
-    if (!name) return;
-    try { localStorage.setItem("neura1-reviewer", name); } catch {}
-    const r = await api<{ problems: string[] }>("/api/notices/manual", {
-      method: "POST", write: true,
-      body: JSON.stringify({ source_id: sourceId, part, entered_by: name, currency: "INR",
-                             new_unit_price: price ? Number(price) : null, lead_weeks: lead ? Number(lead) : null,
-                             effective_date: eff || null }),
-    }).catch((e) => ({ problems: [(e as Error).message] }));
-    if (r.problems.length) setMsg(r.problems.join("; "));
-    else onSaved();
-  }
-
-  return (
-    <div className="mt-3 rounded-lg border border-dashed border-line p-3 text-sm">
-      <div className="text-muted">Not read by a model. Enter what the notice says:</div>
-      <div className="mt-2 grid grid-cols-2 gap-2 md:grid-cols-4">
-        <input value={part} onChange={(e) => setPart(e.target.value)} placeholder="Part number" className="rounded-md border border-line px-2 py-1.5 font-mono" />
-        <input value={price} onChange={(e) => setPrice(e.target.value)} placeholder="New price (INR)" inputMode="decimal" className="rounded-md border border-line px-2 py-1.5" />
-        <input value={lead} onChange={(e) => setLead(e.target.value)} placeholder="Lead time (weeks)" inputMode="numeric" className="rounded-md border border-line px-2 py-1.5" />
-        <input value={eff} onChange={(e) => setEff(e.target.value)} placeholder="Effective (YYYY-MM-DD)" className="rounded-md border border-line px-2 py-1.5" />
-      </div>
-      <button disabled={!part} onClick={save} className="mt-2 rounded-md bg-accent px-3 py-1.5 text-white disabled:opacity-40">Save facts</button>
-      {msg && <div className="mt-2 text-danger">Check failed: {msg}</div>}
-    </div>
-  );
-}
-
-function WhatIf() {
-  const router = useRouter();
-  const [item, setItem] = useState("");
-  const [price, setPrice] = useState("");
-  const [lead, setLead] = useState("");
-  return (
-    <aside className="card h-fit p-4">
-      <h2 className="font-medium">What if a part changes?</h2>
-      <p className="mt-1 text-sm text-muted">Trace any part with a price or lead time you choose.</p>
-      <form
-        className="mt-4 space-y-3 text-sm"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const q = new URLSearchParams({ item, ...(price && { price }), ...(lead && { lead }) });
-          router.push(`/impact?${q}`);
-        }}
-      >
-        <label className="block">
-          <span className="text-muted">Part number</span>
-          <input required value={item} onChange={(e) => setItem(e.target.value)} placeholder="e.g. NB54360"
-                 className="mt-1 w-full rounded-md border border-line px-3 py-2 font-mono" />
-        </label>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="block">
-            <span className="text-muted">New unit price (INR)</span>
-            <input value={price} onChange={(e) => setPrice(e.target.value)} inputMode="decimal"
-                   className="mt-1 w-full rounded-md border border-line px-3 py-2" />
-          </label>
-          <label className="block">
-            <span className="text-muted">Lead time (weeks)</span>
-            <input value={lead} onChange={(e) => setLead(e.target.value)} inputMode="numeric"
-                   className="mt-1 w-full rounded-md border border-line px-3 py-2" />
-          </label>
+      <section className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
+        <div className="card p-5">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-2 font-medium"><FolderKanban size={16} className="text-accent-hover" /> Projects</span>
+            <Link href="/projects" className="text-xs text-muted hover:text-ink">All →</Link>
+          </div>
+          <div className="mt-3 divide-y divide-line">
+            {projects.map((x) => (
+              <Link key={x.id} href={`/projects?id=${x.id}`} className="flex items-center justify-between gap-3 py-2.5 text-sm hover:text-accent-hover">
+                <span>{x.name}<span className="block text-xs text-muted">Lead {x.lead} · target {x.target_date}</span></span>
+                <span className="rounded-full bg-elev px-2 py-0.5 text-[11px] text-muted">{x.status}</span>
+              </Link>
+            ))}
+          </div>
         </div>
-        <button className="w-full rounded-lg border border-ink px-4 py-2 font-medium hover:bg-accent hover:text-white hover:border-accent">
-          Trace
-        </button>
-      </form>
-    </aside>
+        <div className="card p-5">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-2 font-medium"><Brain size={16} className="text-accent-hover" /> Latest in the brain</span>
+            <Link href="/changes" className="text-xs text-muted hover:text-ink">What&apos;s new →</Link>
+          </div>
+          <div className="mt-3 space-y-2.5">
+            {feed?.feed.slice(0, 6).map((f, i) => (
+              <div key={i} className="text-sm"><span className="text-xs text-muted">{f.at.slice(0, 10)} · {f.kind}</span><div className="truncate">{f.what}{f.who ? <span className="text-muted"> · {f.who}</span> : null}</div></div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
 
-function DemoUpdates() {
-  const [msg, setMsg] = useState<string | null>(null);
-  async function apply() {
-    let pass = "";
-    try { pass = localStorage.getItem("neura1-passcode") ?? ""; } catch {}
-    pass = pass || prompt("Demo passcode") || "";
-    if (!pass) return;
-    try {
-      const r = await fetch("/api/updates/apply", { method: "POST", headers: { "x-demo-passcode": pass } });
-      if (!r.ok) throw new Error(r.status === 403 ? "Wrong passcode" : `Failed (${r.status})`);
-      try { localStorage.setItem("neura1-passcode", pass); } catch {}
-      const body = await r.json();
-      setMsg(`Loaded ${Object.keys(body.loaded).length} new sources. Re-open the impact view to see what changed.`);
-    } catch (e) {
-      setMsg((e as Error).message);
-    }
-  }
+function Tile({ title, value, note, tone }: { title: string; value: string; note: string; tone: "danger" | "accent" | "warn" | "violet" }) {
+  const c = { danger: "text-danger", accent: "text-accent-hover", warn: "text-warn", violet: "text-violet" }[tone];
   return (
-    <aside className="card p-4 text-sm">
-      <div className="font-medium">Demo: new information arrives</div>
-      <p className="mt-1 text-muted">
-        17 Oct: Priya posts a bench result for MX-3360 in #hw-power, and Sahyadri Electronics sends a quote.
-      </p>
-      <button onClick={apply} className="mt-3 w-full rounded-lg border border-line px-3 py-1.5 hover:border-ink">Bring in the updates</button>
-      {msg && <div className="mt-2 text-xs text-muted">{msg}</div>}
-    </aside>
+    <div className="rounded-xl bg-elev p-3">
+      <div className="text-[11px] text-muted">{title}</div>
+      <div className={`mt-1 truncate text-lg font-semibold ${c}`}>{value}</div>
+      <div className="mt-0.5 truncate text-xs text-muted" title={note}>{note}</div>
+    </div>
   );
 }
