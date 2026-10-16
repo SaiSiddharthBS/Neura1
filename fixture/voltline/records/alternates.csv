@@ -1,0 +1,3 @@
+item_id,alt_item_id,basis,note
+NB54360,NB54361-L,manufacturer_crossref,Pin-compatible per Northbridge cross-reference; not an engineering approval
+NB54360,MX-3360,distributor_crossref,Suggested by distributor as functional equivalent; not an engineering approval

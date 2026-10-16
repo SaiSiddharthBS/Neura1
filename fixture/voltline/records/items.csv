@@ -1,0 +1,15 @@
+id,kind,name,mpn,manufacturer
+VC-200,product,VC-200 PLC Controller,,
+VG-50,product,VG-50 Industrial IoT Gateway,,
+PSU-24,assembly,PSU-24 24V Power Module,,
+NB54360,part,Buck regulator 3.3V 3A,NB54360,Northbridge Semi
+NB54361-L,part,Buck regulator 3.3V 3A (low-cost),NB54361-L,Northbridge Semi
+MX-3360,part,Buck regulator 3.3V 3A,MX-3360,Meridian Analog
+VX7-MCU,part,VX7 32-bit microcontroller,VX7-M480,Vexa Micro
+KP8081,part,Ethernet PHY 10/100,KP8081,Kestrel Phy
+TB-12P,part,Terminal block 12-pin,TB-12P,Anvil Connect
+LM-4G,part,LTE Cat-4 module,LM-4G-IN,Lumen Wireless
+IND-4R7,part,Inductor 4.7uH 4A,IND-4R7,Corewind
+CAP-22U,part,Capacitor 22uF 50V,CAP-22U-50,Corewind
+FW-PMIC-SEQ,firmware,pmic_seq.c power sequencing module,,
+TP-PSU-07,test,TP-PSU-07 PSU thermal and load qualification,,

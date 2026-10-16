@@ -1,0 +1,2 @@
+id,supplier_id,item_id,unit_price,currency,moq,lead_weeks,valid_from,valid_until
+Q-140,S-SAHYADRI,MX-3360,265,INR,100,8,2026-10-17,2027-01-31

@@ -1,0 +1,8 @@
+{
+  "channel": "#hw-power",
+  "export": "synthetic Slack-style export",
+  "messages": [
+    {"id": "m1", "ts": "2026-10-17T15:02:00+05:30", "user": "Priya Nair", "text": "Bench check on MX-3360 from Meridian Analog: held regulation at 70C ambient in the sealed enclosure with 8C junction margin. Notes in TR-131. This is a bench check only, not the full TP-PSU-07 qualification."},
+    {"id": "m2", "ts": "2026-10-17T15:20:00+05:30", "user": "Meera Kulkarni", "text": "Sahyadri Electronics quoted MX-3360 at ₹265, MOQ 100, 8 weeks lead time. Quote Q-140 attached to the procurement folder."}
+  ]
+}

@@ -1,0 +1,4 @@
+id,supplier_id,item_id,unit_price,currency,moq,lead_weeks,valid_from,valid_until
+Q-099,S-DECCAN,NB54360,230,INR,100,6,2026-01-01,2026-06-30
+Q-101,S-DECCAN,NB54360,250,INR,100,6,2026-07-01,2026-12-31
+Q-102,S-DECCAN,NB54361-L,190,INR,250,4,2026-07-01,2026-12-31
