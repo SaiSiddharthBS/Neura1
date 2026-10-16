@@ -1,0 +1,44 @@
+# Full stack: docker compose up --build   →  web on http://localhost:3000
+# Just the graph for local development:     docker compose up -d falkordb
+services:
+  falkordb:
+    image: falkordb/falkordb:latest
+    ports:
+      - "6380:6379"   # graph (Redis protocol)
+      - "3001:3000"   # FalkorDB Browser
+    volumes:
+      - falkordb_data:/var/lib/falkordb/data
+
+  # Open-source model runtime. After first start: docker compose exec ollama ollama pull qwen2.5:7b
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11435:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    profiles: [model]
+
+  api:
+    build: { context: ., dockerfile: api/Dockerfile }
+    environment:
+      NEURA1_FALKORDB_HOST: falkordb
+      NEURA1_FALKORDB_PORT: "6379"
+      NEURA1_DEMO_PASSCODE: ${NEURA1_DEMO_PASSCODE:-change-me}
+      NEURA1_LLM_BASE_URL: ${NEURA1_LLM_BASE_URL:-http://ollama:11434/v1}
+      NEURA1_LLM_MODEL: ${NEURA1_LLM_MODEL:-qwen2.5:7b}
+      NEURA1_LLM_API_KEY: ${NEURA1_LLM_API_KEY:-not-needed}
+    depends_on: [falkordb]
+    ports:
+      - "8000:8000"
+    profiles: [full]
+
+  web:
+    build: { context: web, args: { NEURA1_API_URL: "http://api:8000" } }
+    depends_on: [api]
+    ports:
+      - "3000:3000"
+    profiles: [full]
+
+volumes:
+  falkordb_data:
+  ollama_data:
