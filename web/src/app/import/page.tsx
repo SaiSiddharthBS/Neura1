@@ -64,7 +64,7 @@ export default function ImportPage() {
     <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
       <section className="space-y-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Bring in your company</h1>
+          <h1 className="page-title">Bring in your company</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted">
             Drop the spreadsheets you already keep (BOM exports, item master, quotes, stock, builds, orders) and the documents
             where decisions live (Slack exports, tickets, test reports, PDFs). Everything is checked before anything is written.

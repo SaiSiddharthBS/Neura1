@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { AlertTriangle, CheckCircle2, CircleHelp, ClipboardCopy, Download, FileText, ShieldX } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import EvidenceDrawer from "@/components/EvidenceDrawer";
@@ -96,7 +97,7 @@ export default function ImpactView({ source, item, price, lead, asOf }: Props) {
           <div className="text-xs uppercase tracking-wide text-muted">
             {r.change.source_id ? "Supplier notice" : "What-if"} · as of {r.change.as_of}
           </div>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+          <h1 className="mt-1 page-title">
             {r.part.id} <span className="font-normal text-muted">{r.part.name}</span>
           </h1>
           <div className="mt-2 flex flex-wrap gap-2 text-sm">
@@ -114,7 +115,7 @@ export default function ImpactView({ source, item, price, lead, asOf }: Props) {
       </section>
 
       {r.changes_since_approval?.length > 0 && (
-        <section className="rounded-xl border border-accent/40 bg-accent/12 p-4 text-sm">
+        <section className="rounded-xl border border-accent/25 bg-accent/[0.07] p-4 text-sm">
           <div className="font-medium text-accent">Changed since this was approved ({r.investigation?.created_at.slice(0, 10)})</div>
           <ul className="mt-1 list-disc pl-5">
             {r.changes_since_approval.map((c) => <li key={c}>{c}</li>)}
@@ -192,7 +193,7 @@ function AlternateBanner({ a, part, onOpen }: { a: Alternate; part: string; onOp
   if (a.status === "rejected") {
     const d = a.decisions.find((x) => x.outcome === "rejected")!;
     return (
-      <div className="rounded-xl border border-danger/40 bg-danger/10 p-4">
+      <div className="rounded-xl border border-danger/25 bg-danger/[0.07] p-4">
         <div className="flex items-start gap-3">
           <ShieldX className="mt-0.5 shrink-0 text-danger" size={20} />
           <div className="min-w-0 flex-1">
@@ -225,7 +226,7 @@ function AlternateBanner({ a, part, onOpen }: { a: Alternate; part: string; onOp
   if (a.status === "pending_review") {
     const d = a.decisions[0];
     return (
-      <div className="rounded-xl border border-warn/40 bg-warn/10 p-4 text-sm">
+      <div className="rounded-xl border border-warn/25 bg-warn/[0.07] p-4 text-sm">
         <div className="flex items-start gap-3">
           <AlertTriangle className="mt-0.5 shrink-0 text-warn" size={20} />
           <div>
@@ -246,7 +247,7 @@ function AlternateBanner({ a, part, onOpen }: { a: Alternate; part: string; onOp
   }
   if (a.status === "approved") {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/12 p-3 text-sm">
+      <div className="flex items-center gap-3 rounded-xl border border-accent/25 bg-accent/[0.07] p-3 text-sm">
         <CheckCircle2 className="text-accent" size={18} /> {a.id} is an approved alternate. {price}.
       </div>
     );
@@ -315,6 +316,7 @@ function ActionsPanel({ report: r, onDone, onOpen }: { report: ImpactReport; onD
                                lead_weeks: r.change.lead_weeks, currency: r.change.currency }),
       });
       setMsg(`${res.created.length} tasks created, ${res.already_existed.length} already existed.`);
+      toast.success(res.created.length ? `Plan approved: ${res.created.length} tasks assigned` : "Plan already approved", { description: "Owners see them on the Workboard and in My day." });
       onDone();
     } catch (e) {
       if (e instanceof ApiError && e.status === 403) {

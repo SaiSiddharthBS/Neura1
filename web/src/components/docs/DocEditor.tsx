@@ -6,6 +6,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Group, Panel, Separator } from "react-resizable-panels";
+import { toast } from "sonner";
 import "superdoc/style.css";
 import EvidenceDrawer from "@/components/EvidenceDrawer";
 import { api, ApiError, viewerId } from "@/lib/api";
@@ -215,11 +217,14 @@ export default function DocEditor({ id }: { id: string }) {
       try { sessionStorage.removeItem(pendingKey(id)); } catch {}
       setMeta((m) => (m ? { ...m, ...body, has_file: true } : m));
       setDirty(false);
+      toast.success(`Saved version ${body.version}`, { description: body.shared
+        ? `${body.passages} passages${body.linked?.length ? `, linked to ${body.linked.slice(0, 4).join(", ")}${body.linked.length > 4 ? "…" : ""}` : ""}`
+        : "Kept private: it states someone's leave" });
       setStatus(body.shared
         ? `Saved · version ${body.version} · ${body.passages} passages${body.linked?.length ? ` linked to ${body.linked.slice(0, 5).join(", ")}${body.linked.length > 5 ? "…" : ""}` : ""}`
         : `Saved · version ${body.version} · kept private (it states someone's leave)`);
     } catch (e) {
-      setStatus(""); setError((e as Error).message);
+      setStatus(""); setError((e as Error).message); toast.error("Could not save", { description: (e as Error).message });
     }
   }, [doc, id, title]);
 
@@ -268,7 +273,7 @@ export default function DocEditor({ id }: { id: string }) {
   }
 
   return (
-    <div className="flex h-[calc(100vh-3rem)] flex-col gap-3">
+    <div className="-mb-12 flex h-[calc(100dvh-7rem)] flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
         <Link href="/docs" className="rounded-lg p-2 text-muted hover:bg-elev hover:text-ink" title="All documents"><ArrowLeft size={16} /></Link>
         <input value={title} onChange={(e) => { setTitle(e.target.value); setDirty(true); }}
@@ -282,14 +287,15 @@ export default function DocEditor({ id }: { id: string }) {
         <button onClick={save} disabled={!ready} className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-sm text-white hover:bg-accent-hover disabled:opacity-50"><Save size={14} /> Save</button>
         <button onClick={downloadDocx} disabled={!ready} className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-sm hover:border-line2 disabled:opacity-50" title="Download as Word"><Download size={14} /> .docx</button>
         <button onClick={exportPdf} disabled={!ready} className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-sm hover:border-line2 disabled:opacity-50" title="Print or save as PDF"><FileDown size={14} /> PDF</button>
-        <button onClick={() => setPanel(!panel)} className="flex items-center gap-1.5 rounded-lg border border-cyan/40 bg-cyan/10 px-3 py-1.5 text-sm text-cyan hover:bg-cyan/20">
+        <button onClick={() => setPanel(!panel)} className="flex items-center gap-1.5 rounded-lg border border-cyan/25 bg-cyan/[0.07] px-3 py-1.5 text-sm text-cyan hover:bg-cyan/20">
           {panel ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />} Neura1 AI
         </button>
       </div>
-      {error && <div className="flex items-start justify-between gap-2 rounded-lg border border-warn/40 bg-warn/10 p-2.5 text-sm text-warn">
+      {error && <div className="flex items-start justify-between gap-2 rounded-lg border border-warn/25 bg-warn/[0.07] p-2.5 text-sm text-warn">
         {error}<button onClick={() => setError(null)}><X size={14} /></button></div>}
 
-      <div className="flex min-h-0 flex-1 gap-3">
+      <Group orientation="horizontal" className="min-h-0 flex-1">
+        <Panel id="paper" minSize="40" className="flex min-w-0">
         <div className="neura1-paper flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-line">
           <div id="neura1-doc-toolbar" className="shrink-0 overflow-x-auto border-b border-[#dfe3ea] bg-white" />
           <div className="relative min-h-0 flex-1 overflow-auto bg-[#e9ecf1]">
@@ -297,8 +303,14 @@ export default function DocEditor({ id }: { id: string }) {
             <div ref={host} className="mx-auto py-6" />
           </div>
         </div>
+        </Panel>
         {panel && (
-          <aside className="card flex w-[380px] shrink-0 flex-col overflow-hidden">
+          <>
+          <Separator className="group mx-1 flex w-2 items-center justify-center outline-none" aria-label="Resize the AI panel">
+            <span className="h-10 w-1 rounded-full bg-line2 transition group-hover:bg-accent group-data-[separator=active]:bg-accent" />
+          </Separator>
+          <Panel id="ai" defaultSize={400} minSize={320} maxSize={640} className="flex">
+          <aside className="card flex w-full flex-col overflow-hidden">
             <div className="flex border-b border-line text-sm">
               {([["edit", "Edit with AI", Wand2], ["check", "Check facts", ShieldCheck], ["insert", "Insert facts", Plus]] as const).map(([k, label, Icon]) => (
                 <button key={k} onClick={() => setTab(k)}
@@ -314,8 +326,10 @@ export default function DocEditor({ id }: { id: string }) {
               <div hidden={tab !== "insert"}><InsertTab ready={ready} doc={doc} lastSel={lastSel} /></div>
             </div>
           </aside>
+          </Panel>
+          </>
         )}
-      </div>
+      </Group>
     </div>
   );
 }
@@ -486,7 +500,7 @@ function CheckTab({ ready, doc, onFind }: { ready: boolean; doc: () => DocApi; o
     setCommented(true);
   }
 
-  const tone = { error: "border-danger/40 bg-danger/10 text-danger", warning: "border-warn/40 bg-warn/10 text-warn", info: "border-line bg-elev text-muted" };
+  const tone = { error: "border-danger/25 bg-danger/[0.07] text-danger", warning: "border-warn/25 bg-warn/[0.07] text-warn", info: "border-line bg-elev text-muted" };
   const Icon = { error: CircleAlert, warning: AlertTriangle, info: Info };
   return (
     <div className="space-y-3 p-4">
@@ -498,7 +512,7 @@ function CheckTab({ ready, doc, onFind }: { ready: boolean; doc: () => DocApi; o
         <button onClick={addComments} disabled={!flags?.length || commented} className="rounded-lg border border-line px-3 py-1.5 text-xs hover:border-line2 disabled:opacity-50">
           {commented ? "Added as comments" : "Add as Word comments"}</button>
       </div>
-      {flags && flags.length === 0 && <div className="flex items-center gap-1.5 rounded-lg border border-success/40 bg-success/10 p-3 text-sm text-success"><Check size={14} /> Nothing in this document contradicts the records.</div>}
+      {flags && flags.length === 0 && <div className="flex items-center gap-1.5 rounded-lg border border-success/25 bg-success/[0.07] p-3 text-sm text-success"><Check size={14} /> Nothing in this document contradicts the records.</div>}
       {flags?.map((f, i) => {
         const I = Icon[f.severity];
         return (

@@ -100,7 +100,7 @@ function Library() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Documents</h1>
+        <h1 className="page-title">Documents</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted">Word documents written with the company brain. Start from a template filled from the graph,
           edit with the full editor, ask Neura1 to rewrite any part as tracked changes, and check every claim against Flyvi&apos;s records.
           Saved documents become knowledge, linked to the parts, people and orders they name.</p>
@@ -139,7 +139,7 @@ function Library() {
                  onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) importFile(f); }} />
         </button>
       </section>
-      {error && <div className="rounded-lg border border-warn/40 bg-warn/10 p-3 text-sm text-warn">{error}</div>}
+      {error && <div className="rounded-lg border border-warn/25 bg-warn/[0.07] p-3 text-sm text-warn">{error}</div>}
 
       <section className="card overflow-hidden">
         <div className="border-b border-line px-4 py-3 text-[11px] uppercase tracking-[0.12em] text-muted">Your company&apos;s documents</div>

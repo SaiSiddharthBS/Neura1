@@ -27,7 +27,7 @@ def main() -> None:
 
     with sync_playwright() as p:
         browser = p.chromium.launch(channel="chrome")
-        page = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
+        page = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1, color_scheme="dark")
         page.goto(base)
         page.evaluate(f"""() => {{ localStorage.setItem('neura1-passcode', '{args.passcode}');
                                   localStorage.setItem('neura1-reviewer', 'Hithesh'); }}""")
@@ -121,12 +121,22 @@ def main() -> None:
         for name, url, wait in (("customer-escalation", "/customers?id=C-KONKAN", "Escalation plan"),
                                 ("absence-plan", "/people?id=P-RAGHAVENDRA&absence=1", "Handover plan"),
                                 ("risk-radar", "/risk", "How work actually clusters"),
-                                ("overview", "/", "What needs attention today"),
+                                ("overview", "/", "Needs attention"),
                                 ("graph-explorer", "/explore?id=NB54360", "History")):
             page.goto(base + url)
             page.wait_for_selector(f"text={wait}", timeout=120000)
             page.wait_for_timeout(1500)
             shot(name)
+
+        # The same overview in the light theme (Neura1 follows the system theme)
+        light = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1, color_scheme="light")
+        light.goto(base)
+        light.evaluate(f"() => {{ localStorage.setItem('neura1-viewer', 'P-HITHESH'); }}")
+        light.goto(base)
+        light.wait_for_selector("text=Needs attention")
+        light.wait_for_timeout(2500)
+        light.screenshot(path=str(OUT / "overview-light.png")); shots.append("overview-light.png")
+        light.close()
 
         # 7c2 Neura1 Chat: a slash command answered from the graph, redacted for the channel's audience
         page.goto(f"{base}/chat")

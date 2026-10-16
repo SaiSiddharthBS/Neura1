@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import Link from "next/link";
 import { ClipboardCheck } from "lucide-react";
 import { useState } from "react";
@@ -23,6 +24,7 @@ export default function PlanPanel({ title, kind, subject, actions, investigation
         method: "POST", write: true, body: JSON.stringify({ kind, subject_id: subject, approved_by: c.name }),
       });
       setMsg(`${r.created.length} tasks created, ${r.already_existed.length} already existed. They are on the Workboard.`);
+      toast.success(r.created.length ? `Plan approved: ${r.created.length} tasks assigned` : "Plan already approved");
       onDone();
     } catch (e) {
       if (e instanceof ApiError && e.status === 403) forgetPasscode();

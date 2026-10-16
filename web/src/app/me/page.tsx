@@ -34,7 +34,7 @@ export default function MyDay() {
         <section className="card p-5">
           <div className="flex items-center justify-between font-medium"><span>Your work</span><Link href="/board" className="text-xs text-muted hover:text-ink">Workboard →</Link></div>
           {d.approvals.length > 0 && (
-            <div className="mt-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
+            <div className="mt-3 rounded-xl border border-accent/25 bg-accent/[0.07] p-3 text-sm">
               <div className="mb-1 text-xs uppercase tracking-wide text-accent-hover">Needs your decision</div>
               {d.approvals.map((w) => <div key={w.id}>{w.title}</div>)}
             </div>

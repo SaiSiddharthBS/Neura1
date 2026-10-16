@@ -30,7 +30,7 @@ export default function RiskRadar() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Risk radar</h1>
+        <h1 className="page-title">Risk radar</h1>
         <p className="mt-1 text-sm text-muted">
           Where Flyvi is fragile, found by FalkorDB graph algorithms and traversals across people, products, customers and suppliers.
           {" "}{r.trace.length} queries, {algoMs.toFixed(0)} ms.
@@ -50,7 +50,7 @@ export default function RiskRadar() {
 
         <Panel icon={PackageX} title="Supply: single source" note="Parts in released products with one supplier on a valid quote, and the open order value that depends on them.">
           {r.single_source.map((s) => (
-            <div key={s.id} className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm">
+            <div key={s.id} className="rounded-xl border border-danger/25 bg-danger/[0.07] p-3 text-sm">
               <div className="flex justify-between gap-2"><Link href={`/impact?item=${s.id}`} className="font-mono font-medium hover:underline">{s.id}</Link><span className="text-danger tabular-nums">{inr(s.value_at_risk)} at risk</span></div>
               <div className="text-xs text-muted">{s.name} · in {s.revisions.join(", ")} · orders {s.orders.join(", ")}</div>
             </div>

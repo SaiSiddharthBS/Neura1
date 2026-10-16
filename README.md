@@ -71,7 +71,11 @@ Neura1 answers in one view:
 <table>
   <tr>
     <td width="50%"><img src="docs/demo/overview.png" alt="Overview"><br><sub><b>Overview</b>: today's signals (a supplier change, a customer escalation, a leave notice), the risk radar, work in flight, projects and the latest knowledge.</sub></td>
+    <td width="50%"><img src="docs/demo/overview-light.png" alt="Overview, light theme"><br><sub><b>Light or dark</b>: the interface follows the system theme. OKLCH colour tokens, Geist type, View Transitions between pages, Motion for small interactions.</sub></td>
+  </tr>
+  <tr>
     <td width="50%"><img src="docs/demo/risk-radar.png" alt="Risk radar"><br><sub><b>Risk radar</b>: FalkorDB betweenness centrality, community detection and traversals find the company's chokepoints, single-sourced parts, one-person knowledge and customer concentration.</sub></td>
+    <td width="50%"><img src="docs/demo/my-day.png" alt="My day"><br><sub><b>My day</b>: each person's open work, decisions waiting for them, signals touching what they own, and who in their team is away.</sub></td>
   </tr>
   <tr>
     <td><img src="docs/demo/chat.png" alt="Neura1 Chat"><br><sub><b>Neura1 Chat</b>: the team talks inside the brain. Messages link to the parts and people they mention, slash commands answer from the graph, and approved plans post themselves.</sub></td>
@@ -528,7 +532,8 @@ The agent uses a JSON plan-act loop, so it works even on servers whose native to
 | Model runtime | Ollama, or vLLM on a DGX Spark | MIT · Apache-2.0 |
 | Model | Qwen2.5-7B-Instruct | Apache-2.0 |
 | API | Python 3.12 · FastAPI · pypdf | MIT · BSD |
-| Web | Next.js 16 · React 19 · React Flow · dagre · Tailwind CSS | MIT |
+| Web | Next.js 16 · React 19.3 (View Transitions) · Tailwind CSS 4 with OKLCH tokens · React Flow · dagre | MIT |
+| Interface | Geist and Geist Mono · Motion · Sonner · react-resizable-panels · lucide | OFL-1.1 · MIT · ISC |
 | Document editor | SuperDoc (Word layout, tracked changes, .docx import/export) · pdf.js | AGPL-3.0 · Apache-2.0 |
 | Automation | Playwright, which captured every screenshot here | Apache-2.0 |
 

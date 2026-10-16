@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Clock, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EvidenceDrawer from "@/components/EvidenceDrawer";
+import { useResolvedTheme } from "@/lib/theme";
 import { api } from "@/lib/api";
 
 type GNode = { id: string; label: string; name: string; kind?: string };
@@ -14,18 +15,18 @@ type Event = { at: string; kind: string; title: string; detail: string; ref: str
 type Hit = { id: string; label: string; name: string };
 
 const TONE: Record<string, string> = {
-  Item: "border-cyan/50 bg-cyan/10", Revision: "border-line2 bg-elev", Person: "border-accent/50 bg-accent/10",
-  Project: "border-violet/50 bg-violet/10", Customer: "border-warn/50 bg-warn/10", Order: "border-warn/40 bg-warn/5",
-  Build: "border-line2 bg-elev", Decision: "border-danger/50 bg-danger/10", Source: "border-line bg-panel",
-  Action: "border-success/40 bg-success/10", Quote: "border-line2 bg-elev", Team: "border-accent/30 bg-accent/5",
-  Investigation: "border-success/40 bg-success/5", Skill: "border-violet/30 bg-violet/5",
+  Item: "border-cyan/25 bg-cyan/[0.07]", Revision: "border-line2 bg-elev", Person: "border-accent/25 bg-accent/[0.07]",
+  Project: "border-violet/50 bg-violet/10", Customer: "border-warn/25 bg-warn/[0.07]", Order: "border-warn/25 bg-warn/[0.07]",
+  Build: "border-line2 bg-elev", Decision: "border-danger/25 bg-danger/[0.07]", Source: "border-line bg-panel",
+  Action: "border-success/25 bg-success/[0.07]", Quote: "border-line2 bg-elev", Team: "border-accent/25 bg-accent/[0.07]",
+  Investigation: "border-success/25 bg-success/[0.07]", Skill: "border-violet/30 bg-violet/5",
 };
 const W = 170, H = 50;
 
 function Card({ data }: NodeProps<Node<{ n: GNode; center: boolean }>>) {
   const { n, center } = data;
   return (
-    <div className="rounded-xl bg-[#0b1020]">
+    <div className="rounded-xl bg-panel">
     <div className={`relative z-10 rounded-xl border px-3 py-1.5 ${TONE[n.label] ?? "border-line bg-panel"} ${center ? "ring-2 ring-cyan ring-offset-2 ring-offset-transparent" : ""}`} style={{ width: W, height: H }}>
       <Handle type="target" position={Position.Top} className="!opacity-0" style={{ left: "50%", top: "50%", transform: "translate(-50%,-50%)" }} />
       <div className="truncate text-[12px] font-medium">{n.label === "Person" || n.label === "Source" || n.label === "Project" || n.label === "Customer" ? n.name : n.id}</div>
@@ -38,6 +39,7 @@ function Card({ data }: NodeProps<Node<{ n: GNode; center: boolean }>>) {
 const nodeTypes = { card: Card };
 
 export default function ExploreView() {
+  const theme = useResolvedTheme();
   const params = useSearchParams();
   const router = useRouter();
   const start = params.get("id") ?? "NB54360";
@@ -91,8 +93,8 @@ export default function ExploreView() {
     });
     const re: Edge[] = edges.filter((e) => nodes.has(e.source) && nodes.has(e.target)).map((e, i) => ({
       id: `e${i}`, type: "straight", source: e.source, target: e.target, label: e.label.toLowerCase().replaceAll("_", " "),
-      labelStyle: { fontSize: 9, fill: "rgba(226,233,245,0.55)" }, labelBgStyle: { fill: "#0b1020" },
-      style: { stroke: "rgba(148,163,184,0.35)" },
+      labelStyle: { fontSize: 9, fill: "var(--muted)" }, labelBgStyle: { fill: "var(--panel)" },
+      style: { stroke: "var(--line2)" },
     }));
     return { rf, re };
   }, [nodes, edges, focus, pos]);
@@ -103,7 +105,7 @@ export default function ExploreView() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Graph explorer</h1>
+          <h1 className="page-title">Graph explorer</h1>
           <p className="mt-1 text-sm text-muted">Walk Flyvi&apos;s company graph live from FalkorDB. Click any record to expand its connections and see its history.</p>
         </div>
         <div className="relative w-80">
@@ -123,9 +125,9 @@ export default function ExploreView() {
       </div>
       <div className="grid gap-4 xl:grid-cols-[1fr_380px]">
         <div className="card h-[72vh] overflow-hidden">
-          <ReactFlow key={start} onInit={(i) => { rf.current = i; }} fitViewOptions={{ padding: 0.08 }} nodes={flow.rf} edges={flow.re} nodeTypes={nodeTypes} colorMode="dark" fitView minZoom={0.1} nodesDraggable
+          <ReactFlow key={start} onInit={(i) => { rf.current = i; }} fitViewOptions={{ padding: 0.08 }} nodes={flow.rf} edges={flow.re} nodeTypes={nodeTypes} colorMode={theme} fitView minZoom={0.1} nodesDraggable
                      onNodeClick={(_, n) => expand(n.id)}>
-            <Background gap={22} color="rgba(255,255,255,0.05)" />
+            <Background gap={22} color="var(--line)" />
             <Controls showInteractive={false} />
           </ReactFlow>
         </div>

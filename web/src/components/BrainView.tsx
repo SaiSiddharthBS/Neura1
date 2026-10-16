@@ -28,20 +28,23 @@ export default function BrainView() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Company brain</h1>
-        <p className="mt-1 text-sm text-muted">One FalkorDB graph of Flyvi&apos;s records, documents, chats, tickets, people and decisions.</p>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {o?.labels.map((l) => (
-          <span key={l.label} className="rounded-lg border border-line bg-panel px-3 py-1.5 text-sm">
-            <b>{l.n}</b> <span className="text-muted">{l.label}</span>
-          </span>
-        ))}
-        {o && <span className="rounded-lg border border-line bg-panel px-3 py-1.5 text-sm">
-          <b>{o.relationships.reduce((s, r) => s + r.n, 0)}</b> <span className="text-muted">relationships</span>
-        </span>}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="page-title">Ask &amp; search</h1>
+          <p className="mt-1.5 text-[15px] text-muted">Ask in plain language. Neura1 answers from one FalkorDB graph of Flyvi&apos;s records, documents, chats and decisions, and shows its sources.</p>
+        </div>
+        {o && (
+          <div className="flex items-center gap-4 text-[12.5px] text-muted">
+            {[
+              [o.labels.reduce((s, l) => s + l.n, 0), "records"],
+              [o.relationships.reduce((s, r) => s + r.n, 0), "links"],
+              [o.labels.find((l) => l.label === "Chunk")?.n ?? 0, "passages"],
+              [o.labels.find((l) => l.label === "Person")?.n ?? 0, "people"],
+            ].map(([n, l]) => (
+              <span key={l as string}><span className="num font-semibold text-ink">{n as number}</span> {l as string}</span>
+            ))}
+          </div>
+        )}
       </div>
 
       <AskBox key={`ask:${params.get("ask") ?? ""}`} onOpen={setOpen} initial={params.get("ask") ?? undefined} />

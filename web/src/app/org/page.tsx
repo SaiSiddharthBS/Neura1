@@ -5,6 +5,7 @@ import { Background, Controls, Handle, Position, ReactFlow, type Edge, type Node
 import "@xyflow/react/dist/style.css";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useResolvedTheme } from "@/lib/theme";
 import { api } from "@/lib/api";
 
 type Org = {
@@ -31,6 +32,7 @@ function OrgNode({ data }: NodeProps<Node<{ c: Card }>>) {
 const nodeTypes = { org: OrgNode };
 
 export default function OrgChart() {
+  const theme = useResolvedTheme();
   const router = useRouter();
   const [o, setO] = useState<Org | null>(null);
   useEffect(() => { api<Org>("/api/org").then(setO); }, []);
@@ -47,7 +49,7 @@ export default function OrgChart() {
     const managed = new Set(o.reporting.map((r) => r.person));
     for (const p of o.people) {
       const lead = p.team_id === "T-LEAD";
-      cards.push({ id: p.id, title: p.name, sub: lead ? p.role : `${p.team}`, tone: p.away_now ? "border-warn/50 bg-warn/10" : lead ? "border-accent/50 bg-accent/10" : "border-line bg-panel", away: p.away_now, work: p.open_work });
+      cards.push({ id: p.id, title: p.name, sub: lead ? p.role : `${p.team}`, tone: p.away_now ? "border-warn/25 bg-warn/[0.07]" : lead ? "border-accent/25 bg-accent/[0.07]" : "border-line bg-panel", away: p.away_now, work: p.open_work });
       if (!managed.has(p.id)) edges.push(["ORG-FLYVI", p.id]);
     }
     for (const r of o.reporting) edges.push([r.manager, r.person]);
@@ -58,21 +60,21 @@ export default function OrgChart() {
     edges.forEach(([a, b]) => g.setEdge(a, b));
     dagre.layout(g);
     const nodes: Node<{ c: Card }>[] = cards.map((c) => { const p = g.node(c.id); return { id: c.id, type: "org", position: { x: p.x - W / 2, y: p.y - H / 2 }, data: { c } }; });
-    const es: Edge[] = edges.map(([a, b], i) => ({ id: `e${i}`, source: a, target: b, type: "smoothstep", style: { stroke: "rgba(148,163,184,0.35)" } }));
+    const es: Edge[] = edges.map(([a, b], i) => ({ id: `e${i}`, source: a, target: b, type: "smoothstep", style: { stroke: "var(--line2)" } }));
     return { nodes, es };
   }, [o]);
 
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Organisation</h1>
+        <h1 className="page-title">Organisation</h1>
         <p className="mt-1 text-sm text-muted">Datasol (Bangalore) Limited, Flyvi Technologies&apos; leadership and every reporting line, from the graph. Open work and who is away today are live. Click anyone for their full profile.</p>
       </div>
       <div className="card h-[72vh] overflow-hidden">
         {flow && (
-          <ReactFlow nodes={flow.nodes} edges={flow.es} nodeTypes={nodeTypes} colorMode="dark" fitView minZoom={0.15} nodesDraggable={false}
+          <ReactFlow nodes={flow.nodes} edges={flow.es} nodeTypes={nodeTypes} colorMode={theme} fitView minZoom={0.15} nodesDraggable={false}
                      onNodeClick={(_, n) => { const id = n.id.split("@")[0]; if (id.startsWith("P-")) router.push(`/people?id=${id}`); }}>
-            <Background gap={22} color="rgba(255,255,255,0.05)" />
+            <Background gap={22} color="var(--line)" />
             <Controls showInteractive={false} />
           </ReactFlow>
         )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { Avatar } from "@/components/ViewerSwitch";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CalendarOff, CheckCircle2, ChevronRight, CircleDot, Lock, Pencil, Search, UserPlus } from "lucide-react";
@@ -37,7 +38,6 @@ type AwayPlan = {
 
 const STATUS: Record<string, string> = { open: "text-muted", in_progress: "text-accent-hover", blocked: "text-danger", done: "text-success" };
 
-function initials(n: string) { return n.split(" ").map((x) => x[0]).join("").slice(0, 2); }
 
 export default function PeopleView() {
   const params = useSearchParams();
@@ -82,7 +82,7 @@ export default function PeopleView() {
               {rows.map((r) => (
                 <button key={r.id} onClick={() => router.replace(`/people?id=${r.id}`)}
                         className={`flex w-full items-center gap-3 px-4 py-2 text-left hover:bg-elev ${r.id === id ? "bg-accent/15" : ""}`}>
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-accent to-cyan text-[11px] font-semibold text-white">{initials(r.name)}</span>
+                  <Avatar name={r.name} size={28} />
                   <span className="min-w-0"><span className="block truncate text-sm font-medium">{r.name}</span><span className="block truncate text-xs text-muted">{r.role}</span></span>
                 </button>
               ))}
@@ -97,10 +97,10 @@ export default function PeopleView() {
         <section className="space-y-4">
           <div className="card p-5">
             <div className="flex flex-wrap items-start gap-4">
-              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-accent to-cyan text-lg font-semibold text-white shadow-[0_0_30px_rgba(59,130,246,0.35)]">{initials(p.name)}</span>
+              <Avatar name={p.name} size={56} />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-2xl font-semibold tracking-tight">{p.name}</h1>
+                  <h1 className="page-title">{p.name}</h1>
                   {p.leave.away_now
                     ? <span className="rounded-full bg-warn/15 px-2 py-0.5 text-xs text-warn">Away today</span>
                     : <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs text-success">Available</span>}

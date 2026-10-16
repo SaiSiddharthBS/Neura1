@@ -5,6 +5,7 @@ import { Background, Controls, Handle, Position, ReactFlow, type Edge, type Node
 import "@xyflow/react/dist/style.css";
 import { useMemo } from "react";
 import type { GraphEdge, GraphNode } from "@/lib/api";
+import { useResolvedTheme } from "@/lib/theme";
 
 const W = 184;
 const H = 52;
@@ -64,6 +65,7 @@ const nodeTypes = { card: GraphCard };
 export default function ImpactGraph({
   nodes, edges, onSelect,
 }: { nodes: GraphNode[]; edges: GraphEdge[]; onSelect?: (n: GraphNode) => void }) {
+  const theme = useResolvedTheme();
   const laid = useMemo(() => {
     const g = new dagre.graphlib.Graph();
     g.setGraph({ rankdir: "LR", nodesep: 16, ranksep: 64 });
@@ -79,8 +81,8 @@ export default function ImpactGraph({
     });
     const rfEdges: Edge[] = directed.map((e, i) => ({
       id: `e${i}`, source: e.source, target: e.target, label: e.label,
-      labelStyle: { fontSize: 10, fill: "rgba(226,233,245,0.6)" }, labelBgStyle: { fill: "#0b1020" },
-      style: { stroke: e.label === "rejected" ? "#f87171" : "rgba(148,163,184,0.45)" },
+      labelStyle: { fontSize: 10, fill: "var(--muted)" }, labelBgStyle: { fill: "var(--panel)" },
+      style: { stroke: e.label === "rejected" ? "var(--danger)" : "var(--line2)" },
     }));
     return { rfNodes, rfEdges };
   }, [nodes, edges]);
@@ -90,7 +92,7 @@ export default function ImpactGraph({
       nodes={laid.rfNodes}
       edges={laid.rfEdges}
       nodeTypes={nodeTypes}
-      colorMode="dark"
+      colorMode={theme}
       fitView
       fitViewOptions={{ padding: 0.08 }}
       minZoom={0.2}
@@ -98,7 +100,7 @@ export default function ImpactGraph({
       nodesConnectable={false}
       onNodeClick={(_, n) => onSelect?.(n.data.n as GraphNode)}
     >
-      <Background gap={22} color="rgba(255,255,255,0.06)" />
+      <Background gap={22} color="var(--line)" />
       <div className="absolute left-3 top-3 z-10 flex flex-wrap gap-x-3 gap-y-1 rounded-md bg-panel/90 px-2 py-1 text-[11px] text-muted ring-1 ring-line">
         <span><i className="mr-1 inline-block h-2 w-2 rounded-full ring-2 ring-danger" />changed part</span>
         <span><i className="mr-1 inline-block h-2 w-2 rounded-sm border border-dashed border-line2" />excluded revision</span>

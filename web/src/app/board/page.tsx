@@ -1,5 +1,6 @@
 "use client";
 
+import { Avatar } from "@/components/ViewerSwitch";
 import Link from "next/link";
 import { ArrowRight, CircleDashed, CircleCheck, CircleDot, FileText, Inbox, OctagonAlert, Zap } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -29,10 +30,6 @@ const KIND: Record<string, string> = {
   handover: "Handover", interim_owner: "Handover", interim_lead: "Handover", handover_note: "Handover", confirm_handover: "Handover",
   customer_response: "Customer", root_cause: "Support", prioritise_fix: "Software", production_hold: "Production", executive_brief: "Leadership",
 };
-
-function initials(name: string | null) {
-  return (name ?? "?").split(" ").map((p) => p[0]).join("").slice(0, 2);
-}
 
 export default function Workboard() {
   const [b, setB] = useState<Board | null>(null);
@@ -72,7 +69,7 @@ export default function Workboard() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Workboard</h1>
+          <h1 className="page-title">Workboard</h1>
           <p className="mt-1 text-sm text-muted">Every task from approved investigations and the Ask agent, in one place. Drag cards to move them; every move is recorded in the graph.</p>
         </div>
         <div className="flex gap-2 text-sm">
@@ -118,7 +115,7 @@ export default function Workboard() {
           {p.awaiting_analysis.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2 text-sm">
               {p.awaiting_analysis.map((n) => (
-                <Link key={n.id} href={`/impact?source=${encodeURIComponent(n.id)}`} className="rounded-lg border border-warn/40 bg-warn/10 px-3 py-1 text-warn hover:border-warn">
+                <Link key={n.id} href={`/impact?source=${encodeURIComponent(n.id)}`} className="rounded-lg border border-warn/25 bg-warn/[0.07] px-3 py-1 text-warn hover:border-warn">
                   Analyse: {n.title} →
                 </Link>
               ))}
@@ -150,7 +147,7 @@ export default function Workboard() {
                     </div>
                     <div className="font-medium leading-snug">{t.title}</div>
                     <div className="mt-2 flex items-center gap-2 text-xs text-muted">
-                      <span className="grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-accent to-cyan text-[10px] font-semibold text-white">{initials(t.owner)}</span>
+                      <Avatar name={t.owner ?? "?"} size={22} />
                       <span className="truncate">{t.owner ?? "Unassigned"}</span>
                       {t.sources > 0 && <span className="ml-auto flex items-center gap-1"><FileText size={11} />{t.sources}</span>}
                     </div>

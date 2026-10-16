@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { ClipboardCheck } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/lib/api";
@@ -18,10 +19,11 @@ export default function DraftTask({ d }: { d: Draft }) {
     try {
       const r = await api<{ id: string; new: boolean; owner: string | null }>("/api/tasks", { method: "POST", write: true, body: JSON.stringify({ ...d, created_by: name }) });
       setState(r.new ? `Created ${r.id} for ${r.owner ?? "nobody (owner not found)"}` : `Already exists (${r.id})`);
+      if (r.new) toast.success(`Task created for ${r.owner ?? "nobody"}`, { description: d.title });
     } catch (e) { setState((e as Error).message); }
   }
   return (
-    <div className="rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
+    <div className="rounded-xl border border-accent/25 bg-accent/[0.07] p-3 text-sm">
       <div className="flex items-center gap-2 font-medium text-accent-hover"><ClipboardCheck size={15} /> Draft task, not created yet</div>
       <div className="mt-1"><b>{d.title}</b> → {d.owner}{d.target ? ` · ${d.target}` : ""}</div>
       {d.why && <div className="text-xs text-muted">{d.why}</div>}

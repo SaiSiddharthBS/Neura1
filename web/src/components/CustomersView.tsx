@@ -37,7 +37,7 @@ export default function CustomersView() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Customers</h1>
+        <h1 className="page-title">Customers</h1>
         <p className="mt-1 text-sm text-muted">Each account across sales, production, support and engineering: orders, field units, tickets, escalations and who knows them.</p>
       </div>
       <div className="grid gap-3 md:grid-cols-3">
@@ -59,7 +59,7 @@ export default function CustomersView() {
         <div className="grid gap-4 lg:grid-cols-[1fr_420px]">
           <div className="space-y-4">
             {d.escalation && (
-              <div className="flex items-start gap-3 rounded-2xl border border-danger/40 bg-danger/10 p-4 text-sm">
+              <div className="flex items-start gap-3 rounded-2xl border border-danger/25 bg-danger/[0.07] p-4 text-sm">
                 <MessageSquareWarning className="mt-0.5 shrink-0 text-danger" size={18} />
                 <div>
                   <div className="font-medium text-danger">Open escalation from {d.customer.name}</div>

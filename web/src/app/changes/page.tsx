@@ -24,7 +24,7 @@ export default function Changes() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
       <section>
-        <h1 className="text-2xl font-semibold tracking-tight">What&apos;s new</h1>
+        <h1 className="page-title">What&apos;s new</h1>
         <p className="mt-1 text-sm text-muted">Everything that reached the company graph, newest first.</p>
         <ol className="card mt-4 divide-y divide-line">
           {d?.feed.map((f, i) => (
@@ -44,7 +44,7 @@ export default function Changes() {
         <p className="mt-1 text-xs text-muted">Knowledge that may no longer be true, found from the graph&apos;s structure.</p>
         <ul className="mt-3 space-y-2 text-sm">
           {d?.attention.map((a, i) => (
-            <li key={i} className="rounded-lg border border-warn/30 bg-warn/10 p-2">
+            <li key={i} className="rounded-lg border border-warn/25 bg-warn/[0.07] p-2">
               <b className="font-mono text-xs">{a.record}</b> <span className="text-xs text-muted">{a.label}</span>
               <div>{a.reason}</div>
             </li>

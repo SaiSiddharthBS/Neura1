@@ -30,7 +30,7 @@ export default function Signals() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       <section>
-        <h1 className="text-2xl font-semibold tracking-tight">Signals</h1>
+        <h1 className="page-title">Signals</h1>
         <p className="mt-1 text-sm text-muted">
           What arrives at Flyvi: supplier notices, customer escalations, leave notices. Each one opens the analysis that fits it.
         </p>

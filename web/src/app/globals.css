@@ -1,83 +1,193 @@
 @import "tailwindcss";
 
-/* Neura1 design language: obsidian glass. Dark by design; every colour is a token. */
+/*
+ * Neura1 design system, 2026.
+ * Neutral surfaces with a slight cool bias, one azure accent, colour only where it means something.
+ * Every colour is an OKLCH token; dark is the default, light follows the system or the theme switch.
+ */
 :root {
   color-scheme: dark;
-  --bg: #04060c;
-  --panel: rgba(12, 17, 31, 0.62);
-  --elev: rgba(255, 255, 255, 0.045);
-  --ink: #eef3fb;
-  --muted: rgba(226, 233, 245, 0.58);
-  --line: rgba(255, 255, 255, 0.08);
-  --line2: rgba(255, 255, 255, 0.16);
-  --accent: #3b82f6;
-  --accent-hover: #60a5fa;
-  --cyan: #5ad1e6;
-  --violet: #a78bfa;
-  --success: #34d399;
-  --danger: #f87171;
-  --warn: #fbbf24;
+  --bg: oklch(0.145 0.006 265);
+  --bg-raised: oklch(0.165 0.006 265);
+  --panel: oklch(0.185 0.007 265);
+  --elev: oklch(1 0 0 / 0.045);
+  --elev-strong: oklch(1 0 0 / 0.08);
+  --ink: oklch(0.97 0.004 265);
+  --ink-soft: oklch(0.86 0.008 265);
+  --muted: oklch(0.68 0.012 265);
+  --faint: oklch(0.52 0.012 265);
+  --line: oklch(1 0 0 / 0.075);
+  --line2: oklch(1 0 0 / 0.14);
+  --accent: oklch(0.68 0.16 252);
+  --accent-hover: oklch(0.76 0.13 245);
+  --accent-ink: oklch(0.99 0 0);
+  --cyan: oklch(0.80 0.11 205);
+  --violet: oklch(0.74 0.13 295);
+  --success: oklch(0.77 0.15 160);
+  --danger: oklch(0.70 0.18 22);
+  --warn: oklch(0.83 0.15 80);
+  --shadow: 0 1px 0 oklch(1 0 0 / 0.035) inset, 0 1px 2px oklch(0 0 0 / 0.4);
+  --shadow-pop: 0 1px 0 oklch(1 0 0 / 0.05) inset, 0 24px 64px -12px oklch(0 0 0 / 0.65), 0 0 0 1px oklch(1 0 0 / 0.08);
+  --halo: oklch(0.68 0.16 252 / 0.10);
   --spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --radius: 14px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg: oklch(0.985 0.002 265);
+    --bg-raised: oklch(0.975 0.003 265);
+    --panel: oklch(1 0 0);
+    --elev: oklch(0.25 0.02 265 / 0.045);
+    --elev-strong: oklch(0.25 0.02 265 / 0.08);
+    --ink: oklch(0.22 0.012 265);
+    --ink-soft: oklch(0.34 0.012 265);
+    --muted: oklch(0.50 0.014 265);
+    --faint: oklch(0.62 0.012 265);
+    --line: oklch(0.25 0.02 265 / 0.09);
+    --line2: oklch(0.25 0.02 265 / 0.17);
+    --accent: oklch(0.56 0.19 255);
+    --accent-hover: oklch(0.49 0.19 255);
+    --cyan: oklch(0.55 0.11 215);
+    --violet: oklch(0.53 0.18 295);
+    --success: oklch(0.56 0.14 155);
+    --danger: oklch(0.57 0.20 25);
+    --warn: oklch(0.63 0.15 65);
+    --shadow: 0 1px 2px oklch(0.2 0.02 265 / 0.06), 0 0 0 1px oklch(0.2 0.02 265 / 0.02);
+    --shadow-pop: 0 24px 64px -16px oklch(0.2 0.02 265 / 0.25), 0 0 0 1px oklch(0.2 0.02 265 / 0.08);
+    --halo: oklch(0.56 0.19 255 / 0.07);
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: oklch(0.985 0.002 265);
+  --bg-raised: oklch(0.975 0.003 265);
+  --panel: oklch(1 0 0);
+  --elev: oklch(0.25 0.02 265 / 0.045);
+  --elev-strong: oklch(0.25 0.02 265 / 0.08);
+  --ink: oklch(0.22 0.012 265);
+  --ink-soft: oklch(0.34 0.012 265);
+  --muted: oklch(0.50 0.014 265);
+  --faint: oklch(0.62 0.012 265);
+  --line: oklch(0.25 0.02 265 / 0.09);
+  --line2: oklch(0.25 0.02 265 / 0.17);
+  --accent: oklch(0.56 0.19 255);
+  --accent-hover: oklch(0.49 0.19 255);
+  --cyan: oklch(0.55 0.11 215);
+  --violet: oklch(0.53 0.18 295);
+  --success: oklch(0.56 0.14 155);
+  --danger: oklch(0.57 0.20 25);
+  --warn: oklch(0.63 0.15 65);
+  --shadow: 0 1px 2px oklch(0.2 0.02 265 / 0.06), 0 0 0 1px oklch(0.2 0.02 265 / 0.02);
+  --shadow-pop: 0 24px 64px -16px oklch(0.2 0.02 265 / 0.25), 0 0 0 1px oklch(0.2 0.02 265 / 0.08);
+  --halo: oklch(0.56 0.19 255 / 0.07);
 }
 
 @theme inline {
   --color-bg: var(--bg);
+  --color-bg-raised: var(--bg-raised);
   --color-panel: var(--panel);
   --color-elev: var(--elev);
+  --color-elev-strong: var(--elev-strong);
   --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
   --color-muted: var(--muted);
+  --color-faint: var(--faint);
   --color-line: var(--line);
   --color-line2: var(--line2);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
   --color-cyan: var(--cyan);
   --color-violet: var(--violet);
   --color-success: var(--success);
   --color-danger: var(--danger);
   --color-warn: var(--warn);
-  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --font-sans: var(--font-geist), ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
+html { background: var(--bg); }
 body {
   background-color: var(--bg);
   color: var(--ink);
-  background-image:
-    radial-gradient(1200px 600px at 8% -10%, rgba(37, 99, 235, 0.22), transparent 60%),
-    radial-gradient(900px 500px at 100% 0%, rgba(90, 209, 230, 0.10), transparent 60%),
-    radial-gradient(900px 700px at 70% 110%, rgba(124, 58, 237, 0.12), transparent 60%),
-    linear-gradient(180deg, #060913 0%, #03050a 100%);
-  background-attachment: fixed;
+  font-feature-settings: "ss01", "cv11";
+  /* One quiet light source at the top, instead of coloured blobs. */
+  background-image: radial-gradient(1100px 420px at 50% -220px, var(--halo), transparent 70%);
+  background-repeat: no-repeat;
+  text-rendering: optimizeLegibility;
 }
 
+h1, h2, h3 { text-wrap: balance; letter-spacing: -0.015em; }
+.page-title { font-size: 28px; line-height: 1.15; font-weight: 600; letter-spacing: -0.028em; }
+.eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+.num { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+/* Surfaces: solid, hairline-bordered, barely shadowed. Hierarchy comes from spacing and type, not glow. */
 .card {
   background: var(--panel);
-  backdrop-filter: blur(24px) saturate(150%);
-  -webkit-backdrop-filter: blur(24px) saturate(150%);
   border: 1px solid var(--line);
-  border-radius: 16px;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 12px 40px rgba(0, 0, 0, 0.35);
-  transition: border-color 300ms var(--spring), transform 400ms var(--spring);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: border-color 200ms var(--spring), box-shadow 200ms var(--spring), background-color 200ms var(--spring);
 }
+a.card:hover, button.card:hover, .card-hover:hover { border-color: var(--line2); }
+.surface-pop { background: var(--panel); border-radius: 16px; box-shadow: var(--shadow-pop); }
+.glow { box-shadow: 0 0 0 1px color-mix(in oklch, var(--accent) 45%, transparent), 0 8px 32px -8px color-mix(in oklch, var(--accent) 45%, transparent); }
 
-.glow {
-  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.35), 0 0 32px rgba(59, 130, 246, 0.25);
-}
-
-input, textarea, select {
-  background: var(--elev);
-  color: var(--ink);
-}
-input::placeholder, textarea::placeholder { color: var(--muted); }
-
-:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
+input, textarea, select { background: var(--elev); color: var(--ink); }
+input::placeholder, textarea::placeholder { color: var(--faint); }
+select option { background: var(--panel); color: var(--ink); }
+:focus-visible { outline: 2px solid color-mix(in oklch, var(--accent) 70%, transparent); outline-offset: 2px; border-radius: 6px; }
+::selection { background: color-mix(in oklch, var(--accent) 35%, transparent); }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 999px; }
+::-webkit-scrollbar-thumb { background: var(--elev-strong); border-radius: 999px; border: 3px solid transparent; background-clip: content-box; }
 
-.react-flow { --xy-background-color: transparent; }
-.react-flow__controls button { background: rgba(255, 255, 255, 0.06); border-color: var(--line); color: var(--ink); fill: var(--ink); }
+.kbd {
+  font-family: var(--font-mono); font-size: 10.5px; line-height: 1; padding: 3px 5px; border-radius: 5px;
+  border: 1px solid var(--line2); color: var(--muted); background: var(--elev);
+}
+
+/* AI is visibly thinking: a light sweep across the text. */
+.shimmer {
+  background: linear-gradient(90deg, var(--muted) 0%, var(--ink) 45%, var(--muted) 90%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: shimmer 1.8s linear infinite;
+}
+@keyframes shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+
+.ai-ring { position: relative; }
+.ai-ring::before {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: conic-gradient(from var(--angle, 0deg), color-mix(in oklch, var(--accent) 80%, transparent), color-mix(in oklch, var(--violet) 70%, transparent), color-mix(in oklch, var(--cyan) 70%, transparent), color-mix(in oklch, var(--accent) 80%, transparent));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: spin-angle 4s linear infinite; opacity: 0.9;
+}
+@property --angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@keyframes spin-angle { to { --angle: 360deg; } }
+
+.skeleton { background: linear-gradient(90deg, var(--elev) 0%, var(--elev-strong) 50%, var(--elev) 100%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; border-radius: 8px; }
+
+.react-flow { --xy-background-color: transparent; --xy-edge-label-background-color: var(--panel); --xy-edge-label-color: var(--muted); }
+.react-flow__controls { box-shadow: var(--shadow) !important; border-radius: 10px; overflow: hidden; }
+.react-flow__controls button { background: var(--panel); border-color: var(--line); color: var(--ink); fill: var(--ink); }
+.react-flow__attribution { background: transparent !important; }
+.react-flow__attribution a { color: var(--faint) !important; }
+
+/* Page changes: a short cross-fade with a small lift (View Transitions API). */
+::view-transition-old(page) { animation: vt-out 160ms var(--spring) both; }
+::view-transition-new(page) { animation: vt-in 320ms var(--spring) both; }
+@keyframes vt-out { to { opacity: 0; transform: translateY(-4px); } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(8px); } }
 
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-.rise { animation: rise 500ms var(--spring) both; }
-@media (prefers-reduced-motion: reduce) { .rise { animation: none; } .card { transition: none; } }
+.rise { animation: rise 420ms var(--spring) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rise, .shimmer, .skeleton, .ai-ring::before { animation: none; }
+  ::view-transition-old(page), ::view-transition-new(page) { animation: none; }
+  .card { transition: none; }
+}

@@ -32,7 +32,7 @@ export default function ProjectsView() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
+        <h1 className="page-title">Projects</h1>
         <p className="mt-1 text-sm text-muted">Who is on them, what they cover, the decisions that touch them, and open work.</p>
       </div>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">

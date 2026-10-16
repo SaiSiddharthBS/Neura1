@@ -18,7 +18,9 @@ event, including:
 - the Neura1 name;
 - the logo;
 - the company-brain idea and planning notes;
-- the visual design language: dark "obsidian glass" palette, azure accent, Inter/JetBrains Mono pairing and a floating sidebar. It was re-implemented here as new Tailwind tokens and components; no stylesheet or component code was copied.
+- the first visual direction (a dark "obsidian glass" palette with an azure accent). During the event it was replaced by
+  a new design system: OKLCH light and dark tokens, Geist type, a slim sidebar and View Transitions. No stylesheet or
+  component code was copied from the earlier project.
 **Not carried over:** no source code, UI, database schema, or data from the earlier codebase.
 
 Third-party libraries are listed in `api/pyproject.toml` and `web/package.json`. The document editor uses

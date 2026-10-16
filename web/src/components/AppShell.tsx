@@ -3,25 +3,32 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ViewTransition, useEffect, useState } from "react";
+import { Toaster } from "sonner";
 import {
-  Bell, Brain, Building2, Command, FileText, MessageCircle, Waypoints, FolderKanban, History, Inbox, KanbanSquare, LayoutDashboard, Network, Radar, Sun, Upload, Users,
+  Bell, Brain, Building2, FileText, FolderKanban, History, Inbox, KanbanSquare, LayoutDashboard, Menu, MessageCircle,
+  Network, Radar, Search, Sparkles, Sun, Upload, Users, Waypoints,
 } from "lucide-react";
 import CommandPalette from "@/components/CommandPalette";
+import ThemeSwitch from "@/components/ThemeSwitch";
 import ViewerSwitch from "@/components/ViewerSwitch";
+import { api } from "@/lib/api";
+import { useResolvedTheme } from "@/lib/theme";
 
-const NAV = [
+type Item = { href: string; label: string; icon: typeof Sun; badge?: "signals" };
+const NAV: { section: string; items: Item[] }[] = [
   { section: "Today", items: [
-    { href: "/me", label: "My day", icon: Sun },
-    { href: "/chat", label: "Chat", icon: MessageCircle },
     { href: "/", label: "Overview", icon: LayoutDashboard },
-    { href: "/signals", label: "Signals", icon: Inbox },
+    { href: "/me", label: "My day", icon: Sun },
+    { href: "/signals", label: "Signals", icon: Inbox, badge: "signals" },
     { href: "/board", label: "Workboard", icon: KanbanSquare },
     { href: "/history", label: "Plans", icon: History },
+    { href: "/chat", label: "Chat", icon: MessageCircle },
   ]},
   { section: "Company brain", items: [
     { href: "/brain", label: "Ask & search", icon: Brain },
-    { href: "/explore", label: "Graph explorer", icon: Waypoints },
     { href: "/docs", label: "Documents", icon: FileText },
+    { href: "/explore", label: "Graph explorer", icon: Waypoints },
     { href: "/people", label: "People", icon: Users },
     { href: "/org", label: "Organisation", icon: Network },
     { href: "/projects", label: "Projects", icon: FolderKanban },
@@ -34,61 +41,111 @@ const NAV = [
   ]},
 ];
 
+const openPalette = () => window.dispatchEvent(new Event("neura1:palette"));
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
+  const theme = useResolvedTheme();
+  const [mobile, setMobile] = useState(false);
+  const [openSignals, setOpenSignals] = useState(0);
+
+  useEffect(() => {
+    api<{ investigation: unknown }[]>("/api/signals").then((s) => setOpenSignals(s.filter((x) => !x.investigation).length)).catch(() => {});
+  }, [path]);
+
   const active = (href: string) => (href === "/" ? path === "/" : path.startsWith(href)) ||
     (href === "/signals" && path.startsWith("/impact"));
+  const here = NAV.flatMap((g) => g.items.map((i) => ({ ...i, section: g.section }))).find((i) => active(i.href));
+
+  const sidebar = (
+    <div className="flex h-full flex-col">
+      <Link href="/" onClick={() => setMobile(false)} className="mx-3 mt-3 flex items-center gap-2.5 rounded-xl px-2 py-2 hover:bg-elev">
+        <Image src="/mark.png" alt="" width={256} height={207} loading="eager" style={{ width: 28, height: "auto" }} />
+        <span className="min-w-0 leading-tight">
+          <span className="block truncate text-[13.5px] font-semibold tracking-tight">Flyvi Technologies</span>
+          <span className="block text-[11.5px] text-muted">Neura1 · company brain</span>
+        </span>
+      </Link>
+      <button onClick={openPalette}
+              className="mx-3 mt-2 flex items-center gap-2 rounded-lg border border-line bg-elev px-2.5 py-1.5 text-[13px] text-muted transition hover:border-line2 hover:text-ink">
+        <Search size={14} /> <span className="flex-1 text-left">Search or ask</span> <span className="kbd">⌘K</span>
+      </button>
+      <nav className="mt-3 flex-1 space-y-4 overflow-y-auto px-3 pb-3">
+        {NAV.map((g) => (
+          <div key={g.section}>
+            <div className="px-2 pb-1 text-[11px] font-medium text-faint">{g.section}</div>
+            <ul className="space-y-px">
+              {g.items.map(({ href, label, icon: Icon, badge }) => {
+                const on = active(href);
+                return (
+                  <li key={href}>
+                    <Link href={href} onClick={() => setMobile(false)}
+                          className={`group relative flex h-8 items-center gap-2.5 rounded-lg px-2 text-[13.5px] transition-colors ${on
+                            ? "bg-elev-strong font-medium text-ink"
+                            : "text-ink-soft hover:bg-elev hover:text-ink"}`}>
+                      {on && <span className="absolute -left-3 top-1.5 h-5 w-[3px] rounded-r-full bg-accent" />}
+                      <Icon size={15} strokeWidth={on ? 2.1 : 1.8} className={on ? "text-accent" : "text-muted group-hover:text-ink-soft"} />
+                      <span className="flex-1 truncate">{label}</span>
+                      {badge === "signals" && openSignals > 0 && (
+                        <span className="num min-w-[18px] rounded-full bg-accent/15 px-1.5 text-center text-[11px] font-medium text-accent">{openSignals}</span>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </nav>
+      <div className="space-y-2 border-t border-line p-3">
+        <ViewerSwitch />
+        <div className="flex items-center justify-between px-1">
+          <span className="flex items-center gap-1.5 text-[11px] text-faint"><span className="h-1.5 w-1.5 rounded-full bg-warn" /> Synthetic data</span>
+          <ThemeSwitch />
+        </div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="flex min-h-screen gap-5 p-3 lg:p-5">
-      <aside className="card sticky top-5 hidden h-[calc(100vh-40px)] w-60 shrink-0 flex-col lg:flex">
-        <Link href="/" className="flex items-center gap-3 border-b border-line px-5 py-5">
-          <Image src="/mark.png" alt="" width={256} height={207} loading="eager" style={{ width: 40, height: "auto" }} className="drop-shadow-[0_0_12px_rgba(90,209,230,0.45)]" />
-          <span>
-            <span className="block text-[17px] font-semibold tracking-tight">Neura1</span>
-            <span className="block text-[11px] text-muted">Company brain · Flyvi</span>
-          </span>
-        </Link>
-        <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
-          {NAV.map((g) => (
-            <div key={g.section}>
-              <div className="px-3 pb-1.5 text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted">{g.section}</div>
-              {g.items.map(({ href, label, icon: Icon }) => (
-                <Link key={href} href={href}
-                      className={`group flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${active(href)
-                        ? "bg-accent/15 text-ink shadow-[inset_0_0_0_1px_rgba(59,130,246,0.35)]"
-                        : "text-muted hover:bg-elev hover:text-ink"}`}>
-                  <Icon size={16} className={active(href) ? "text-accent-hover" : ""} />
-                  {label}
-                </Link>
-              ))}
-            </div>
-          ))}
-        </nav>
-        <div className="space-y-2 border-t border-line p-4">
-          <ViewerSwitch />
-          <button onClick={() => window.dispatchEvent(new Event("neura1:palette"))}
-                  className="flex w-full items-center justify-between rounded-xl bg-elev px-3 py-2 text-xs text-muted hover:text-ink">
-            <span className="flex items-center gap-2"><Command size={13} /> Search or ask</span>
-            <kbd className="rounded border border-line px-1.5 font-mono">⌘K</kbd>
-          </button>
-          <div className="rounded-xl border border-warn/30 bg-warn/10 px-3 py-2 text-[11px] text-warn">Synthetic company data</div>
-        </div>
+    <div className="flex min-h-screen">
+      <aside className="sticky top-0 hidden h-screen w-[248px] shrink-0 border-r border-line bg-bg-raised/70 backdrop-blur-xl lg:block">
+        {sidebar}
       </aside>
 
+      {mobile && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button aria-label="Close menu" className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobile(false)} />
+          <aside className="surface-pop absolute inset-y-2 left-2 w-[264px] overflow-hidden">{sidebar}</aside>
+        </div>
+      )}
+
       <div className="min-w-0 flex-1">
-        <header className="card mb-4 flex items-center gap-3 px-4 py-3 lg:hidden">
-          <Image src="/mark.png" alt="" width={256} height={207} loading="eager" style={{ width: 30, height: "auto" }} />
-          <span className="font-semibold">Neura1</span>
-          <nav className="ml-auto flex gap-1 overflow-x-auto text-xs">
-            {NAV.flatMap((g) => g.items).map((i) => (
-              <Link key={i.href} href={i.href} className={`rounded-lg px-2 py-1 ${active(i.href) ? "bg-accent/20" : "text-muted"}`}>{i.label}</Link>
-            ))}
+        <header className="sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-line bg-bg/75 px-4 backdrop-blur-xl lg:px-8">
+          <button aria-label="Menu" onClick={() => setMobile(true)} className="-ml-1 rounded-lg p-1.5 text-muted hover:bg-elev hover:text-ink lg:hidden"><Menu size={17} /></button>
+          <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-[13px]">
+            <span className="hidden text-muted sm:inline">Flyvi</span>
+            <span className="hidden text-faint sm:inline">/</span>
+            <span className="hidden text-muted sm:inline">{here?.section ?? "Neura1"}</span>
+            <span className="hidden text-faint sm:inline">/</span>
+            <span className="truncate font-medium">{here?.label ?? "Neura1"}</span>
           </nav>
+          <div className="ml-auto flex items-center gap-2">
+            <button onClick={openPalette}
+                    className="ai-ring flex items-center gap-1.5 rounded-full bg-panel px-3 py-1.5 text-[13px] font-medium shadow-[var(--shadow)] transition hover:bg-elev">
+              <Sparkles size={14} className="text-accent" /> Ask Neura1
+              <span className="kbd ml-1 hidden sm:inline">⌘K</span>
+            </button>
+          </div>
         </header>
-        <main className="rise mx-auto max-w-[1400px] pb-10">{children}</main>
+        <main className="mx-auto max-w-[1360px] px-4 pb-16 pt-6 lg:px-8 lg:pt-8">
+          <ViewTransition name="page">
+            <div key={path} className="rise">{children}</div>
+          </ViewTransition>
+        </main>
       </div>
       <CommandPalette />
+      <Toaster theme={theme} position="bottom-right" toastOptions={{ className: "!rounded-xl !border-line !bg-panel !text-ink !shadow-[var(--shadow-pop)]" }} />
     </div>
   );
 }

@@ -279,12 +279,15 @@ OPERATIONAL = ["Person", "Project", "Item", "Customer", "Order", "Build", "Revis
 OPERATIONAL_RELS = ["OWNS", "WORKS_ON", "LEADS", "COVERS", "CONTAINS", "BUILDS", "FULFILLED_BY", "PLACED",
                     "DEPENDS_ON", "HAS_REV", "CERTIFIES", "BACKS_UP", "REPORTS_TO"]
 
+# FalkorDB estimates betweenness from sampled start nodes. A fixed seed makes one run repeatable; averaging
+# several seeded runs (see risk_radar) makes the ranking stable and closer to the exact value.
 CHOKEPOINTS = """
-CALL algo.betweenness({nodeLabels:$labels, relationshipTypes:$rels}) YIELD node, score
+CALL algo.betweenness({nodeLabels:$labels, relationshipTypes:$rels, samplingSize:$size, samplingSeed:$seed})
+YIELD node, score
 WHERE score > 0
 RETURN node.id AS id, labels(node)[0] AS label, coalesce(node.name, node.id) AS name, score
-ORDER BY score DESC LIMIT 8
 """
+CHOKEPOINT_SEEDS = range(1, 11)
 
 COMMUNITIES = """
 CALL algo.labelPropagation({nodeLabels:['Person', 'Project', 'Item', 'Customer'],
@@ -325,7 +328,12 @@ def risk_radar(graph: Graph, today: date | None = None) -> dict:
     t = Trace(graph)
     today_s = (today or date.today()).isoformat()
 
-    chokepoints = t.run("chokepoints", CHOKEPOINTS, {"labels": OPERATIONAL, "rels": OPERATIONAL_RELS})
+    totals: dict[str, dict] = {}
+    for seed in CHOKEPOINT_SEEDS:
+        for r in t.run(f"chokepoints_seed_{seed}", CHOKEPOINTS,
+                       {"labels": OPERATIONAL, "rels": OPERATIONAL_RELS, "size": 1000, "seed": seed}):
+            totals.setdefault(r["id"], {**r, "score": 0.0})["score"] += r["score"] / len(CHOKEPOINT_SEEDS)
+    chokepoints = sorted(totals.values(), key=lambda r: (-r["score"], r["id"]))[:8]
 
     value_by_rev = {r["revision"]: r for r in t.run("order_value_by_revision", ORDER_VALUE_BY_REVISION, {})}
     single_source, no_quote = [], []

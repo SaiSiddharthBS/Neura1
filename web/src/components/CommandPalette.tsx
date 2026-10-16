@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Box, Brain, FolderKanban, Search, Sparkles, User, Users, Zap } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -64,36 +65,49 @@ export default function CommandPalette() {
     return list.slice(0, 12);
   }, [q, hits, router]);
 
-  if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-[12vh] backdrop-blur-sm" onClick={() => setOpen(false)}>
-      <div className="card w-full max-w-xl overflow-hidden glow" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-3 border-b border-line px-4">
-          <Search size={16} className="text-muted" />
-          <input ref={input} value={q} onChange={(e) => { setQ(e.target.value); setSel(0); }}
-                 onKeyDown={(e) => {
-                   if (e.key === "ArrowDown") { e.preventDefault(); setSel((s) => Math.min(s + 1, cmds.length - 1)); }
-                   if (e.key === "ArrowUp") { e.preventDefault(); setSel((s) => Math.max(s - 1, 0)); }
-                   if (e.key === "Enter") cmds[sel]?.go();
-                 }}
-                 placeholder="Search parts, people, projects, or ask anything…"
-                 className="h-14 flex-1 bg-transparent text-[15px] outline-none" style={{ background: "transparent" }} />
-          <kbd className="rounded border border-line px-1.5 font-mono text-[11px] text-muted">esc</kbd>
-        </div>
-        <ul className="max-h-[50vh] overflow-y-auto p-2">
-          {cmds.map((c, i) => (
-            <li key={c.key}>
-              <button onMouseEnter={() => setSel(i)} onClick={c.go}
-                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm ${i === sel ? "bg-accent/15" : ""}`}>
-                <c.icon size={16} className={i === sel ? "text-accent-hover" : "text-muted"} />
-                <span className="flex-1 truncate">{c.title}</span>
-                <span className="truncate text-xs text-muted">{c.hint}</span>
-              </button>
-            </li>
-          ))}
-          {!cmds.length && <li className="px-3 py-6 text-center text-sm text-muted"><Brain className="mx-auto mb-2" size={18} />Nothing matches.</li>}
-        </ul>
-      </div>
-    </div>
+    <AnimatePresence>
+      {open && (
+        <motion.div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 pt-[14vh] backdrop-blur-[2px]"
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}
+                    onClick={() => setOpen(false)}>
+          <motion.div className="surface-pop w-full max-w-[600px] overflow-hidden" onClick={(e) => e.stopPropagation()}
+                      initial={{ opacity: 0, scale: 0.97, y: -6 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}>
+            <div className="flex items-center gap-3 border-b border-line px-4">
+              <Search size={16} className="text-faint" />
+              <input ref={input} value={q} onChange={(e) => { setQ(e.target.value); setSel(0); }}
+                     onKeyDown={(e) => {
+                       if (e.key === "ArrowDown") { e.preventDefault(); setSel((s) => Math.min(s + 1, cmds.length - 1)); }
+                       if (e.key === "ArrowUp") { e.preventDefault(); setSel((s) => Math.max(s - 1, 0)); }
+                       if (e.key === "Enter") cmds[sel]?.go();
+                     }}
+                     placeholder="Search parts, people, projects, or ask anything…"
+                     className="h-14 flex-1 bg-transparent text-[15px] outline-none" style={{ background: "transparent" }} />
+              <span className="kbd">esc</span>
+            </div>
+            <ul className="max-h-[52vh] overflow-y-auto p-1.5">
+              {cmds.map((c, i) => (
+                <li key={c.key}>
+                  <button onMouseEnter={() => setSel(i)} onClick={c.go}
+                          className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-[13.5px] transition-colors ${i === sel ? "bg-elev-strong" : ""}`}>
+                    <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-md border border-line ${i === sel ? "bg-panel text-accent" : "text-muted"}`}><c.icon size={14} /></span>
+                    <span className="flex-1 truncate">{c.title}</span>
+                    <span className="truncate text-[12px] text-faint">{c.hint}</span>
+                    {i === sel && <span className="kbd">↵</span>}
+                  </button>
+                </li>
+              ))}
+              {!cmds.length && <li className="px-3 py-8 text-center text-sm text-muted"><Brain className="mx-auto mb-2" size={18} />Nothing matches.</li>}
+            </ul>
+            <div className="flex items-center gap-3 border-t border-line px-4 py-2 text-[11.5px] text-faint">
+              <span className="flex items-center gap-1"><span className="kbd">↑</span><span className="kbd">↓</span> move</span>
+              <span className="flex items-center gap-1"><span className="kbd">↵</span> open</span>
+              <span className="ml-auto">Questions go to Neura1 with sources</span>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

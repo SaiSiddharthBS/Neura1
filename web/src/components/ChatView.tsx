@@ -1,5 +1,6 @@
 "use client";
 
+import { Avatar } from "@/components/ViewerSwitch";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Bot, FileText, Hash, Link2, Loader2, MessageCircle, Send, Sparkles } from "lucide-react";
@@ -108,7 +109,7 @@ export default function ChatView() {
   const hints = text.startsWith("/") || text === "@" ? COMMANDS.filter(([c]) => c.startsWith(text.split(" ")[0]) || text === "@") : [];
 
   return (
-    <div className="grid h-[calc(100vh-60px)] gap-4 lg:grid-cols-[250px_1fr]">
+    <div className="-mb-12 grid h-[calc(100dvh-7rem)] gap-4 lg:grid-cols-[250px_1fr]">
       <aside className="card flex flex-col overflow-hidden">
         <div className="border-b border-line p-4">
           <div className="flex items-center gap-2 font-medium"><MessageCircle size={16} className="text-cyan" /> Neura1 Chat</div>
@@ -150,16 +151,16 @@ export default function ChatView() {
             const about = m.about.filter((a) => a.id && !a.id.startsWith("chat/"));
             return (
               <div key={m.id} className="flex gap-3">
-                <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-[11px] font-semibold text-white ${bot ? "bg-gradient-to-br from-cyan to-violet" : "bg-gradient-to-br from-accent to-cyan"}`}>
-                  {bot ? <Bot size={15} /> : m.author.slice(0, 2)}
-                </span>
+                {bot
+                  ? <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-accent to-violet text-white"><Bot size={15} /></span>
+                  : <Avatar name={m.author} size={32} />}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-2 text-sm">
                     {m.author_id ? <Link href={`/people?id=${m.author_id}`} className="font-medium hover:underline">{m.author}</Link> : <span className="font-medium text-cyan">{m.author}</span>}
                     <span className="text-[11px] text-muted">{new Date(m.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                     {bot && m.kind === "notice" && <span className="rounded bg-violet/15 px-1.5 text-[10px] text-violet">posted on its own</span>}
                   </div>
-                  <div className={`mt-0.5 whitespace-pre-wrap text-sm leading-relaxed ${bot ? "rounded-xl border border-cyan/20 bg-cyan/5 px-3 py-2" : ""}`}>{rich(m.text)}</div>
+                  <div className={`mt-0.5 whitespace-pre-wrap text-sm leading-relaxed ${bot ? "rounded-xl border border-cyan/25 bg-cyan/[0.07] px-3 py-2" : ""}`}>{rich(m.text)}</div>
                   {(links.length > 0 || sources.length > 0) && (
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
                       {links.map((l) => <Link key={l.href} href={l.href} className="rounded-md border border-line px-2 py-0.5 text-xs hover:border-line2">{l.label} →</Link>)}
