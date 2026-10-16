@@ -73,7 +73,7 @@ A chat message can record a rejection. It can never approve a part. Only a perso
 - **Procurement:** every quote with validity, the baseline used, stock, net need and MOQ.
 - **Production:** each build's need, coverage from stock, shortfall and supply date.
 - **Sales:** orders, due dates, the penalty clause and the account manager.
-- **Support:** 220 Rev B controllers already at Nilgiri contain this part; spares will need the new lead time.
+- **Support:** 220 PDU-28 Rev B units already at Nilgiri contain this part; spares will need the new lead time.
 - **Management:** a summary generated from the query results, not by a language model.
 
 ## 5. Nothing is a black box
@@ -156,7 +156,7 @@ endpoint pointed at a GPU (e.g. a DGX Spark serving through vLLM) needs no code 
 |---|---|---|
 | 0:00 | Inbox | "Hardware companies run on a bill of materials. When one chip changes, every team is affected, and the reasons behind old choices are buried in Slack." |
 | 0:15 | Paste notice | "A distributor emails a price and lead-time change. Neura1 reads it with a local open-source model, and code checks every number against the email." |
-| 0:35 | Impact overview, graph | "One FalkorDB traversal: through the power module to two released products. Three per controller, because the module is fitted twice and the chip is also on the board. Drafts and obsolete revisions excluded." |
+| 0:35 | Impact overview, graph | "One FalkorDB traversal: through the power module to two released products. Three per unit, because the power stage is fitted twice and the chip is also on the board. Drafts and obsolete revisions excluded." |
 | 1:00 | Red banner → Slack evidence | "The cheaper pin-compatible part was rejected two years ago, in Slack. Neura1 found the decision, verified the quote word for word, and stops us repeating the mistake." |
 | 1:30 | Lenses | "Same graph, every team: firmware owner, quotes and stock, builds short, Nilgiri's penalty clause, units in the field." |
 | 2:00 | Cypher tab | "Every query is visible: 13 queries, about 30 ms." |

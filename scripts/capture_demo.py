@@ -110,7 +110,7 @@ def main() -> None:
         page.get_by_role("button", name="Nilgiri", exact=True).click()
         page.wait_for_timeout(1500)
         page.locator("section.card").nth(1).screenshot(path=str(OUT / "who-knows.png")); shots.append("who-knows.png")
-        for name, url, wait in (("people", "/people?id=P-SAI", "Knows about"),
+        for name, url, wait in (("people", "/people?id=P-SAI", "Working on now"),
                                 ("projects", "/projects?id=PRJ-NILGIRI", "Recent discussion"),
                                 ("whats-new", "/changes", "Needs attention")):
             page.goto(base + url)

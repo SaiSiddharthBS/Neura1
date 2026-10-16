@@ -45,3 +45,14 @@ def test_false_approval_claims_are_flagged(graph):
     flagged = check_approval_claims(graph, "The only approved alternative is MX-3360. NB54361-L is not approved.")
     assert len(flagged) == 1 and "MX-3360" in flagged[0] and "NOT APPROVED" in flagged[0]
     assert check_approval_claims(graph, "MX-3360 is not approved yet.") == []
+
+
+def test_resolve_item_handles_several_part_numbers_at_once(graph):
+    out = run_tool(graph, Trace(graph), "resolve_item", {"text": "NB54360 NB54361-L"})
+    assert {r["id"] for r in out} == {"NB54360", "NB54361-L"}
+
+
+def test_incumbent_part_called_approved_is_not_flagged(graph):
+    from neura1.agent import check_approval_claims
+
+    assert check_approval_claims(graph, "The only approved part for this application is NB54360.") == []

@@ -1,0 +1,22 @@
+{
+  "source_id": "inbox/notice_NB54360_2026-10-14.md",
+  "kind": "notice",
+  "model": "qwen2.5:7b",
+  "extracted_at": "2026-10-16T11:48:05+00:00",
+  "source_versions": [
+    "inbox/notice_NB54360_2026-10-14.md"
+  ],
+  "output": {
+    "part": "NB54360",
+    "change_types": [
+      "price",
+      "lead_time"
+    ],
+    "new_unit_price": 320,
+    "currency": "₹",
+    "effective_date": "2026-11-01",
+    "lead_weeks": 22,
+    "last_time_buy": "2027-03-31",
+    "supplier": "Northbridge Semi"
+  }
+}

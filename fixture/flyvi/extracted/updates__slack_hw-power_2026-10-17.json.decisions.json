@@ -1,0 +1,32 @@
+{
+  "source_id": "updates/slack_hw-power_2026-10-17.json",
+  "kind": "decisions",
+  "model": "qwen2.5:7b",
+  "extracted_at": "2026-10-16T11:55:42+00:00",
+  "source_versions": [
+    "updates/slack_hw-power_2026-10-17.json"
+  ],
+  "output": {
+    "decisions": [
+      {
+        "outcome": "evidence_only",
+        "subject": "MX-3360",
+        "instead_of": null,
+        "applies_to": [
+          "PSM-28 Rev 1"
+        ],
+        "summary": "MX-3360 passed the bench check on regulation at 70C ambient with 8C junction margin in a sealed enclosure.",
+        "reason": null,
+        "decided_by": "Raghavendra",
+        "decided_at": "2026-10-17",
+        "ref": "TR-131",
+        "evidence": [
+          {
+            "chunk_id": "updates/slack_hw-power_2026-10-17.json#m1",
+            "quote": "Bench check on MX-3360 from Meridian Analog: held regulation at 70C ambient in the sealed enclosure with 8C junction margin."
+          }
+        ]
+      }
+    ]
+  }
+}

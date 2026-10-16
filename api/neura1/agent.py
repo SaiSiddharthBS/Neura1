@@ -47,7 +47,8 @@ def check_approval_claims(graph: Graph, answer: str) -> list[str]:
 
     warnings = []
     statuses = {}
-    for r in rows(graph, "MATCH (a:Item)-[:ALTERNATE_OF]-(:Item) RETURN DISTINCT a.id AS id"):
+    # Only the alternates themselves (the part the alternate stands in for is the approved incumbent).
+    for r in rows(graph, "MATCH (a:Item)-[:ALTERNATE_OF]->(:Item) RETURN DISTINCT a.id AS id"):
         decisions = rows(graph, """MATCH (d:Decision)-[:ABOUT]->(:Item {id:$id})
                                    RETURN d.outcome AS outcome, d.authority AS authority, d.status AS status""",
                          {"id": r["id"]})
@@ -126,7 +127,17 @@ TOOLS = [
 
 def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
     if name == "resolve_item":
-        return trace.run(name, Q.RESOLVE_ITEM, {"text": args["text"]})
+        text = str(args.get("text", "")).strip()
+        found = trace.run(name, Q.RESOLVE_ITEM, {"text": text})
+        if found:
+            return found
+        # Small models often pass several part numbers at once ("NB54360 NB54361-L"): resolve each one.
+        out = []
+        for token in [t for t in re.split(r"[\s,;/]+", text) if len(t) >= 3]:
+            hit = trace.run(name, Q.RESOLVE_ITEM, {"text": token}) or \
+                [s | {"suggestion": True} for s in trace.run("suggest_items", Q.SUGGEST_ITEMS, {"text": token})]
+            out.extend(hit)
+        return out or {"error": f"No item matches {text!r}", "hint": "pass one part number or id per call"}
     if name == "where_used":
         return trace.run(name, Q.WHERE_USED, {"item_id": args["item_id"]})
     if name == "dependents":

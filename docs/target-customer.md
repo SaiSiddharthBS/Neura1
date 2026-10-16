@@ -1,14 +1,14 @@
 # Who Neura1 is for
 
 Neura1 is built for **one kind of business first: Indian industrial electronics product companies with
-20–300 people**. These companies design their own controllers, IIoT gateways, instruments or test equipment and
+20–300 people**. These companies design their own power electronics, controllers, instruments or embedded systems, often for aerospace, defence and industrial customers, and
 have them assembled in-house or at an EMS partner.
 
 This is a deliberate choice. A "company brain for everyone" can't know what a BOM revision is, why a
-cross-referenced part isn't approved, or that a late controller can trigger a penalty clause. A company brain
+cross-referenced part isn't approved, or that a late power unit can trigger a penalty clause. A company brain
 for this business can.
 
-> Status: this is our target hypothesis. The demo company, Flyvi Technologies, is synthetic. We have not yet run
+> Status: this is our target hypothesis. The demo uses Flyvi Technologies, a real company, with synthetic data. We have not yet run
 > interviews or pilots. See "What we still need to prove" below.
 
 ## The people and the moment

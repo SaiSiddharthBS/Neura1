@@ -23,7 +23,7 @@ the whole company (people, projects, products, customers, decisions) and turns i
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white">
   <img alt="React Flow" src="https://img.shields.io/badge/React_Flow-ff0072">
   <img alt="Ollama" src="https://img.shields.io/badge/Ollama-Qwen2.5--7B-111111?logo=ollama&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-45_passing-2fd3a5">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-47_passing-2fd3a5">
   <img alt="MCP" src="https://img.shields.io/badge/MCP-16_tools-5b6cff">
   <img alt="Cost" src="https://img.shields.io/badge/running_cost-₹0-2fd3a5">
 </p>
@@ -449,7 +449,7 @@ cd api
 cp .env.example .env                               # set NEURA1_DEMO_PASSCODE
 uv sync
 uv run python -m neura1.cli load                   # load Flyvi Technologies + saved model extractions
-uv run pytest -q                                   # 45 tests
+uv run pytest -q                                   # 47 tests
 uv run uvicorn neura1.main:app --port 8000
 
 cd ../web && pnpm install && pnpm dev              # http://localhost:3000
@@ -497,10 +497,10 @@ The agent uses a JSON plan-act loop, so it works even on servers whose native to
 
 | Check | Result |
 |---|---|
-| Automated tests | **45 passing**: BOM roll-ups, revision applicability, cost edge cases, import validation, CAD BOMs, extraction verification, idempotent approvals, the HTTP flow end to end, and 503 when the graph is down |
+| Automated tests | **47 passing**: BOM roll-ups, revision applicability, cost edge cases, import validation, CAD BOMs, extraction verification, idempotent approvals, the HTTP flow end to end, and 503 when the graph is down |
 | Local model on real fixture documents | DEC-117 found in **Slack and Jira** ✓ · notice read correctly ✓ · MX-3360 bench result ✓ · TR-131 bench note **missed** ✗ · [full table](docs/DEMO.md#what-the-local-model-got-right-and-wrong) |
-| Mistakes caught and fixed | The agent once called MX-3360 "approved". That led to the approval wording in tool output and the rule-based check. |
-| Frozen evaluation | 43 ground-truth questions in [`api/eval/golden.yaml`](api/eval/golden.yaml), written before any model ran: graph agent vs search-only vs whole-corpus, same model. **Results pending GPU time; failures will be published, not hidden.** |
+| Mistakes caught and fixed | The agent once called MX-3360 "approved", which led to the approval wording in tool output and the rule-based check. That check then flagged the incumbent part by mistake, and was narrowed to alternates only. A small model passed two part numbers in one lookup, so the lookup now splits them. |
+| Frozen evaluation | 48 ground-truth questions in [`api/eval/golden.yaml`](api/eval/golden.yaml), written before any model ran: graph agent vs search-only vs whole-corpus, same model. **Results pending GPU time; failures will be published, not hidden.** |
 
 <br>
 
@@ -534,7 +534,7 @@ api/                 FastAPI service
   neura1/search.py     hybrid vector + full-text search with graph expansion
   neura1/webhooks.py   Slack and Jira live ingestion
   neura1/mcp_server.py the graph's tools for any MCP client
-  tests/  eval/        45 tests · 43-question frozen evaluation
+  tests/  eval/        47 tests · 48-question frozen evaluation
 web/                 Next.js app: Inbox · Impact · Company brain · Investigations · Import
 fixture/flyvi/    synthetic company: records · chats · tickets · docs · notice · updates · model extractions
 docs/                demo walkthrough · data model · queries · target customer · reuse · AI disclosure
