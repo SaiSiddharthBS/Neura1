@@ -22,8 +22,8 @@ the whole company (people, projects, products, customers, decisions) and turns i
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white">
   <img alt="React Flow" src="https://img.shields.io/badge/React_Flow-ff0072">
-  <img alt="Ollama" src="https://img.shields.io/badge/Ollama-Qwen2.5--7B-111111?logo=ollama&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-63_passing-2fd3a5">
+  <img alt="DGX Spark" src="https://img.shields.io/badge/DGX_Spark-ornith--1.5--35b-76B900?logo=nvidia&logoColor=white">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-78_passing-2fd3a5">
   <img alt="MCP" src="https://img.shields.io/badge/MCP-16_tools-5b6cff">
   <img alt="Licence" src="https://img.shields.io/badge/licence-AGPL--3.0-a42e2b">
   <img alt="Cost" src="https://img.shields.io/badge/running_cost-₹0-2fd3a5">
@@ -295,7 +295,7 @@ flowchart LR
     end
 
     DB[("FalkorDB<br/>one company graph")]
-    M["Local open model<br/>Ollama · Qwen2.5-7B<br/>or a DGX via vLLM"]
+    M["Open model on a DGX Spark<br/>vLLM · ornith-1.5-35b-a3b<br/>laptop fallback: Ollama"]
     W["Web app<br/>Next.js · React Flow"]
 
     A --> V --> L --> DB
@@ -523,6 +523,18 @@ uv run python -m neura1.cli tag-skills             # tag tasks and projects with
 
 The agent uses a JSON plan-act loop, so it works even on servers whose native tool calling is unreliable.
 
+**What the DGX does.** Every model call goes to the main endpoint: Ask and the agent, chat replies, Edit with AI in
+documents, reading forwarded emails, decision and action extraction, skill tagging and the evaluation. A background
+worker (`neura1/auto.py`) also reads new information on its own every 30 seconds: a chat channel once it has been quiet
+for 45 s, an imported or saved document, a Jira or Slack webhook, a forwarded escalation. Verified decisions are
+announced in chat, and new tasks are tagged with the skills they need. The worker only runs while the DGX is reachable,
+so a laptop is never asked to do its work. With a 262k-token context, the DGX gets larger tool results
+(`NEURA1_LLM_TOOL_RESULT_CHARS`) and whole documents for Edit with AI (`NEURA1_LLM_DOC_CHARS`).
+
+If the DGX is unreachable, calls retry once on `NEURA1_LLM_FALLBACK_*` (Qwen2.5-7B on Ollama), and the sidebar shows
+which model is answering. Embeddings stay on local Ollama (`nomic-embed-text`) because the DGX's vLLM serves no
+embedding model. To move them, serve one there and point `NEURA1_LLM_EMBED_BASE_URL` at it, then run `cli embed` again.
+
 </details>
 
 <br>
@@ -544,7 +556,7 @@ The agent uses a JSON plan-act loop, so it works even on servers whose native to
 |---|---|---|
 | Graph | FalkorDB, self-hosted in Docker | Source-available (SSPLv1), free |
 | Model runtime | Ollama, or vLLM on a DGX Spark | MIT · Apache-2.0 |
-| Model | ornith-1.5-35b-a3b on a DGX Spark (over Tailscale) for chat and extraction; Qwen2.5-7B on a laptop as a fallback; nomic-embed-text for embeddings | open weights |
+| Model | ornith-1.5-35b-a3b on a DGX Spark (over Tailscale) for every model call, including the background reader; Qwen2.5-7B on a laptop as a fallback; nomic-embed-text for embeddings | open weights |
 | API | Python 3.12 · FastAPI · pypdf | MIT · BSD |
 | Web | Next.js 16 · React 19.3 (View Transitions) · Tailwind CSS 4 with OKLCH tokens · React Flow · dagre | MIT |
 | Interface | Geist, Geist Mono and Instrument Serif · Motion · Lenis smooth scroll · Sonner · react-resizable-panels · lucide | OFL-1.1 · MIT · ISC |

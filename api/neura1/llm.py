@@ -83,7 +83,8 @@ def complete(**kwargs):
 def status() -> dict:
     up = _primary_up()
     return {"model": settings.llm_model if up else (settings.llm_fallback_model or settings.llm_model),
-            "primary": settings.llm_model, "on_fallback": not up}
+            "primary": settings.llm_model, "on_fallback": not up,
+            "where": (settings.llm_label or "main endpoint") if up else "this machine (fallback)"}
 
 
 def _parse_json(text: str) -> dict:

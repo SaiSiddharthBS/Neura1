@@ -15,6 +15,7 @@ scripts/serve_public.sh stop         # take it down
 - **The URL changes** each time the tunnel restarts. For a fixed address, create a named Cloudflare tunnel
   (free account) or deploy with Docker (`docker compose --profile full up`).
 - **Keep the machine awake and on Tailscale.** The script runs `caffeinate`. If the DGX is unreachable, answers come
-  from the local model (`NEURA1_LLM_FALLBACK_*`); `/api/health` shows which one is active.
+  from the local model (`NEURA1_LLM_FALLBACK_*`); `/api/health` and the sidebar show which one is active. The
+  background reader (`worker` in `/api/health`) pauses until the DGX is back.
 - **Reset the story** before a demo: Import → *Reset the demo company* (passcode), or `uv run python -m neura1.cli load`.
 - Data is synthetic. People appear by first name only.

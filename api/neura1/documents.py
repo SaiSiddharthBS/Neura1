@@ -22,7 +22,6 @@ from neura1.graph import rows
 from neura1.ingest.unstructured import REV_PHRASE, entity_lexicon, load_sources, mentions
 
 DOC_DIR = "documents"
-MAX_AI_CHARS = 12000
 
 
 def _dir() -> Path:
@@ -533,8 +532,8 @@ def ai_edit(graph: Graph, instruction: str, blocks: list[dict], viewer: Viewer, 
 
     blocks = [b for b in blocks if b.get("id")]
     body = "\n".join(f"[{b['id']}] {b.get('text') or ''}" for b in blocks)
-    if len(body) > MAX_AI_CHARS:
-        raise ValueError("That is too much text for one edit on this machine. Select a section and try again.")
+    if len(body) > settings.llm_doc_chars:
+        raise ValueError("That is too much text for one edit. Select a section and try again.")
     facts = _ground(graph, body + "\n" + instruction, viewer)
     user = (f"DOCUMENT: {title}\n\nPARAGRAPHS:\n{body}\n\nCOMPANY FACTS:\n"
             + ("\n".join(f"- {x}" for x in facts) or "- none") + f"\n\nINSTRUCTION: {instruction}")

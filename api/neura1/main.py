@@ -25,11 +25,14 @@ from neura1.viz import impact_subgraph
 
 @asynccontextmanager
 async def lifespan(_app):
-    """Background jobs: the mail-drop inbox and the 09:00 IST morning brief (off when NEURA1_BACKGROUND=0)."""
+    """Background jobs: the mail-drop inbox, the 09:00 IST morning brief and the DGX worker that reads new
+    information (off when NEURA1_BACKGROUND=0)."""
     if settings.background:
-        from neura1 import brief, inbox
+        from neura1 import auto, brief, inbox
         inbox.start_watcher(get_graph)
         brief.start_scheduler(get_graph)
+        if settings.auto_extract:
+            auto.start(get_graph)
     yield
 
 
@@ -125,7 +128,9 @@ def health():
     try:
         n = rows(get_graph(), "MATCH (n) RETURN count(n) AS n")[0]["n"]
         from neura1 import llm as _llm
-        return {"graph": "ok", "nodes": n, **(_llm.status() if settings.llm_model else {"model": None})}
+        from neura1 import auto
+        return {"graph": "ok", "nodes": n, **(_llm.status() if settings.llm_model else {"model": None}),
+                "worker": auto.last_run or None}
     except Exception as exc:
         raise GraphUnavailable(str(exc))
 

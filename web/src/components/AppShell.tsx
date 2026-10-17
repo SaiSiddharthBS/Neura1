@@ -12,6 +12,7 @@ import {
   Compass, Network, Radar, Search, Sparkles, Sun, Target, Upload, Users, Waypoints,
 } from "lucide-react";
 import CommandPalette from "@/components/CommandPalette";
+import ModelStatus from "@/components/ModelStatus";
 import ThemeSwitch from "@/components/ThemeSwitch";
 import Tour, { startTour } from "@/components/Tour";
 import ViewerSwitch from "@/components/ViewerSwitch";
@@ -155,6 +156,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </nav>
       <div className="space-y-2 border-t border-line p-3">
         <ViewerSwitch />
+        <div className="px-1"><ModelStatus /></div>
         <div className="flex items-center justify-between px-1">
           <span className="flex items-center gap-1.5 text-[11px] text-faint"><span className="h-1.5 w-1.5 rounded-full bg-warn" /> Synthetic data</span>
           <ThemeSwitch />

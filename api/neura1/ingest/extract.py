@@ -159,7 +159,7 @@ def resolve_chunk_ref(ref: str, passages: list[dict]) -> str | None:
 def snapshot_path(source_id: str, kind: str) -> Path:
     """Snapshots for the demo fixture live with the fixture; a company's own uploads live in data/."""
     safe = source_id.replace("/", "__")
-    base = settings.data_dir if source_id.startswith("uploads/") else settings.fixture_dir
+    base = settings.fixture_dir if (settings.fixture_dir / source_id).is_file() else settings.data_dir
     return base / "extracted" / f"{safe}.{kind}.json"
 
 
@@ -173,9 +173,10 @@ def save_manual_notice(source_id: str, fields: dict, entered_by: str) -> dict:
     return snap
 
 
-def run_model(graph: Graph, source_id: str, kind: str) -> dict:
-    """Call the model and snapshot the raw output. Verification happens separately on load."""
-    passages = source_passages(graph, source_id)
+def run_model(graph: Graph, source_id: str, kind: str, passages: list[dict] | None = None) -> dict:
+    """Call the model and snapshot the raw output. Verification happens separately on load.
+    `passages` narrows what the model reads (e.g. only people's messages in a chat channel)."""
+    passages = passages if passages is not None else source_passages(graph, source_id)
     if kind == "decisions":
         out = chat_json(DECISION_SYSTEM, _prompt(passages), DECISION_SCHEMA, "decisions")
     elif kind == "actions":

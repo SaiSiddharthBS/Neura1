@@ -26,6 +26,13 @@ class Settings(BaseSettings):
     llm_embed_base_url: str | None = None
     llm_embed_api_key: str | None = None
     llm_timeout: float = 900  # seconds; CPU-only local models are slow, a DGX is fast
+    # Shown in the app, e.g. "DGX Spark".
+    llm_label: str | None = None
+    # How much the model may read at once. A DGX with a long context can take far more than a laptop model.
+    llm_tool_result_chars: int = 6000   # one tool result shown to the agent
+    llm_doc_chars: int = 12000          # one AI edit of a document
+    # Read new information automatically (decisions, meeting actions, skill tags) while the main model is reachable.
+    auto_extract: bool = True
     # Used automatically when the main endpoint is unreachable (e.g. the DGX is off the network).
     llm_fallback_base_url: str | None = None
     llm_fallback_model: str | None = None

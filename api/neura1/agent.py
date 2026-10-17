@@ -12,6 +12,7 @@ from decimal import Decimal
 from falkordb import Graph
 
 from neura1 import brain, queries as Q, scenarios
+from neura1.config import settings
 from neura1.graph import rows
 from neura1.impact import ChangeEvent, Trace, analyse
 
@@ -447,7 +448,7 @@ def ask(graph: Graph, question: str, max_steps: int = 10, history: list[dict] | 
         results.append(result)
         messages.append({"role": "assistant", "content": json.dumps(step)})
         messages.append({"role": "user", "content": f"Result of {step['tool']}:\n"
-                         + json.dumps(result, default=str)[:6000]
+                         + json.dumps(result, default=str)[:settings.llm_tool_result_chars]
                          + "\n\nNext step (another tool, or the answer)?"})
     messages.append({"role": "user", "content": "Give your final answer now from the results so far."})
     try:
