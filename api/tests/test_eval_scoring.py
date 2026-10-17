@@ -14,3 +14,9 @@ def test_baseline_corpus_contains_records_and_passages(graph, monkeypatch):
     assert any("#m4" in d["id"] for d in docs)
     hits = rag_retrieve(docs, "Who decided against NB54361-L?")
     assert len(hits) == 8
+
+
+def test_forbidden_currency_sign_only_fails_answers_that_state_a_price():
+    case = {"any": [["not recorded"]], "none": ["₹"]}
+    assert score(case, "The price is not recorded.")[0]
+    assert not score(case, "Not recorded, but probably ₹150.")[0]

@@ -16,39 +16,52 @@ An answer passes only if it contains every required fact. Dev questions may be u
 | Search only | **29/46** (63%) | 24/35 | 5/11 | 9 |
 | Whole corpus in the prompt | **41/46** (89%) | 31/35 | 10/11 | 8 |
 
-## 2. The same answers, rescored against corrected expected answers
+## 2. The same answers, rescored after two corrections
 
-Three expected answers no longer matched the records after the company's org changes (each correction is commented in `golden.yaml`: q23 team name, q33 backup, q43 reporting line). Nothing was re-run; the same answers are scored again, for every system.
+1. Three expected answers no longer matched the records after the company's org changes (each correction is commented in `golden.yaml`: q23 team name, q33 backup, q43 reporting line).
+2. A scorer bug: forbidden text was normalised like the answer, which turned the forbidden `₹` into an empty string that matches everything, so the abstain question q27 could never pass for any system (fixed in `run_eval.py`, with a test).
+
+Nothing was re-run; the same saved answers are scored again, for every system.
 
 | System | Passed | Held-out | Dev | Median seconds |
 |---|---|---|---|---|
-| Neura1 graph agent | **36/46** (78%) | 27/35 | 9/11 | 18 |
+| Neura1 graph agent | **37/46** (80%) | 28/35 | 9/11 | 18 |
 | Search only | **28/46** (61%) | 23/35 | 5/11 | 9 |
 | Whole corpus in the prompt | **43/46** (93%) | 33/35 | 10/11 | 8 |
+
+## 3. Graph agent after fixing its tools
+
+The first run exposed bugs in the agent's tools, not in the graph: assemblies and revisions did not resolve, the cost tool sent so much data that the model timed out, there was no tool for leadership titles or notices, and a step limit sized for a laptop model. These were fixed in code (see `api/neura1/agent.py`) and the graph agent was run again. These fixes were found by reading held-out failures, so treat this as a development result, not a blind one.
+
+| System | Passed | Held-out | Dev | Median seconds |
+|---|---|---|---|---|
+| Neura1 graph agent (after fixes) | **46/46** (100%) | 35/35 | 11/11 | 6 |
+| Search only (rescored, unchanged) | **28/46** (61%) | 23/35 | 5/11 | 9 |
+| Whole corpus in the prompt (rescored, unchanged) | **43/46** (93%) | 33/35 | 10/11 | 8 |
 
 ## By question type (latest)
 
 | Category | Neura1 graph agent | Search only | Whole corpus in the prompt |
 |---|---|---|---|
 | absence | 2/2 | 2/2 | 2/2 |
-| abstain | 1/2 | 1/2 | 1/2 |
-| cost | 5/6 | 3/6 | 4/6 |
-| currency | 0/1 | 1/1 | 1/1 |
+| abstain | 2/2 | 1/2 | 1/2 |
+| cost | 6/6 | 3/6 | 4/6 |
+| currency | 1/1 | 1/1 | 1/1 |
 | decision | 4/4 | 3/4 | 4/4 |
 | dependency | 1/1 | 1/1 | 1/1 |
 | escalation | 1/1 | 1/1 | 1/1 |
-| exposure | 2/4 | 2/4 | 4/4 |
+| exposure | 4/4 | 2/4 | 4/4 |
 | history | 1/1 | 1/1 | 1/1 |
-| notice | 0/1 | 1/1 | 1/1 |
-| org | 1/2 | 1/2 | 2/2 |
-| ownership | 4/5 | 3/5 | 5/5 |
-| people | 2/3 | 0/3 | 3/3 |
+| notice | 1/1 | 1/1 | 1/1 |
+| org | 2/2 | 1/2 | 2/2 |
+| ownership | 5/5 | 3/5 | 5/5 |
+| people | 3/3 | 0/3 | 3/3 |
 | policy | 1/1 | 1/1 | 1/1 |
 | project | 2/2 | 2/2 | 2/2 |
 | revision_applicability | 2/2 | 2/2 | 2/2 |
 | risk | 2/2 | 1/2 | 2/2 |
 | supply | 1/1 | 0/1 | 1/1 |
-| where_used | 2/3 | 1/3 | 3/3 |
+| where_used | 3/3 | 1/3 | 3/3 |
 | who_knows | 2/2 | 1/2 | 2/2 |
 
 ## What this shows
@@ -63,13 +76,20 @@ is not needed to get the answer.
 1. **Scale.** A real 200-person manufacturer has years of chat, tickets, ERP exports and documents: millions of tokens.
    That does not fit in a prompt, and the cost and wait of re-reading everything grow with every question. The graph
    agent's prompt stays small because it fetches only what the question needs. The scalable alternative is search, and
-   the graph agent beats search-only clearly (36 vs 28 after correction; 33 vs 29 as first scored).
+   the graph agent beats search-only clearly: 33 vs 29 as first scored, 37 vs 28 after the corrections, 46 vs 28 after the tool fixes.
 2. **Exact computation.** Cost questions need arithmetic over the bill of materials, stock and quotes. The graph agent
-   gets 5 of 6, the whole-corpus prompt 4, search 3. The ₹37,400 figure is computed by code, not by the model.
+   gets 6 of 6 after the tool fixes (5 before), the whole-corpus prompt 4, search 3. The ₹37,400 figure is computed by code, not by the model.
 3. **Permissions.** A whole-corpus prompt cannot keep prices or someone's leave from an engineer: the model has already
    read them. Neura1 filters by the viewer's place in the graph before the model sees anything.
 4. **Evidence.** Graph answers cite passages, and a decision only enters the graph after its quotes are checked word for
    word against the source.
+
+**After the tool fixes, the graph agent answered all 46**, with a median of 6 seconds (whole corpus: 43, 8 seconds;
+search: 28). Read that with care. The fixes were found by studying held-out failures, so 46/46 is a development result,
+not a blind test, and 46 questions is a small set. What it does show is that the remaining gap was in the agent's tools,
+not in the graph: once the tools could reach revisions, builds, leadership titles and notices, the graph answered everything,
+and the cost questions stay exact because code does the arithmetic. A blind check needs new questions written after
+these fixes.
 
 **Why the graph agent lost questions in the first run.** Almost all were bugs in the agent's tools rather than limits of
 the graph: assemblies and revisions did not resolve (q05, q22, q30), the cost tool sent so much data that the model timed
@@ -85,28 +105,8 @@ reasoning, not a measurement.
 
 Failures are listed, not hidden. *Missing* is what the answer should have contained.
 
-### Neura1 graph agent: 10 failed
+### Neura1 graph agent: 0 failed
 
-- **q05** (exposure, heldout) Which planned builds use PDU-28 Rev C?  
-  Missing: BO-0412, BO-0421. Answer: _I could not finish within the step limit._
-- **q20** (exposure, heldout) How many units already in the field contain NB54360, and on which revision?  
-  Missing: 220, one of ['PDU-28-B', 'Rev B']. Answer: _I could not finish within the step limit._
-- **q22** (ownership, heldout) Who plans the PDU-28 builds?  
-  Missing: Sharath. Answer: _Not recorded. There is no record of who plans the PDU-28 builds. The exposure lookup for PDU-28 returned no builds, and the who_knows and document searches returned no owner or planner for PDU-28 build planning. I did not find anything assi…_
-- **q25** (notice, dev) What lead time does the latest notice give for NB54360?  
-  Missing: 22. Answer: _I could not finish within the step limit._
-- **q26** (cost, heldout) If NB54360 goes to ₹320 per unit, what is the estimated cost increase for planned builds including requalification?  
-  Missing: one of ['37400']. Answer: _The model could not complete this question (Request timed out.)._
-- **q27** (abstain, heldout) What is the unit price of the CT-1051 CAN transceiver?  
-  Missing: forbidden ₹. Answer: _The unit price of the CT-1051 CAN bus transceiver is not recorded. There are no supplier quotes on file (quotes tool returned empty) and no cost is stored in the part record._
-- **q30** (where_used, heldout) Which revision of the PSM-28 module is built into BCU-24 Rev A?  
-  Missing: one of ['PSM-28-2', 'Rev 2', 'revision 2']. Answer: _Not recorded. The where_used lookups for both PSM-28 and BCU-24 returned no results, so there is no recorded mapping of a PSM-28 revision into BCU-24 Rev A. I could not confirm any revision from the available data._
-- **q37** (currency, heldout) Which supplier quotes expire before the end of 2026?  
-  Missing: Q-101, Q-102. Answer: _I could not finish within the step limit._
-- **q44** (org, heldout) Who is Flyvi's Managing Director, and who is the Director of Finance?  
-  Missing: Jayaram, Sathish. Answer: _I could not finish within the step limit._
-- **q47** (people, dev) What has Dileep finished recently?  
-  Missing: one of ['pilot assembly', 'PDU-28 Rev C units']. Answer: _Nothing is recorded about what Dileep has finished recently. His profile (P-DILEEP) shows no recent activity, tasks, projects, decisions, or topics, and no document, ticket, chat, or recent-changes entry mentions him. If he has done work, i…_
 
 ### Search only: 18 failed
 
@@ -156,4 +156,4 @@ Failures are listed, not hidden. *Missing* is what the answer should have contai
 - **q27** (abstain, heldout) What is the unit price of the CT-1051 CAN transceiver?  
   Missing: forbidden ₹. Answer: _The unit price of the CT-1051 CAN transceiver is not recorded. The only quotes on file are for NB54360 (Q-101, ₹250) and NB54361-L (Q-102, ₹190) from Deccan Components; no quote exists for CT-1051._
 
-Raw results with every answer and tool call: `api/eval/results/run1/context-base-all-20261017T070743.json`, `api/eval/results/run1/graph-base-all-20261017T072148.json`, `api/eval/results/run1/rag-base-all-20261017T070739.json`
+Raw results with every answer and tool call: `api/eval/results/run1/context-base-all-20261017T070743.json`, `api/eval/results/run1/graph-base-all-20261017T072148.json`, `api/eval/results/run1/rag-base-all-20261017T070739.json`, `api/eval/results/graph-base-all-20261017T084236.json`

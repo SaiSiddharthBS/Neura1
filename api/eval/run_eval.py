@@ -33,7 +33,10 @@ def score(case: dict, answer: str) -> tuple[bool, list[str]]:
     missing = [s for s in case.get("all", []) if normalise(str(s)) not in a]
     missing += [f"one of {group}" for group in case.get("any", [])
                 if not any(normalise(str(s)) in a for s in group)]
-    forbidden = [s for s in case.get("none", []) if normalise(str(s)) in a]
+    # Forbidden text is checked against the raw answer: normalising would turn a forbidden "₹" into "", which matches
+    # every answer (fixed 2026-10-17; before this, abstain questions with "none: [₹]" could never pass).
+    raw = answer.lower()
+    forbidden = [s for s in case.get("none", []) if str(s).lower() in raw]
     return not missing and not forbidden, missing + [f"forbidden {s}" for s in forbidden]
 
 

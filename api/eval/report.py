@@ -60,10 +60,13 @@ def main() -> None:
         "questions may not.", "",
         "## 1. First run, exactly as scored", "", head]
     lines += [row(NAMES[k], run1[k]["results"]) for k in ORDER if k in run1]
-    lines += ["", "## 2. The same answers, rescored against corrected expected answers", "",
-              "Three expected answers no longer matched the records after the company's org changes (each correction is "
-              "commented in `golden.yaml`: q23 team name, q33 backup, q43 reporting line). Nothing was re-run; the same "
-              "answers are scored again, for every system.", "", head]
+    lines += ["", "## 2. The same answers, rescored after two corrections", "",
+              "1. Three expected answers no longer matched the records after the company's org changes (each correction "
+              "is commented in `golden.yaml`: q23 team name, q33 backup, q43 reporting line).",
+              "2. A scorer bug: forbidden text was normalised like the answer, which turned the forbidden `₹` into an "
+              "empty string that matches everything, so the abstain question q27 could never pass for any system "
+              "(fixed in `run_eval.py`, with a test).", "",
+              "Nothing was re-run; the same saved answers are scored again, for every system.", "", head]
     lines += [row(NAMES[k], rescored(run1[k], cases)) for k in ORDER if k in run1]
     if "graph" in run2:
         lines += ["", "## 3. Graph agent after fixing its tools", "",
@@ -72,9 +75,9 @@ def main() -> None:
                   "titles or notices, and a step limit sized for a laptop model. These were fixed in code (see "
                   "`api/neura1/agent.py`) and the graph agent was run again. These fixes were found by reading held-out "
                   "failures, so treat this as a development result, not a blind one.", "", head,
-                  row(NAMES["graph"] + " (after fixes)", run2["graph"]["results"])]
+                  row(NAMES["graph"] + " (after fixes)", rescored(run2["graph"], cases))]
         lines += [row(NAMES[k] + " (rescored, unchanged)", rescored(run1[k], cases)) for k in ("rag", "context") if k in run1]
-    final = {"graph": run2.get("graph", {}).get("results") or rescored(run1["graph"], cases)}
+    final = {"graph": rescored(run2["graph"], cases) if "graph" in run2 else rescored(run1["graph"], cases)}
     final |= {k: rescored(run1[k], cases) for k in ("rag", "context") if k in run1}
     lines += ["", "## By question type (latest)", "", "| Category | " + " | ".join(NAMES[k] for k in ORDER if k in final) + " |",
               "|---|" + "---|" * len(final)]
