@@ -50,6 +50,11 @@ class Viewer:
         return (self.unrestricted or person_id == self.id or person_id in self.reports
                 or person_id in self.covers or self.team in LEAVE_TEAMS)
 
+    def sees_profile_of(self, person_id: str) -> bool:
+        """A person's expertise from their work: themselves, their management chain, HR and leadership."""
+        return (self.unrestricted or person_id == self.id or person_id in self.reports
+                or self.team in LEAVE_TEAMS)
+
     def describe(self) -> dict:
         return {"id": self.id, "name": self.name, "role": self.role, "team": self.team_name,
                 "sees_money": self.sees_money, "reports": sorted(self.reports),

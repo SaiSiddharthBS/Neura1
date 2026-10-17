@@ -170,15 +170,8 @@ export default function PeopleView() {
                 </div>
               )}
             </Card>
-            <Card title="Skills (stated) and knowledge (from their work)">
-              <div className="flex flex-wrap gap-1.5">
-                {p.skills.map((s) => <span key={s.id} title={s.also.length ? `Also: ${s.also.join(", ")}` : "Only person with this skill"}
-                                          className={`rounded-full px-2 py-0.5 text-xs ${s.also.length ? "bg-accent/15 text-accent-hover" : "bg-warn/15 text-warn"}`}>{s.name}</span>)}
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {p.topics.map((t) => <span key={t.id} className="rounded-md bg-elev px-2 py-0.5 font-mono text-xs">{t.id} · {t.mentions}×</span>)}
-              </div>
-              {!p.skills.length && !p.topics.length && <Empty />}
+            <Card title="Expertise from work">
+              <Expertise key={p.id} id={p.id} name={p.name} />
             </Card>
             <Card title="Projects">
               {p.projects.map((x) => <Link key={x.id} href={`/projects?id=${x.id}`} className="block rounded-lg px-2 py-1 text-sm hover:bg-elev">{x.name} <span className="text-xs text-muted">· {x.roles.join(", ")} · {x.status}</span></Link>)}
@@ -327,4 +320,59 @@ function Drawer({ title, onClose, children }: { title: string; onClose: () => vo
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return <label className="block text-sm"><span className="mb-1 block text-xs text-muted">{label}</span>{children}</label>;
+}
+
+
+type ExpertiseSkill = { skill: string; area: string; level: "hands-on" | "involved" | "stated"; stated: boolean;
+                        finished: { id: string; title: string; at: string }[]; current: { id: string; title: string; at: string }[] };
+type ExpertiseData = { restricted: boolean; stated: string[]; skills?: ExpertiseSkill[]; note?: string };
+
+const LEVEL = {
+  "hands-on": { label: "Hands-on", hint: "finished work needing it", cls: "border-success/30 bg-success/[0.08] text-success" },
+  involved: { label: "Involved", hint: "doing this work now", cls: "border-accent/30 bg-accent/[0.08] text-accent" },
+  stated: { label: "Stated", hint: "self-declared, no recorded work yet", cls: "border-line bg-elev text-ink-soft" },
+} as const;
+
+/** What a person can do, shown as evidence from their recorded work. No scores; private to the people allowed to see it. */
+function Expertise({ id, name }: { id: string; name: string }) {
+  const [e, setE] = useState<ExpertiseData | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
+  useEffect(() => { api<ExpertiseData>(`/api/people/${id}/expertise`).then(setE).catch(() => {}); }, [id]);
+  if (!e) return <div className="skeleton h-16" />;
+  if (e.restricted) {
+    return (
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-1.5">{e.stated.map((s) => <span key={s} className={`rounded-full border px-2 py-0.5 text-xs ${LEVEL.stated.cls}`}>{s}</span>)}
+          {!e.stated.length && <Empty text="No skills stated." />}</div>
+        <div className="flex items-center gap-1.5 text-xs text-muted"><Lock size={12} /> {name}&apos;s expertise from work is visible to them, their management chain, HR and leadership.</div>
+      </div>
+    );
+  }
+  const groups = (["hands-on", "involved", "stated"] as const).map((lv) => [lv, (e.skills ?? []).filter((s) => s.level === lv)] as const).filter(([, l]) => l.length);
+  const shown = (e.skills ?? []).find((s) => s.skill === open);
+  return (
+    <div className="space-y-3">
+      {groups.map(([lv, list]) => (
+        <div key={lv}>
+          <div className="mb-1.5 text-[11.5px] text-faint">{LEVEL[lv].label} · {LEVEL[lv].hint}</div>
+          <div className="flex flex-wrap gap-1.5">
+            {list.map((s) => (
+              <button key={s.skill} onClick={() => setOpen(open === s.skill ? null : s.skill)} title={s.area}
+                      className={`rounded-full border px-2.5 py-0.5 text-xs transition ${LEVEL[lv].cls} ${open === s.skill ? "ring-2 ring-accent/40" : ""}`}>
+                {s.skill}{s.finished.length + s.current.length ? ` · ${s.finished.length + s.current.length}` : ""}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+      {shown && (shown.finished.length + shown.current.length > 0) && (
+        <ul className="space-y-1 rounded-lg border border-line bg-elev p-2.5 text-xs">
+          {shown.finished.map((t) => <li key={t.id}><span className="text-success">Finished</span> · {t.title} <span className="text-faint">({t.id}, {t.at?.slice(0, 10)})</span></li>)}
+          {shown.current.map((t) => <li key={t.id}><span className="text-accent">Working on</span> · {t.title} <span className="text-faint">({t.id})</span></li>)}
+        </ul>
+      )}
+      {!groups.length && <Empty text="No recorded work or stated skills yet." />}
+      <div className="text-[11px] text-faint">Evidence from recorded work, not a performance measure. Visible to {name}, their management chain, HR and leadership.</div>
+    </div>
+  );
 }

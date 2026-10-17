@@ -251,6 +251,7 @@ read-only, and tasks are drafts until a person confirms them.
 | **Permissions from the graph** | "Viewing as" any person. Leave details are visible to that person's management chain, backup, HR and leadership. Money is visible to leadership, BD and purchase. Everyone else sees it redacted, including rupee amounts written inside messages and answers. | Sidebar → Viewing as |
 | **Neura1 Chat** | Built-in team chat (channels and DMs). Every message becomes a linked passage in the graph, so chat feeds search, "who knows" and timelines. `@neura1` answers in the thread with sources; `/impact`, `/who`, `/away`, `/risk` answer instantly without a model. Replies only show what *every* reader of that channel may see (money and leave are redacted per audience). #leadership and #supply are open only to people cleared for money, and direct messages stay private by construction: they are never turned into searchable company knowledge. Approved plans, finished tasks and new notices are posted to the right channel automatically. | Chat |
 | **Neura1 Docs** | A Word editor inside the brain (pages, toolbar, tables, tracked changes, comments, .docx in and out, PDF). Templates are written from the graph: an engineering change notice (HB-ENG-04), a customer response, a leave handover (HB-HR-02). The **Neura1 AI** side panel rewrites a selection, a section or the whole document on request, and every AI edit lands as a tracked change you accept or reject. **Check facts** tests every claim against the graph with fixed rules (a rejected part, an unapproved alternate, an expired quote, an obsolete revision, a price no quote supports, someone on leave, an ID that doesn't exist) and cites the proof. **Insert facts** drops live tables (where used, decisions, orders, who knows, history) at the cursor. Saved documents become knowledge linked to what they name; documents with amounts or someone's leave are only open to people allowed to see them. | Documents |
+| **Capability map** | What Flyvi can do, built from recorded work: the model tags every task and project with the skills it needs, choosing only from Flyvi's own skill list (code rejects anything else). Each area shows people with finished work, people active now, and whether more work lies ahead than behind; **Where Flyvi is thin** lists skills open work needs that only one person holds or nobody has finished work in yet. Evidence, not ratings: no scores or rankings exist anywhere. A person's full expertise is visible only to them, their management chain, HR and leadership; names in the company map only to HR and leadership (managers see their own reports). | Capability map · People |
 | **Graph explorer + time travel** | Open any part, person, project, customer or decision and walk its connections live from FalkorDB, click to expand. Beside it, the record's full history: decisions, quotes, messages, tasks, status changes, investigations, leave, newest first. | Graph explorer |
 | **My day** | Your open work, decisions waiting for you, signals touching your areas, who in your team is away, and what changed in things you own | My day |
 | **Ask with memory** | Conversations stored per person as `Conversation → Turn` nodes, linked to the passages cited and the records discussed. Follow-ups work, and `recall` searches everyone's past answers (shared memory, Track 02). Each tool call streams live. | Ask & search |
@@ -495,9 +496,11 @@ Open http://localhost:3000. The API seeds the demo company on first start.
 Any OpenAI-compatible endpoint works. In `api/.env`:
 
 ```bash
-NEURA1_LLM_BASE_URL=http://localhost:11435/v1      # Ollama in Docker, or http://<dgx>:8000/v1 for vLLM
-NEURA1_LLM_MODEL=qwen2.5:7b
-NEURA1_LLM_TIMEOUT=900                             # CPU models are slow; a GPU needs far less
+NEURA1_LLM_BASE_URL=http://<your-dgx>:8080/v1      # a DGX Spark over Tailscale, or Ollama: http://localhost:11435/v1
+NEURA1_LLM_API_KEY=...                             # keep it in api/.env, which is never committed
+NEURA1_LLM_MODEL=ornith-1.5-35b-a3b                # or qwen2.5:7b on a laptop
+NEURA1_LLM_EMBED_BASE_URL=http://localhost:11435/v1 # embeddings can come from a different server
+NEURA1_LLM_EMBED_MODEL=nomic-embed-text
 ```
 
 ```bash
@@ -505,6 +508,7 @@ uv run python -m neura1.cli check-model            # chat · structured JSON · 
 uv run python -m neura1.cli extract                # read every document; raw outputs saved for replay
 uv run python -m neura1.cli load                   # verified decisions enter the graph
 uv run python -m neura1.cli embed                  # semantic search (NEURA1_LLM_EMBED_MODEL=nomic-embed-text)
+uv run python -m neura1.cli tag-skills             # tag tasks and projects with the skills they need (verified)
 ```
 
 The agent uses a JSON plan-act loop, so it works even on servers whose native tool calling is unreliable.
@@ -530,7 +534,7 @@ The agent uses a JSON plan-act loop, so it works even on servers whose native to
 |---|---|---|
 | Graph | FalkorDB, self-hosted in Docker | Source-available (SSPLv1), free |
 | Model runtime | Ollama, or vLLM on a DGX Spark | MIT · Apache-2.0 |
-| Model | Qwen2.5-7B-Instruct | Apache-2.0 |
+| Model | ornith-1.5-35b-a3b on a DGX Spark (over Tailscale) for chat and extraction; Qwen2.5-7B on a laptop as a fallback; nomic-embed-text for embeddings | open weights |
 | API | Python 3.12 · FastAPI · pypdf | MIT · BSD |
 | Web | Next.js 16 · React 19.3 (View Transitions) · Tailwind CSS 4 with OKLCH tokens · React Flow · dagre | MIT |
 | Interface | Geist, Geist Mono and Instrument Serif · Motion · Lenis smooth scroll · Sonner · react-resizable-panels · lucide | OFL-1.1 · MIT · ISC |

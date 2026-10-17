@@ -9,7 +9,7 @@ import { motion } from "motion/react";
 import { Toaster } from "sonner";
 import {
   Bell, Brain, Building2, FileText, FolderKanban, History, Inbox, KanbanSquare, LayoutDashboard, Menu, MessageCircle,
-  Network, Radar, Search, Sparkles, Sun, Upload, Users, Waypoints,
+  Network, Radar, Search, Sparkles, Sun, Target, Upload, Users, Waypoints,
 } from "lucide-react";
 import CommandPalette from "@/components/CommandPalette";
 import ThemeSwitch from "@/components/ThemeSwitch";
@@ -32,6 +32,7 @@ const NAV: { section: string; items: Item[] }[] = [
     { href: "/docs", label: "Documents", icon: FileText },
     { href: "/explore", label: "Graph explorer", icon: Waypoints },
     { href: "/people", label: "People", icon: Users },
+    { href: "/capabilities", label: "Capability map", icon: Target },
     { href: "/org", label: "Organisation", icon: Network },
     { href: "/projects", label: "Projects", icon: FolderKanban },
     { href: "/customers", label: "Customers", icon: Building2 },

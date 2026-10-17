@@ -5,6 +5,7 @@
   uv run python -m neura1.cli seed       # load the demo company only if the graph is empty
   uv run python -m neura1.cli check-model  # verify the model endpoint supports what Neura1 needs
   uv run python -m neura1.cli embed      # embed passages for semantic search (needs NEURA1_LLM_EMBED_MODEL)
+  uv run python -m neura1.cli tag-skills # tag tasks and projects with the skills they need (model, verified)
 """
 
 import json
@@ -27,6 +28,8 @@ def load(reset: bool = True) -> None:
     print("records:", load_records(graph))
     print("sources:", load_sources(graph))
     print("decisions:", extract.load_snapshots(graph))
+    from neura1 import capabilities
+    print("skill tags:", capabilities.load_tags(graph))
     from neura1.config import settings
     if settings.llm_embed_model:
         try:
@@ -47,6 +50,7 @@ def extract_all(only: str | None = None) -> None:
     graph = get_graph()
     jobs = [(graph, r["id"], "decisions") for r in rows(graph, """
         MATCH (s:Source) WHERE s.kind IN ['chat','ticket','doc'] AND NOT s.id STARTS WITH 'uploads/' AND NOT s.id STARTS WITH 'documents/'
+              AND NOT s.id STARTS WITH 'chat/'
         RETURN s.id AS id ORDER BY id""")]
     jobs += [(graph, r["id"], "notice") for r in rows(graph, """
         MATCH (s:Source {kind:'notice'}) WHERE NOT s.id STARTS WITH 'uploads/' RETURN s.id AS id""")]
@@ -74,6 +78,15 @@ def extract_all(only: str | None = None) -> None:
     if not only:
         print("tip: meeting action items are extracted with kind 'actions'", flush=True)
     scratch.delete()
+
+
+def tag_skills() -> None:
+    """Have the model tag each task and project with the skills it needs (from Flyvi's list only), then snapshot."""
+    from neura1 import capabilities
+    graph = get_graph()
+    snap = capabilities.tag_with_model(graph)
+    print(f"tagged {len(snap['tags'])} records with {snap['model']}; rejected: {snap['rejected'] or 'none'}")
+    print("applied:", capabilities.load_tags(graph))
 
 
 def embed() -> None:
@@ -132,4 +145,5 @@ if __name__ == "__main__":
     if cmd == "extract":
         extract_all(rest[0] if rest else None)
     else:
-        {"load": load, "seed": seed, "check-model": check_model, "embed": embed}.get(cmd, lambda: print(__doc__))()
+        {"load": load, "seed": seed, "check-model": check_model, "embed": embed,
+         "tag-skills": tag_skills}.get(cmd, lambda: print(__doc__))()

@@ -10,3 +10,7 @@ node_modules/
 .DS_Store
 api/.cache/
 data/
+
+# Local secrets the user keeps next to the code
+api/DGX API DETAILS
+*API DETAILS*

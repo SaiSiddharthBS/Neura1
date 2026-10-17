@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     llm_api_key: str = "not-needed"
     llm_model: str | None = None
     llm_embed_model: str | None = None  # e.g. nomic-embed-text; enables semantic search over passages
+    # Embeddings may come from a different server than chat (e.g. chat on a DGX, embeddings on local Ollama).
+    llm_embed_base_url: str | None = None
+    llm_embed_api_key: str | None = None
     llm_timeout: float = 900  # seconds; CPU-only local models are slow, a DGX is fast
 
     # Live ingestion. Slack requests are verified with the app's signing secret; Jira with a shared secret header.

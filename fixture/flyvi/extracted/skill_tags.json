@@ -1,0 +1,144 @@
+{
+  "model": "ornith-1.5-35b-a3b",
+  "at": "2026-10-17T05:58:09+00:00",
+  "tags": {
+    "WRK-101": [
+      "Power electronics architecture",
+      "Schematic and PCB design"
+    ],
+    "WRK-102": [
+      "Power stage design",
+      "Thermal derating"
+    ],
+    "WRK-103": [
+      "Schematic and PCB design"
+    ],
+    "WRK-104": [
+      "Schematic and PCB design"
+    ],
+    "WRK-105": [
+      "Embedded C",
+      "Power sequencing"
+    ],
+    "WRK-106": [
+      "Embedded C",
+      "Power sequencing"
+    ],
+    "WRK-107": [
+      "CAN bus",
+      "Embedded C"
+    ],
+    "WRK-108": [
+      "Bootloaders",
+      "Field firmware updates"
+    ],
+    "WRK-109": [
+      "Python",
+      "Test automation"
+    ],
+    "WRK-110": [
+      "Functional testing"
+    ],
+    "WRK-111": [
+      "Battery management firmware",
+      "Embedded C"
+    ],
+    "WRK-112": [
+      "Desktop tools and GUI",
+      "Python"
+    ],
+    "WRK-113": [
+      "Digital control loops",
+      "Power electronics architecture"
+    ],
+    "WRK-114": [
+      "Data logging",
+      "Embedded C"
+    ],
+    "WRK-115": [
+      "AS9100D",
+      "Requirements traceability"
+    ],
+    "WRK-116": [
+      "MIL-STD-461 EMI/EMC testing"
+    ],
+    "WRK-117": [
+      "Environmental testing"
+    ],
+    "WRK-118": [
+      "Functional testing",
+      "Test automation"
+    ],
+    "WRK-119": [
+      "AS9100D",
+      "Configuration management"
+    ],
+    "WRK-120": [
+      "AS9100D",
+      "Configuration management"
+    ],
+    "WRK-121": [
+      "Inventory control"
+    ],
+    "WRK-122": [
+      "Assembly and soldering"
+    ],
+    "WRK-123": [
+      "Production planning"
+    ],
+    "WRK-124": [
+      "Component sourcing",
+      "Obsolescence management"
+    ],
+    "WRK-125": [
+      "Component sourcing"
+    ],
+    "WRK-126": [
+      "Production planning"
+    ],
+    "WRK-127": [
+      "Project planning"
+    ],
+    "WRK-128": [
+      "Defence customer accounts"
+    ],
+    "WRK-129": [
+      "Requirements traceability"
+    ],
+    "WRK-130": [
+      "System integration"
+    ],
+    "WRK-131": [
+      "AS9100D"
+    ],
+    "WRK-132": [
+      "Power electronics architecture"
+    ],
+    "WRK-133": [
+      "Project planning"
+    ],
+    "PRJ-AS9100": [
+      "AS9100D",
+      "Configuration management"
+    ],
+    "PRJ-COSTDOWN": [
+      "Component sourcing",
+      "Obsolescence management"
+    ],
+    "PRJ-FW24": [
+      "CAN bus",
+      "Embedded C",
+      "Field firmware updates"
+    ],
+    "PRJ-NILGIRI": [
+      "Defence customer accounts",
+      "Production planning"
+    ],
+    "PRJ-PDU48": [
+      "Power electronics architecture",
+      "Power stage design",
+      "Schematic and PCB design"
+    ]
+  },
+  "rejected": {}
+}

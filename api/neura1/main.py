@@ -942,3 +942,17 @@ async def docs_import(file: UploadFile = File(...)):
     except Exception as exc:
         raise HTTPException(422, f"Could not read this file: {exc}")
     return {"title": title, "markdown": md}
+
+
+# ---------- capability map ----------
+
+@app.get("/api/capabilities")
+def capability_map(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import capabilities
+    return capabilities.company_map(g, v)
+
+
+@app.get("/api/people/{person_id}/expertise")
+def person_expertise(person_id: str, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import capabilities
+    return capabilities.person_expertise(g, person_id, v)

@@ -302,6 +302,8 @@ def load_snapshots(graph: Graph) -> dict:
     out = {}
     for path in sorted((settings.fixture_dir / "extracted").glob("*.json")):
         snap = json.loads(path.read_text())
+        if "source_id" not in snap:  # other model snapshots (e.g. skill tags) live here too
+            continue
         if snap["source_id"] not in present:
             continue
         if snap["kind"] == "decisions":

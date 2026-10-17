@@ -52,5 +52,7 @@ def embed(texts: list[str]) -> list[list[float]]:
     """Embeddings from the same OpenAI-compatible endpoint (Ollama, vLLM). Raises LLMUnavailable if not configured."""
     if not settings.llm_embed_model:
         raise LLMUnavailable("No embedding model configured (NEURA1_LLM_EMBED_MODEL)")
-    resp = client().embeddings.create(model=settings.llm_embed_model, input=texts)
+    c = OpenAI(base_url=settings.llm_embed_base_url, api_key=settings.llm_embed_api_key or "not-needed",
+               timeout=settings.llm_timeout, max_retries=0) if settings.llm_embed_base_url else client()
+    resp = c.embeddings.create(model=settings.llm_embed_model, input=texts)
     return [d.embedding for d in resp.data]
