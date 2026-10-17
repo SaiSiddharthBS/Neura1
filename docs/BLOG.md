@@ -36,6 +36,20 @@ documents and chats split into passages linked to what they mention, and the dec
 - **People analytics, carefully.** The capability map shows what the company is good at from recorded work, with no
   scores or rankings, and names only for people allowed to see them.
 
+## Four things a search box cannot do
+
+- **Never the same mistake twice.** Chat checks a message against recorded decisions while it is typed. Suggest the
+  part the company rejected in 2025 and the decision appears, with the Slack messages that prove it, before you send.
+- **A sandbox for the whole company.** FalkorDB's `GRAPH.COPY` copies the company graph in about a tenth of a second.
+  A scenario (a supplier change, an engineer away, a bigger order) runs on the copy, each change alone and then together,
+  and the copy is thrown away. The interesting results are the ones that only appear in combination: the regulator
+  change needs a firmware review from the one person who will be away that month.
+- **Can we promise this?** A delivery date checked across the bill of materials, free stock, the newest lead time on
+  record, people, knowledge and certifications. Stock and quotes alone said yes to 50 units by December; a supplier
+  notice from the day before made the honest answer April.
+- **Knowledge rescue.** Before someone leaves, Neura1 interviews them with questions built from the graph and keeps the
+  answers as linked, searchable knowledge. The model only helps with follow-up questions and facts it can quote.
+
 ## The evaluation, including where we lost
 
 We wrote expected answers before running anything and compared three systems on the same model (ornith-1.5-35b-a3b on a

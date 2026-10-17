@@ -85,8 +85,11 @@ def read_source(graph: Graph, src: dict) -> dict:
         summaries = rows(graph, "MATCH (d:Decision) WHERE d.id IN $ids RETURN d.id AS id, d.outcome AS o, d.summary AS s",
                          {"ids": result["decisions"]})
         text = "; ".join(f"{d['id']} ({d['o']}): {d['s']}" for d in summaries[:3])
+        kinds = {"approved": "decision", "rejected": "decision", "proposed": "proposal"}
+        what = {kinds.get(d["o"], "finding") for d in summaries}
+        noun = what.pop() if len(what) == 1 else "record"
         chat.notify(graph, "evidence", f"Neura1 read {src.get('title') or src['id']} and recorded "
-                    f"{len(summaries)} decision{'s' if len(summaries) != 1 else ''}, each checked word for word: {text}.",
+                    f"{len(summaries)} {noun}{'s' if len(summaries) != 1 else ''}, each checked word for word: {text}.",
                     [{"label": "Explore", "href": f"/explore?id={summaries[0]['id']}"}] if summaries else None)
     return result
 

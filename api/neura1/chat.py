@@ -613,6 +613,8 @@ def handle(graph: Graph, channel_id: str, text: str, author: str, author_id: str
            reply_to: str | None = None) -> dict:
     msg = post(graph, channel_id, text, author, author_id, reply_to=reply_to)
     stripped = text.strip()
+    if author_id and not stripped.startswith("/"):
+        _remind(graph, channel_id, stripped, msg["id"])
     if stripped.startswith("/"):
         reply = command(graph, stripped, Audience(graph, channel_id))
         post(graph, channel_id, reply["text"], BOT, None, kind="command", links=reply.get("links"), reply_to=msg["id"])
@@ -620,6 +622,18 @@ def handle(graph: Graph, channel_id: str, text: str, author: str, author_id: str
         ask_in_channel(graph, channel_id, re.sub(r"@neura1\b", "", text, flags=re.I).strip(), author_id, msg["id"])
         msg["thinking"] = True
     return msg
+
+
+def _remind(graph: Graph, channel_id: str, text: str, message_id: str) -> None:
+    """If a message proposes something the company already rejected, answer it with the decision and its proof."""
+    from neura1 import guard
+    try:
+        note = guard.reminder(guard.check(graph, text, access.Viewer()))
+    except Exception:
+        return  # a reminder must never stop a message from being sent
+    if note:
+        post(graph, channel_id, redact_text(note, Audience(graph, channel_id)), BOT, None, kind="guard",
+             reply_to=message_id)
 
 
 # ---------- Neura1 speaks first ----------

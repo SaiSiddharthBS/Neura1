@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowDown, ArrowLeft, Bot, Check, CheckCheck, Copy, CornerUpLeft, FileText, Hash, Info, Link2, Loader2, Pencil,
-  SendHorizontal, Smile, Sparkles, Trash2, X,
+  SendHorizontal, ShieldAlert, Smile, Sparkles, Trash2, X,
 } from "lucide-react";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import NewConversation from "@/components/chat/NewConversation";
 import {
   BOT, type Conversation, dayLabel, type Hit, type Msg, parseJson, type Person, REACTIONS, type Thread, time,
 } from "@/components/chat/types";
+import GuardCard, { type Flag } from "@/components/GuardCard";
 import { api, ApiError, viewerId } from "@/lib/api";
 import { credentials, forgetPasscode } from "@/lib/session";
 
@@ -97,6 +98,9 @@ export default function ChatView() {
   const [mention, setMention] = useState<{ at: number; q: string } | null>(null);
   const [hint, setHint] = useState(0);
   const [divider, setDivider] = useState<string | null>(null);
+  const [flags, setFlags] = useState<Flag[]>([]);
+  const [ack, setAck] = useState(false);
+  const [nudge, setNudge] = useState(0);
 
   const scroller = useRef<HTMLDivElement>(null);
   const box = useRef<HTMLTextAreaElement>(null);
@@ -202,7 +206,7 @@ export default function ChatView() {
     openedWith.current = known.current?.get(current) ?? 0;
     const reset = setTimeout(() => {
       setMsgs([]); setLoaded(false); setReply(null); setEditing(null); setText(""); setBelow(0); setDivider(null);
-      setWaiting(false); setTyping([]); setError(null); setMention(null);
+      setWaiting(false); setTyping([]); setError(null); setMention(null); setFlags([]); setAck(false);
       tick();
     }, 0);
     const t = setInterval(tick, 2000);
@@ -270,10 +274,29 @@ export default function ChatView() {
   };
   useEffect(resize, [text]);
 
+  // Never the same mistake twice: check the draft against what Flyvi already decided, on every pause in typing.
+  useEffect(() => {
+    const draft = text.trim();
+    const t = setTimeout(() => {
+      if (draft.length < 8 || draft.startsWith("/")) { setFlags([]); return; }
+      api<{ flags: Flag[] }>("/api/guard", { method: "POST", body: JSON.stringify({ text: draft }) })
+        .then((r) => { setFlags(r.flags); if (!r.flags.some((f) => f.severity === "error")) setAck(false); })
+        .catch(() => setFlags([]));
+    }, 420);
+    return () => clearTimeout(t);
+  }, [text]);
+
   async function send() {
     const body = text.trim();
     if (!body) return;
     setMention(null);
+    // The company already said no to this: the first Enter shows why, a second one sends anyway.
+    if (flags.some((f) => f.severity === "error") && !ack && !body.startsWith("/")) {
+      setAck(true);
+      setNudge((n) => n + 1);
+      return;
+    }
+    setFlags([]); setAck(false);
     if (editing) {
       const id = editing.id;
       setText(""); setEditing(null);
@@ -293,6 +316,7 @@ export default function ChatView() {
   }
 
   function onType(v: string) {
+    if (v !== text) setAck(false);
     setText(v);
     setHint(0);
     const caret = box.current?.selectionStart ?? v.length;
@@ -556,6 +580,7 @@ export default function ChatView() {
               ))}
             </div>
           )}
+          <GuardCard flags={flags} armed={ack} nudge={nudge} onDismiss={() => { setFlags([]); setAck(false); }} />
           {(reply || editing) && (
             <div className="mb-2 flex items-center gap-2 rounded-xl border-l-2 border-accent bg-elev px-3 py-1.5 text-[12.5px]">
               {editing ? <Pencil size={13} className="shrink-0 text-accent" /> : <CornerUpLeft size={13} className="shrink-0 text-accent" />}
@@ -626,6 +651,7 @@ function Bubble({ m, me, mine, bot, last, names, flash, people, onReply, onEdit,
   const nameOf = (id: string) => people.find((p) => p.id === id)?.name ?? id;
   const tone = m.deleted ? "border border-dashed border-line bg-transparent text-muted italic"
     : mine ? "bg-accent text-accent-ink"
+    : m.kind === "guard" ? "border border-danger/30 bg-danger/[0.06] text-ink"
     : bot ? "border border-cyan/25 bg-cyan/[0.07] text-ink"
     : "bg-elev-strong text-ink";
   const shape = mine ? `rounded-2xl ${last ? "rounded-br-md" : ""}` : `rounded-2xl ${last ? "rounded-bl-md" : ""}`;
@@ -644,8 +670,15 @@ function Bubble({ m, me, mine, bot, last, names, flash, people, onReply, onEdit,
               <span className="line-clamp-2 opacity-80">{m.reply.deleted ? "Message deleted" : m.reply.text}</span>
             </button>
           )}
+          {m.kind === "guard" && !m.deleted && (
+            <span className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-danger"><ShieldAlert size={12} /> Neura1 remembers</span>
+          )}
           {m.deleted ? <span className="text-[13px]">This message was deleted</span>
-            : <span className="whitespace-pre-wrap break-words">{rich(m.text, names, mine)}</span>}
+            : <span className="whitespace-pre-wrap break-words">{m.text.split("\n").map((line, i, all) => (
+                line.startsWith("> ")
+                  ? <span key={i} className="my-1 block border-l-2 border-line2 pl-2.5 text-[13px] text-ink-soft">{rich(line.slice(2), names, mine)}</span>
+                  : <Fragment key={i}>{rich(line, names, mine)}{i < all.length - 1 && !all[i + 1].startsWith("> ") ? "\n" : ""}</Fragment>
+              ))}</span>}
           <span className={`ml-2 inline-flex translate-y-0.5 items-center gap-1 text-[10.5px] ${mine ? "text-accent-ink/70" : "text-faint"}`}>
             {m.edited_at && !m.deleted && "edited ·"} {time(m.ts)}
           </span>

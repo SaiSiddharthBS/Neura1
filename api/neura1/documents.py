@@ -379,9 +379,12 @@ def _amounts(text: str) -> list[tuple[str, float]]:
     return out
 
 
-def check(graph: Graph, blocks: list[dict], viewer: Viewer) -> list[dict]:
-    """Return flags: {block_id, quote, severity, title, message, record, sources}. `quote` is an exact substring."""
-    f = _facts(graph)
+def check(graph: Graph, blocks: list[dict], viewer: Viewer, adopt: re.Pattern = ADOPT,
+          facts: dict | None = None) -> list[dict]:
+    """Return flags: {block_id, quote, severity, title, message, record, sources}. `quote` is an exact substring.
+
+    `adopt` is what counts as proposing a part (chat is looser than a formal document); `facts` may be cached."""
+    f = facts or _facts(graph)
     lexicon = entity_lexicon(graph)
     known_prefixes = {m.group(1) for i in f["ids"] for m in [ID_LIKE.fullmatch(i)] if m}
     flags = []
@@ -407,7 +410,7 @@ def check(graph: Graph, blocks: list[dict], viewer: Viewer) -> list[dict]:
 
         rejected_here = set()
         for d in f["rejected"]:
-            if d["item"] in named and d["id"] not in text and claims(d["item"], ADOPT):
+            if d["item"] in named and d["id"] not in text and claims(d["item"], adopt):
                 rejected_here.add(d["item"])
                 flag(b, d["item"], "error", f"{d['item']} was rejected ({d['id']})",
                      f"{d['summary']}. Reason: {d['reason']}. Decided by {d['by'] or 'engineering'} on {d['at']}. "

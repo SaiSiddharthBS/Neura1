@@ -953,6 +953,152 @@ def chat_search(q: str, g=Depends(graph), v: access.Viewer = Depends(current_vie
     return chat.search(g, v, q)
 
 
+# ---------- never the same mistake twice ----------
+
+class GuardIn(BaseModel):
+    text: str
+
+
+@app.post("/api/guard")
+def guard_check(body: GuardIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    """Check a message or draft against recorded decisions, quotes, revisions and leave while it is written."""
+    from neura1 import guard
+    if len(body.text) > 8000:
+        raise HTTPException(400, "Text is too long to check")
+    return {"flags": guard.check(g, body.text, v)}
+
+
+# ---------- can we promise this? ----------
+
+class PromiseIn(BaseModel):
+    product: str
+    qty: int
+    due: date
+
+
+@app.post("/api/promise")
+def promise_check(body: PromiseIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import promise
+    if not 0 < body.qty <= 100000:
+        raise HTTPException(400, "Quantity must be between 1 and 100,000")
+    return promise.check(g, body.product, body.qty, body.due, v)
+
+
+@app.get("/api/promise/products")
+def promise_products(g=Depends(graph)):
+    return rows(g, """MATCH (i:Item {kind:'product'})-[:HAS_REV]->(r:Revision)
+                      RETURN i.id AS product, i.name AS name, r.id AS revision, r.status AS status ORDER BY revision""")
+
+
+# ---------- company sandbox ----------
+
+def _leadership(v: access.Viewer) -> None:
+    if not (v.unrestricted or v.leader):
+        raise HTTPException(403, "The sandbox weighs amounts and leave plans together, so it is open to the directors "
+                                 "and the leadership team")
+
+
+@app.get("/api/sandbox/presets")
+def sandbox_presets(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import sandbox
+    _leadership(v)
+    return [p | {"labels": [s["label"] for s in sandbox.validate(g, p["shocks"])]} for p in sandbox.PRESETS]
+
+
+@app.get("/api/sandbox/options")
+def sandbox_options(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    _leadership(v)
+    return {
+        "parts": rows(g, "MATCH (i:Item {kind:'part'}) RETURN i.id AS id, i.name AS name ORDER BY id"),
+        "people": rows(g, "MATCH (p:Person) RETURN p.id AS id, p.name AS name ORDER BY name"),
+        "orders": rows(g, "MATCH (c:Customer)-[:PLACED]->(o:Order) RETURN o.id AS id, c.name AS customer, "
+                          "o.qty AS qty, o.due_date AS due ORDER BY id"),
+        "suppliers": rows(g, "MATCH (s:Supplier) RETURN s.id AS id, s.name AS name ORDER BY name"),
+    }
+
+
+class SandboxIn(BaseModel):
+    shocks: list[dict]
+
+
+@app.post("/api/sandbox")
+def sandbox_run(body: SandboxIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import sandbox
+    _leadership(v)
+    try:
+        return sandbox.run(g, body.shocks)
+    except (sandbox.SandboxError, ValueError, KeyError) as exc:
+        raise HTTPException(400, str(exc))
+
+
+# ---------- knowledge rescue ----------
+
+@app.get("/api/rescue")
+def rescue_plan(person: str, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import rescue
+    if not v.sees_profile_of(person):
+        raise HTTPException(403, "Knowledge rescue is open to the person themself, and to the directors and "
+                                 "leadership team")
+    out = rescue.plan(g, person)
+    if out.get("status") != "ok":
+        raise HTTPException(404, "Unknown person")
+    if not v.sees_leave_of(person):
+        out["absence"] = None
+    return out
+
+
+@app.get("/api/rescue/candidates")
+def rescue_candidates(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    """People whose knowledge is most at risk: away soon, or owning things. Others see only themselves."""
+    if not (v.unrestricted or v.leader):
+        return [{"id": v.id, "name": v.name, "reason": "you"}] if v.id else []
+    away = {r["id"]: r for r in rows(g, """MATCH (p:Person)-[:HAS_ABSENCE]->(a:Absence) WHERE a.end_date >= $t
+                                          RETURN p.id AS id, a.start_date AS start, a.end_date AS end""",
+                                     {"t": date.today().isoformat()})}
+    owners = rows(g, "MATCH (p:Person)-[:OWNS]->(i:Item) RETURN p.id AS id, p.name AS name, collect(i.id) AS owns")
+    out = []
+    for o in owners:
+        a = away.get(o["id"])
+        out.append({"id": o["id"], "name": o["name"], "owns": o["owns"],
+                    "reason": f"away {a['start']} to {a['end']}" if a else f"owns {', '.join(o['owns'][:3])}"})
+    return sorted(out, key=lambda x: (not x["reason"].startswith("away"), x["name"]))
+
+
+class RescueAnswer(BaseModel):
+    person: str
+    question_id: str
+    question: str
+    about: list[str] = []
+    answer: str
+
+
+@app.post("/api/rescue/answer", dependencies=[Depends(require_passcode)])
+def rescue_answer(body: RescueAnswer, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import rescue
+    if not v.id or not (v.id == body.person or v.leader):
+        raise HTTPException(403, "Only the person, or the leadership team recording for them, can add answers")
+    if not body.answer.strip() or len(body.answer) > 6000:
+        raise HTTPException(400, "The answer is empty or too long")
+    try:
+        return rescue.save(g, body.person, body.question_id, body.question, body.about, body.answer,
+                           None if v.id == body.person else v.name)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc))
+
+
+class ReviewIn(BaseModel):
+    question: str
+    answer: str
+
+
+@app.post("/api/rescue/review", dependencies=[Depends(ai_rate_limit)])
+def rescue_review(body: ReviewIn, v: access.Viewer = Depends(current_viewer)):
+    from neura1 import rescue
+    if len(body.answer) > 6000:
+        raise HTTPException(400, "The answer is too long")
+    return rescue.review(body.question, body.answer)
+
+
 # ---------- graph explorer ----------
 
 @app.get("/api/explore")
@@ -1138,6 +1284,8 @@ def reset_demo():
         _reset.update(running=True, error=None)
         try:
             load()
+            from neura1 import guard
+            guard.forget()
             for f in (settings.data_dir / "documents").glob("DOC-*"):
                 f.unlink(missing_ok=True)
             _reset["last"] = datetime.now(timezone.utc).isoformat(timespec="seconds")

@@ -102,6 +102,11 @@ TOOLS = [
     ("organisation", "How Flyvi is organised: the directors, the leadership team under them, and everyone else "
                      "(employees). Given a person's name, also their tier, title and backup.",
      {"name": {"type": ["string", "null"]}}),
+    ("can_we_promise", "Whether Flyvi can deliver a quantity of a product by a date: parts and free stock, the newest "
+                       "lead times (supplier notices beat quotes), people and knowledge, certifications. Returns the "
+                       "verdict, the earliest realistic date, the limiting part and what would change the answer. "
+                       "Use it for any 'can we deliver / commit / promise' question.",
+     {"product": {"type": "string"}, "qty": {"type": "integer"}, "due": {"type": "string", "description": "YYYY-MM-DD"}}),
     ("notices", "Supplier notices received (price, lead-time, end-of-life changes), with their full text.", {}),
     ("who_knows", "Who knows about something: a part, project, customer, order or alias like 'pmic_seq.c'. "
                   "Returns people ranked with the reasons (owns it, decided, discussed, works on it).",
@@ -252,6 +257,14 @@ def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
                        collect(DISTINCT r.name) AS direct_reports, collect(DISTINCT b.name) AS backed_up_by""",
                 {"t": args["name"]})
         return out
+    if name == "can_we_promise":
+        from datetime import date as _date
+        from neura1 import promise
+        from neura1.access import Viewer
+        r = promise.check(graph, str(args["product"]), int(args["qty"]), _date.fromisoformat(str(args["due"])), Viewer())
+        trace.steps.append({"name": "can_we_promise", "cypher": "(promise engine: BOM, stock, notices, people, "
+                            "certifications)", "params": args, "rows": len(r.get("constraints", [])), "ms": 0})
+        return {k: v for k, v in r.items() if k not in ("leave_included",)}
     if name == "notices":
         return trace.run(name, """MATCH (s:Source {kind:'notice'})<-[:PART_OF]-(c:Chunk)
                                   WITH s, c ORDER BY c.ordinal
@@ -419,6 +432,10 @@ def _restrict(name: str, result, restrict: dict | None):
                     "visible to everyone reading this; point them to the person's page"}
     if name == "person" and isinstance(result, dict):
         result = {k: v for k, v in result.items() if k not in ("absences",)}
+    if name == "can_we_promise" and isinstance(result, dict) and result.get("constraints"):
+        sees = restrict.get("leave_of", lambda _p: True)
+        result = result | {"constraints": [c for c in result["constraints"]
+                                           if c.get("kind") != "people" or sees(c.get("person_id"))]}
     return result
 
 

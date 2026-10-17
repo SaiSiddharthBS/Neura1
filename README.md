@@ -66,13 +66,31 @@ Neura1 answers in one view:
 
 <br>
 
+## ✦ Four things no other company brain does
+
+Search-based assistants find documents. Neura1 reasons over how the company actually fits together, so it can do things
+they cannot.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/demo/remembers.png" alt="Neura1 remembers"><br><sub><b>Never the same mistake twice.</b> While someone types "Can we go for NB54361-L to save cost?", Neura1 shows that the company rejected that part in March 2025, with the two Slack messages that prove it, word for word. Sending anyway takes a second Enter, and Neura1 answers in the thread so the whole channel sees why. Rules over the graph, no model, so it is instant. Also catches expired quotes, obsolete revisions and work given to someone who will be away.</sub></td>
+    <td width="50%"><img src="docs/demo/sandbox.png" alt="Company sandbox"><br><sub><b>Try it on a copy of the company first.</b> FalkorDB copies the whole company graph in about 0.1 s (<code>GRAPH.COPY</code>). The sandbox applies a scenario to the copy (a part change, someone away or leaving, an order scaled, a supplier gone), runs the same engines as the real company, and throws the copy away. Each change is also run alone, so what only goes wrong in combination is called out: in "the perfect storm", the NB54360 change needs Sai's firmware review in the very weeks Sai is away.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/demo/promise.png" alt="Can we promise this?"><br><sub><b>Can we promise this?</b> "50 × PDU-28 by 31 December?" Stock and quotes alone say yes. Neura1 says no: the supplier notice of 14 October moved NB54360 to 22 weeks, so the earliest honest date is 10 April 2027. It also checks the people and knowledge the product depends on, its certifications and revision, and says what would change the answer (ship 20 from stock now, place the order before the last-time-buy, and do not switch to the rejected part).</sub></td>
+    <td><img src="docs/demo/rescue.png" alt="Knowledge rescue"><br><sub><b>Knowledge rescue.</b> Before someone leaves or goes on long leave, Neura1 interviews them with questions built from the graph: what they own, what depends on it, what Flyvi relies on them for, the decisions they were part of. Answers become searchable knowledge linked to those records. The DGX reads each answer, keeps only facts it can quote word for word, and asks a follow-up when something is missing. The sandbox then counts that knowledge as captured.</sub></td>
+  </tr>
+</table>
+
+<br>
+
 ## ✦ See it
 
 > **Try it:** open the live demo link from the submission (or run `scripts/serve_public.sh`, see [docs/DEPLOY.md](docs/DEPLOY.md)) and press **Take the 3-minute tour** on the Overview. It follows one supplier notice through the whole company.
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/demo/overview.png" alt="Overview"><br><sub><b>Overview</b>: one supplier change ripples through FalkorDB, ring by ring, to revisions, builds, orders, customers and people; then today's signals and the company at a glance.</sub></td>
+    <td width="50%"><img src="docs/demo/ripple-focus.png" alt="The ripple map"><br><sub><b>The ripple map</b>: one supplier change travels through FalkorDB ring by ring, with a faint pulse flowing outward along each connection. Hover a record and its whole chain back to the change lights up; click and the map glides in to it.</sub></td>
     <td width="50%"><img src="docs/demo/overview-light.png" alt="Overview, light theme"><br><sub><b>Light or dark</b>: frosted glass over a slow aurora, following the system theme. OKLCH tokens, Geist with an Instrument Serif accent, View Transitions, Motion, Lenis momentum scroll and scroll-driven reveals.</sub></td>
   </tr>
   <tr>
@@ -80,7 +98,7 @@ Neura1 answers in one view:
     <td width="50%"><img src="docs/demo/my-day.png" alt="My day"><br><sub><b>My day</b>: each person's open work, decisions waiting for them, signals touching what they own, and who in their team is away.</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/demo/tour.png" alt="Guided tour"><br><sub><b>Guided tour</b>: nine steps through the story, each spotlighting the record that matters, here the decision that rejected the cheaper part in 2025.</sub></td>
+    <td><img src="docs/demo/tour.png" alt="Guided tour"><br><sub><b>Guided tour</b>: ten steps through the story, each spotlighting the record that matters, here the decision that rejected the cheaper part in 2025.</sub></td>
     <td><img src="docs/demo/my-day.png" alt="Morning brief"><br><sub><b>A brain that acts</b>: a morning brief posted at 09:00 IST, and forwarded supplier emails that turn into analysed signals on their own.</sub></td>
   </tr>
   <tr>
@@ -261,7 +279,11 @@ read-only, and tasks are drafts until a person confirms them.
 | **Permissions from the graph** | A demo control, "view as anyone", shows how the same graph looks to each person (see [Sign-in in production](#sign-in-in-production)). Flyvi has three tiers: the directors, the leadership team under them, and employees. Leave details are visible to the person, their backup, and the directors and leadership team; so is money. Everyone else sees it redacted, including rupee amounts written inside messages and answers. | Sidebar → Viewing as |
 | **Neura1 Chat** | A full messenger: channels (anyone can create one), direct messages and private groups (add, remove, rename, leave), with unread counts and @mentions, replies, edits, deletes, emoji reactions, read receipts ("Seen"), typing indicators, online status and message search. Every channel message becomes a linked passage in the graph, so chat feeds search, "who knows" and timelines. `@neura1` answers as a reply with sources; `/impact`, `/who`, `/away`, `/risk` answer instantly without a model. Replies only show what *every* reader may see (money and leave are redacted per audience). #leadership is open only to the directors and leadership team. Direct messages and groups stay private by construction: they never become searchable company knowledge, and a deleted message leaves the graph. Approved plans, finished tasks and new notices are posted to the right channel automatically. | Chat |
 | **Neura1 Docs** | A Word editor inside the brain (pages, toolbar, tables, tracked changes, comments, .docx in and out, PDF). Templates are written from the graph: an engineering change notice (HB-ENG-04), a customer response, a leave handover (HB-HR-02). The **Neura1 AI** side panel rewrites a selection, a section or the whole document on request, and every AI edit lands as a tracked change you accept or reject. **Check facts** tests every claim against the graph with fixed rules (a rejected part, an unapproved alternate, an expired quote, an obsolete revision, a price no quote supports, someone on leave, an ID that doesn't exist) and cites the proof. **Insert facts** drops live tables (where used, decisions, orders, who knows, history) at the cursor. Saved documents become knowledge linked to what they name; documents with amounts or someone's leave are only open to people allowed to see them. | Documents |
-| **Capability map** | What Flyvi can do, built from recorded work: the model tags every task and project with the skills it needs, choosing only from Flyvi's own skill list (code rejects anything else). Each area shows people with finished work, people active now, and whether more work lies ahead than behind; **Where Flyvi is thin** lists skills open work needs that only one person holds or nobody has finished work in yet. Evidence, not ratings: no scores or rankings exist anywhere. A person's full expertise is visible only to them, their management chain, HR and leadership; names in the company map only to HR and leadership (managers see their own reports). | Capability map · People |
+| **Capability map** | What Flyvi can do, built from recorded work: the model tags every task and project with the skills it needs, choosing only from Flyvi's own skill list (code rejects anything else). Each area shows people with finished work, people active now, and whether more work lies ahead than behind; **Where Flyvi is thin** lists skills open work needs that only one person holds or nobody has finished work in yet. Evidence, not ratings: no scores or rankings exist anywhere. A person's full expertise is visible only to them and to the directors and leadership team; so are names in the company map. | Capability map · People |
+| **Never the same mistake twice** | Every chat message is checked while it is typed against recorded decisions, quotes, revisions and leave (`POST /api/guard`, rules only). Proposing a rejected part shows the decision and its source passages; sending anyway needs a second Enter, and Neura1 replies in the thread with the proof. | Chat |
+| **Company sandbox** | Scenarios run on a `GRAPH.COPY` of the company (≈0.1 s), each change alone and then together; findings that appear only in combination are flagged. Part changes and end of life, people away or leaving, orders scaled, suppliers gone. Directors and leadership only, since it weighs money and leave together. The real graph is never written. | Plan ahead → Sandbox |
+| **Can we promise this?** | A delivery date checked across the exploded BOM, free stock, the newest lead time on record (a supplier notice beats a quote), the people and knowledge the product depends on, certifications and revision status. Yes, yes with risks, not confirmed, or no with the earliest date, the limiting part and what would change it, beside what a stock-and-quote check alone would say. | Plan ahead → Can we promise? |
+| **Knowledge rescue** | Interview questions built from the graph for anyone about to be away; answers become `rescue/<person>` passages linked to what they cover, found by search and Ask. The DGX extracts facts (kept only if quoted word for word) and asks follow-ups. Captured knowledge lowers that person's knowledge risk in the sandbox. | Plan ahead → Knowledge rescue |
 | **Graph explorer + time travel** | Open any part, person, project, customer or decision and walk its connections live from FalkorDB, click to expand. Beside it, the record's full history: decisions, quotes, messages, tasks, status changes, investigations, leave, newest first. | Graph explorer |
 | **My day** | Your open work, decisions waiting for you, signals touching your areas, who in your team is away, and what changed in things you own | My day |
 | **Ask with memory** | Conversations stored per person as `Conversation → Turn` nodes, linked to the passages cited and the records discussed. Follow-ups work, and `recall` searches everyone's past answers (shared memory, Track 02). Each tool call streams live. | Ask & search |
