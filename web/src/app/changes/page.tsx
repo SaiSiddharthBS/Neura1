@@ -1,5 +1,6 @@
 "use client";
 
+import { PageTitle } from "@/components/ui";
 import { AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 import DraftTask from "@/components/DraftTask";
@@ -24,7 +25,7 @@ export default function Changes() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
       <section>
-        <h1 className="page-title">What&apos;s new</h1>
+        <PageTitle>What&apos;s <em>new</em></PageTitle>
         <p className="mt-1 text-sm text-muted">Everything that reached the company graph, newest first.</p>
         <ol className="card mt-4 divide-y divide-line">
           {d?.feed.map((f, i) => (

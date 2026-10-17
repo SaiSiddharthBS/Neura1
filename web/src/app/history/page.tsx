@@ -1,5 +1,6 @@
 "use client";
 
+import { PageTitle } from "@/components/ui";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api, inr } from "@/lib/api";
@@ -12,7 +13,7 @@ export default function History() {
   useEffect(() => { api<Inv[]>("/api/investigations").then(setRows); }, []);
   return (
     <div>
-      <h1 className="page-title">Investigations</h1>
+      <PageTitle>Plans, <em>remembered</em></PageTitle>
       <p className="mt-1 text-sm text-muted">Approved investigations and the tasks they created, stored in the graph.</p>
       <div className="card mt-4 divide-y divide-line">
         {rows?.length === 0 && <div className="p-4 text-sm text-muted">Nothing approved yet.</div>}

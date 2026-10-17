@@ -1,5 +1,8 @@
 "use client";
 
+import { toast } from "sonner";
+import { motion } from "motion/react";
+import { PageTitle } from "@/components/ui";
 import { Avatar } from "@/components/ViewerSwitch";
 import Link from "next/link";
 import { ArrowRight, CircleDashed, CircleCheck, CircleDot, FileText, Inbox, OctagonAlert, Zap } from "lucide-react";
@@ -36,7 +39,7 @@ export default function Workboard() {
   const [who, setWho] = useState("all");
   const [project, setProject] = useState("all");
   const [drag, setDrag] = useState<string | null>(null);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [over, setOver] = useState<string | null>(null);
 
   const load = useCallback(() => api<Board>("/api/board").then(setB), []);
   useEffect(() => { api<Board>("/api/board").then(setB); }, []);
@@ -48,15 +51,29 @@ export default function Workboard() {
     name = name || prompt("Your name") || "";
     if (!pass || !name) return;
     try { localStorage.setItem("neura1-passcode", pass); localStorage.setItem("neura1-reviewer", name); } catch {}
+    // Move the card at once; the server confirms, or the board reloads to the truth.
+    type Col = keyof Board["columns"];
+    const from = (task.status ?? "open") as Col;
+    const to = status as Col;
+    setB((cur) => cur && ({
+      ...cur,
+      columns: {
+        ...cur.columns,
+        [from]: (cur.columns[from] ?? []).filter((x) => x.id !== task.id),
+        [to]: [{ ...task, status }, ...(cur.columns[to] ?? [])],
+      },
+    }));
     try {
       await api(`/api/actions/${task.id}/status`, { method: "POST", write: true, body: JSON.stringify({ status, by: name }) });
-      setMsg(`Moved “${task.title}” to ${COLUMNS.find((c) => c.key === status)?.title}.`);
+      toast.success(`Moved to ${COLUMNS.find((c) => c.key === status)?.title}`, { description: task.title });
       load();
     } catch (e) {
       if (e instanceof ApiError && e.status === 403) try { localStorage.removeItem("neura1-passcode"); } catch {}
-      setMsg((e as Error).message);
+      toast.error("Could not move the task", { description: (e as Error).message });
+      load();
     }
   }
+
 
   const all = b ? Object.values(b.columns).flat() : [];
   const owners = [...new Map(all.filter((t) => t.owner).map((t) => [t.owner_id, t.owner])).entries()];
@@ -69,7 +86,7 @@ export default function Workboard() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="page-title">Workboard</h1>
+          <PageTitle>Work, <em>in one place</em></PageTitle>
           <p className="mt-1 text-sm text-muted">Every task from approved investigations and the Ask agent, in one place. Drag cards to move them; every move is recorded in the graph.</p>
         </div>
         <div className="flex gap-2 text-sm">
@@ -124,23 +141,24 @@ export default function Workboard() {
         </section>
       )}
 
-      {msg && <div className="text-sm text-muted">{msg}</div>}
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {COLUMNS.map((c) => {
           const tasks = (b?.columns[c.key] ?? []).filter(visible);
           return (
-            <div key={c.key} onDragOver={(e) => e.preventDefault()}
-                 onDrop={() => { const t = all.find((x) => x.id === drag); if (t && (t.status ?? "open") !== c.key) move(t, c.key); setDrag(null); }}
-                 className={`card flex min-h-[320px] flex-col p-3 ${drag ? "border-line2" : ""}`}>
+            <div key={c.key} onDragOver={(e) => { e.preventDefault(); if (over !== c.key) setOver(c.key); }}
+                 onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(null); }}
+                 onDrop={() => { const t = all.find((x) => x.id === drag); if (t && (t.status ?? "open") !== c.key) move(t, c.key); setDrag(null); setOver(null); }}
+                 className={`card no-reveal flex min-h-[320px] flex-col p-3 transition-shadow ${over === c.key && drag ? "ring-2 ring-accent/50" : ""}`}>
               <div className="mb-3 flex items-center gap-2 px-1 text-sm font-medium">
                 <c.icon size={15} className={c.tone} /> {c.title}
                 <span className="ml-auto rounded-full bg-elev px-2 text-xs text-muted tabular-nums">{tasks.length}</span>
               </div>
               <div className="flex flex-1 flex-col gap-2">
                 {tasks.map((t) => (
-                  <article key={t.id} draggable onDragStart={() => setDrag(t.id)} onDragEnd={() => setDrag(null)}
-                           className={`cursor-grab rounded-xl border border-line bg-elev p-3 text-sm transition hover:border-line2 active:cursor-grabbing ${drag === t.id ? "opacity-40" : ""}`}>
+                  <motion.div key={t.id} layout layoutId={t.id} transition={{ type: "spring", stiffness: 420, damping: 36, mass: 0.9 }}>
+                  <article draggable onDragStart={() => setDrag(t.id)} onDragEnd={() => { setDrag(null); setOver(null); }}
+                           className={`group cursor-grab rounded-xl border border-line bg-panel/70 p-3 text-sm shadow-[0_1px_0_0_var(--edge)_inset] transition hover:-translate-y-px hover:border-line2 hover:shadow-[var(--shadow-pop)] active:cursor-grabbing ${drag === t.id ? "scale-[0.98] opacity-40" : ""}`}>
                     <div className="mb-1.5 flex items-center gap-1.5">
                       <span className="rounded-md bg-accent/15 px-1.5 py-0.5 text-[10.5px] text-accent-hover">{KIND[t.kind] ?? t.kind}</span>
                       {t.projects.map((x) => <span key={x} className="rounded-md bg-violet/15 px-1.5 py-0.5 text-[10.5px] text-violet">{x}</span>)}
@@ -156,13 +174,14 @@ export default function Workboard() {
                         from {t.investigation} · {t.part}
                       </Link>
                     )}
-                    <div className="mt-2 flex gap-1">
+                    <div className="flex max-h-0 gap-1 overflow-hidden opacity-0 transition-all duration-300 group-hover:mt-2 group-hover:max-h-8 group-hover:opacity-100 group-focus-within:mt-2 group-focus-within:max-h-8 group-focus-within:opacity-100">
                       {COLUMNS.filter((x) => x.key !== (t.status ?? "open")).map((x) => (
                         <button key={x.key} onClick={() => move(t, x.key)} title={`Move to ${x.title}`}
                                 className="rounded-md border border-line px-1.5 py-0.5 text-[10.5px] text-muted hover:border-line2 hover:text-ink">{x.title}</button>
                       ))}
                     </div>
                   </article>
+                  </motion.div>
                 ))}
                 {!tasks.length && <div className="grid flex-1 place-items-center rounded-xl border border-dashed border-line text-xs text-muted">Drop tasks here</div>}
               </div>

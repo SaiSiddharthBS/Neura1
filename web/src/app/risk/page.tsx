@@ -1,5 +1,6 @@
 "use client";
 
+import { PageTitle } from "@/components/ui";
 import Link from "next/link";
 import { Activity, Brain, Building2, Network, PackageX, Users } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -30,7 +31,7 @@ export default function RiskRadar() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="page-title">Risk radar</h1>
+        <PageTitle>Where Flyvi is <em>fragile</em></PageTitle>
         <p className="mt-1 text-sm text-muted">
           Where Flyvi is fragile, found by FalkorDB graph algorithms and traversals across people, products, customers and suppliers.
           {" "}{r.trace.length} queries, {algoMs.toFixed(0)} ms.

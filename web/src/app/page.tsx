@@ -7,7 +7,7 @@ import {
   ArrowRight, ArrowUpRight, Brain, CalendarOff, FolderKanban, KanbanSquare, MessageSquareWarning, PackageSearch, Radar, Sparkles,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Pill, Section, Stagger, Ticker, riseItem } from "@/components/ui";
+import { Pill, Section, Stagger, Ticker, riseItem, PageTitle } from "@/components/ui";
 import { api, inr } from "@/lib/api";
 
 type Signal = { id: string; kind: "notice" | "escalation" | "leave"; title: string; date: string | null; subject: string | null; investigation: string | null };
@@ -70,7 +70,7 @@ export default function Overview() {
       <motion.section variants={riseItem} className="flex flex-wrap items-end justify-between gap-6">
         <div>
           <div className="text-[13px] text-muted">{hello.date}</div>
-          <h1 className="page-title mt-1">{hello.text}{me?.name ? `, ${me.name}` : ""}</h1>
+          <PageTitle className="mt-1">{`${hello.text}${me?.name ? "," : ""}`}{me?.name ? " " : ""}{me?.name ? <em>{me.name}</em> : null}</PageTitle>
           <p className="mt-1.5 text-[15px] text-muted">
             {signals === null ? "Reading the company graph…" : open
               ? <>{open} signal{open === 1 ? "" : "s"} need{open === 1 ? "s" : ""} a decision. Each is traced through Flyvi&apos;s people, products, orders and decisions.</>

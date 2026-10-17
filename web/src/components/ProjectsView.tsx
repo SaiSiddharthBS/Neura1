@@ -1,5 +1,6 @@
 "use client";
 
+import { PageTitle } from "@/components/ui";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -32,7 +33,7 @@ export default function ProjectsView() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="page-title">Projects</h1>
+        <PageTitle>Projects <em>in flight</em></PageTitle>
         <p className="mt-1 text-sm text-muted">Who is on them, what they cover, the decisions that touch them, and open work.</p>
       </div>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">

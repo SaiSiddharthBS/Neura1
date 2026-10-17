@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ViewTransition, useEffect, useState } from "react";
+import Lenis from "lenis";
+import { motion } from "motion/react";
 import { Toaster } from "sonner";
 import {
   Bell, Brain, Building2, FileText, FolderKanban, History, Inbox, KanbanSquare, LayoutDashboard, Menu, MessageCircle,
@@ -49,6 +51,42 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [mobile, setMobile] = useState(false);
   const [openSignals, setOpenSignals] = useState(0);
 
+  // Momentum scrolling for the page. Anything that scrolls on its own (lists, chat, the editor, graphs) keeps native scroll.
+  useEffect(() => {
+    // Reduced-motion users and automated browsers (screen readers' test rigs, Playwright) keep native scrolling.
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches || navigator.webdriver) return;
+    const lenis = new Lenis({
+      autoRaf: true, lerp: 0.11, wheelMultiplier: 1,
+      prevent: (node) => {
+        if (node.closest?.(".react-flow, .superdoc, [data-lenis-prevent]")) return true;
+        const st = getComputedStyle(node);
+        return /(auto|scroll)/.test(st.overflowY) && node.scrollHeight > node.clientHeight + 1;
+      },
+    });
+    (window as unknown as { lenis?: Lenis }).lenis = lenis;
+    return () => lenis.destroy();
+  }, []);
+  useEffect(() => {
+    (window as unknown as { lenis?: Lenis }).lenis?.scrollTo(0, { immediate: true });
+  }, [path]);
+
+  // A soft light follows the cursor across whichever card it is over.
+  useEffect(() => {
+    let frame = 0;
+    const move = (e: PointerEvent) => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const card = (e.target as Element | null)?.closest?.(".card") as HTMLElement | null;
+        if (!card) return;
+        const r = card.getBoundingClientRect();
+        card.style.setProperty("--mx", `${e.clientX - r.left}px`);
+        card.style.setProperty("--my", `${e.clientY - r.top}px`);
+      });
+    };
+    window.addEventListener("pointermove", move, { passive: true });
+    return () => { window.removeEventListener("pointermove", move); cancelAnimationFrame(frame); };
+  }, []);
+
   useEffect(() => {
     api<{ investigation: unknown }[]>("/api/signals").then((s) => setOpenSignals(s.filter((x) => !x.investigation).length)).catch(() => {});
   }, [path]);
@@ -70,7 +108,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               className="mx-3 mt-2 flex items-center gap-2 rounded-lg border border-line bg-elev px-2.5 py-1.5 text-[13px] text-muted transition hover:border-line2 hover:text-ink">
         <Search size={14} /> <span className="flex-1 text-left">Search or ask</span> <span className="kbd">⌘K</span>
       </button>
-      <nav className="mt-3 flex-1 space-y-4 overflow-y-auto px-3 pb-3">
+      <nav className="isolate mt-3 flex-1 space-y-4 overflow-y-auto px-3 pb-3">
         {NAV.map((g) => (
           <div key={g.section}>
             <div className="px-2 pb-1 text-[11px] font-medium text-faint">{g.section}</div>
@@ -81,9 +119,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   <li key={href}>
                     <Link href={href} onClick={() => setMobile(false)}
                           className={`group relative flex h-8 items-center gap-2.5 rounded-lg px-2 text-[13.5px] transition-colors ${on
-                            ? "bg-elev-strong font-medium text-ink"
+                            ? "font-medium text-ink"
                             : "text-ink-soft hover:bg-elev hover:text-ink"}`}>
-                      {on && <span className="absolute -left-3 top-1.5 h-5 w-[3px] rounded-r-full bg-accent" />}
+                      {on && (
+                        <motion.span layoutId="nav-active" className="absolute inset-0 -z-10 rounded-lg bg-elev-strong shadow-[0_1px_0_0_var(--edge)_inset]"
+                                     transition={{ type: "spring", stiffness: 520, damping: 42, mass: 0.8 }}>
+                          <span className="absolute -left-3 top-1.5 h-5 w-[3px] rounded-r-full bg-accent" />
+                        </motion.span>
+                      )}
                       <Icon size={15} strokeWidth={on ? 2.1 : 1.8} className={on ? "text-accent" : "text-muted group-hover:text-ink-soft"} />
                       <span className="flex-1 truncate">{label}</span>
                       {badge === "signals" && openSignals > 0 && (
@@ -109,7 +152,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen">
-      <aside className="sticky top-0 hidden h-screen w-[248px] shrink-0 border-r border-line bg-bg-raised/70 backdrop-blur-xl lg:block">
+      <div aria-hidden className="aurora"><span /><span /><span /></div>
+      <aside className="glass-bar sticky top-0 z-20 hidden h-screen w-[248px] shrink-0 border-r border-line lg:block">
         {sidebar}
       </aside>
 
@@ -121,7 +165,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-line bg-bg/75 px-4 backdrop-blur-xl lg:px-8">
+        <header className="glass-bar sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-line px-4 lg:px-8">
           <button aria-label="Menu" onClick={() => setMobile(true)} className="-ml-1 rounded-lg p-1.5 text-muted hover:bg-elev hover:text-ink lg:hidden"><Menu size={17} /></button>
           <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-[13px]">
             <span className="hidden text-muted sm:inline">Flyvi</span>

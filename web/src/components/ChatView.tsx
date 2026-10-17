@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "motion/react";
 import { Avatar } from "@/components/ViewerSwitch";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -150,7 +151,8 @@ export default function ChatView() {
             const sources: string[] = m.sources ? JSON.parse(m.sources) : [];
             const about = m.about.filter((a) => a.id && !a.id.startsWith("chat/"));
             return (
-              <div key={m.id} className="flex gap-3">
+              <motion.div key={m.id} className="flex gap-3" initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
+                          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}>
                 {bot
                   ? <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-accent to-violet text-white"><Bot size={15} /></span>
                   : <Avatar name={m.author} size={32} />}
@@ -174,7 +176,7 @@ export default function ChatView() {
                     </div>
                   )}
                 </div>
-              </div>
+              </motion.div>
             );
           })}
           {waiting && <div className="flex items-center gap-2 pl-11 text-xs text-muted"><Loader2 size={13} className="animate-spin" /> Neura1 is working through the graph…</div>}

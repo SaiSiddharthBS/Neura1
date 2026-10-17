@@ -28,6 +28,10 @@ def main() -> None:
     with sync_playwright() as p:
         browser = p.chromium.launch(channel="chrome")
         page = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1, color_scheme="dark")
+        # Screenshots are still images: show every card at rest instead of mid scroll-reveal.
+        STILL = ("document.addEventListener('DOMContentLoaded', () => { const s = document.createElement('style');"
+                 " s.textContent = 'main .card { animation: none !important; } .split-word { opacity: 1 !important; transform: none !important; filter: none !important; }'; document.head.appendChild(s); });")
+        page.add_init_script(STILL)
         page.goto(base)
         page.evaluate(f"""() => {{ localStorage.setItem('neura1-passcode', '{args.passcode}');
                                   localStorage.setItem('neura1-reviewer', 'Hithesh'); }}""")
@@ -83,11 +87,16 @@ def main() -> None:
         # 5b The workboard: move one task forward, as a person would
         page.goto(f"{base}/board")
         page.wait_for_selector("text=Process")
-        page.locator("article", has_text="Firmware review").get_by_role("button", name="In progress").click()
-        page.wait_for_selector("text=Moved")
-        page.locator("article", has_text="Confirm pricing").get_by_role("button", name="Done").click()
+        # Move buttons appear when a card is hovered, as for a person using a mouse.
+        card = page.locator("article", has_text="Firmware review").first
+        card.hover(); page.wait_for_timeout(400)
+        card.get_by_role("button", name="In progress").click()
+        page.wait_for_selector("text=Moved to")
+        card = page.locator("article", has_text="Confirm pricing").first
+        card.hover(); page.wait_for_timeout(400)
+        card.get_by_role("button", name="Done").click()
         page.wait_for_timeout(1200)
-        page.evaluate("window.scrollTo(0, 0)")
+        page.evaluate("window.lenis ? window.lenis.scrollTo(0, { immediate: true }) : window.scrollTo(0, 0)")
         shot("workboard")
 
         # 6 New information arrives, then the impact view shows what changed
@@ -130,6 +139,7 @@ def main() -> None:
 
         # The same overview in the light theme (Neura1 follows the system theme)
         light = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1, color_scheme="light")
+        light.add_init_script(STILL)
         light.goto(base)
         light.evaluate(f"() => {{ localStorage.setItem('neura1-viewer', 'P-HITHESH'); }}")
         light.goto(base)
@@ -153,6 +163,7 @@ def main() -> None:
         # 7c3 Neura1 Docs: a change notice written from the graph, a fact check, and an AI edit as tracked changes
         page.goto(f"{base}/docs")
         page.wait_for_selector("text=Engineering change notice")
+        page.wait_for_timeout(1500)
         shot("docs-library")
         page.locator("button", has_text="Create from the graph").first.click()
         page.wait_for_selector(".superdoc-page", timeout=240000)

@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { toast } from "sonner";
+import { motion } from "motion/react";
 import "superdoc/style.css";
 import EvidenceDrawer from "@/components/EvidenceDrawer";
 import { api, ApiError, viewerId } from "@/lib/api";
@@ -314,8 +315,10 @@ export default function DocEditor({ id }: { id: string }) {
             <div className="flex border-b border-line text-sm">
               {([["edit", "Edit with AI", Wand2], ["check", "Check facts", ShieldCheck], ["insert", "Insert facts", Plus]] as const).map(([k, label, Icon]) => (
                 <button key={k} onClick={() => setTab(k)}
-                        className={`flex flex-1 items-center justify-center gap-1.5 py-2.5 ${tab === k ? "border-b-2 border-cyan text-ink" : "text-muted hover:text-ink"}`}>
+                        className={`relative flex flex-1 items-center justify-center gap-1.5 py-2.5 ${tab === k ? "font-medium text-ink" : "text-muted hover:text-ink"}`}>
                   <Icon size={13} /> {label}
+                  {tab === k && <motion.span layoutId="doc-ai-tab" className="absolute inset-x-3 -bottom-px h-[2px] rounded-full bg-accent"
+                                             transition={{ type: "spring", stiffness: 500, damping: 38 }} />}
                 </button>
               ))}
             </div>

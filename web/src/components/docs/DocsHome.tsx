@@ -1,5 +1,6 @@
 "use client";
 
+import { PageTitle } from "@/components/ui";
 import { FilePlus2, FileText, FileUp, Lock, ScrollText, Send, UserRoundCog } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -100,7 +101,7 @@ function Library() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="page-title">Documents</h1>
+        <PageTitle>Write with the <em>brain</em></PageTitle>
         <p className="mt-1 max-w-3xl text-sm text-muted">Word documents written with the company brain. Start from a template filled from the graph,
           edit with the full editor, ask Neura1 to rewrite any part as tracked changes, and check every claim against Flyvi&apos;s records.
           Saved documents become knowledge, linked to the parts, people and orders they name.</p>

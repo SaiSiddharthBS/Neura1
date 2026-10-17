@@ -1,5 +1,6 @@
 "use client";
 
+import { PageTitle } from "@/components/ui";
 import { Background, Controls, Handle, Position, ReactFlow, type Edge, type Node, type NodeProps, type ReactFlowInstance } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -105,7 +106,7 @@ export default function ExploreView() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="page-title">Graph explorer</h1>
+          <PageTitle>Walk the <em>graph</em></PageTitle>
           <p className="mt-1 text-sm text-muted">Walk Flyvi&apos;s company graph live from FalkorDB. Click any record to expand its connections and see its history.</p>
         </div>
         <div className="relative w-80">

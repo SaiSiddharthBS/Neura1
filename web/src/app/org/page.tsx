@@ -1,5 +1,6 @@
 "use client";
 
+import { PageTitle } from "@/components/ui";
 import dagre from "@dagrejs/dagre";
 import { Background, Controls, Handle, Position, ReactFlow, type Edge, type Node, type NodeProps } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -67,7 +68,7 @@ export default function OrgChart() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="page-title">Organisation</h1>
+        <PageTitle>How Flyvi is <em>organised</em></PageTitle>
         <p className="mt-1 text-sm text-muted">Datasol (Bangalore) Limited, Flyvi Technologies&apos; leadership and every reporting line, from the graph. Open work and who is away today are live. Click anyone for their full profile.</p>
       </div>
       <div className="card h-[72vh] overflow-hidden">

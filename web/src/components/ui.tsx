@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { animate, motion, useInView, useMotionValue, useTransform } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 
 /** A number that counts up once when it first comes into view. */
 export function Ticker({ value, className = "", format = (n: number) => Math.round(n).toLocaleString("en-IN") }:
@@ -73,3 +73,31 @@ export const riseItem = {
   hidden: { opacity: 0, y: 8 },
   show: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1] as const } },
 };
+
+const wordVariant = {
+  hidden: { opacity: 0, y: "0.4em", filter: "blur(10px)" },
+  show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] as const } },
+};
+
+/** A page headline whose words rise out of a blur, one after another. Strings are split into words; elements
+ *  (such as an <em> accent) move as one word. Done in React, so re-renders stay safe. */
+export function PageTitle({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  let k = 0;
+  const parts: React.ReactNode[] = [];
+  for (const child of React.Children.toArray(children)) {
+    if (typeof child === "string" || typeof child === "number") {
+      for (const w of String(child).split(/(\s+)/)) {
+        if (!w) continue;
+        parts.push(/^\s+$/.test(w) ? " " : <motion.span key={k++} className="split-word" variants={wordVariant}>{w}</motion.span>);
+      }
+    } else {
+      parts.push(<motion.span key={k++} className="split-word" variants={wordVariant}>{child}</motion.span>);
+    }
+  }
+  return (
+    <motion.h1 className={`page-title ${className}`} initial="hidden" animate="show"
+               variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }}>
+      {parts}
+    </motion.h1>
+  );
+}

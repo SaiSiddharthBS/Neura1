@@ -1,5 +1,6 @@
 "use client";
 
+import { PageTitle } from "@/components/ui";
 import { Download, FileUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
@@ -64,7 +65,7 @@ export default function ImportPage() {
     <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
       <section className="space-y-4">
         <div>
-          <h1 className="page-title">Bring in your company</h1>
+          <PageTitle>Bring in your <em>company</em></PageTitle>
           <p className="mt-1 max-w-2xl text-sm text-muted">
             Drop the spreadsheets you already keep (BOM exports, item master, quotes, stock, builds, orders) and the documents
             where decisions live (Slack exports, tickets, test reports, PDFs). Everything is checked before anything is written.

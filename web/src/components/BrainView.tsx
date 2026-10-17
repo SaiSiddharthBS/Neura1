@@ -1,5 +1,6 @@
 "use client";
 
+import { PageTitle } from "@/components/ui";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import AskBox from "@/components/AskBox";
@@ -30,7 +31,7 @@ export default function BrainView() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="page-title">Ask &amp; search</h1>
+          <PageTitle>Ask the <em>company</em></PageTitle>
           <p className="mt-1.5 text-[15px] text-muted">Ask in plain language. Neura1 answers from one FalkorDB graph of Flyvi&apos;s records, documents, chats and decisions, and shows its sources.</p>
         </div>
         {o && (

@@ -29,6 +29,15 @@
   --shadow: 0 1px 0 oklch(1 0 0 / 0.035) inset, 0 1px 2px oklch(0 0 0 / 0.4);
   --shadow-pop: 0 1px 0 oklch(1 0 0 / 0.05) inset, 0 24px 64px -12px oklch(0 0 0 / 0.65), 0 0 0 1px oklch(1 0 0 / 0.08);
   --halo: oklch(0.68 0.16 252 / 0.10);
+  --glass: oklch(0.21 0.01 265 / 0.52);
+  --glass-strong: oklch(0.19 0.01 265 / 0.80);
+  --edge: oklch(1 0 0 / 0.14);
+  --edge-soft: oklch(1 0 0 / 0.03);
+  --spot: oklch(0.75 0.12 250 / 0.10);
+  --aurora-1: oklch(0.55 0.20 258 / 0.42);
+  --aurora-2: oklch(0.55 0.20 300 / 0.40);
+  --aurora-3: oklch(0.70 0.13 200 / 0.30);
+  --grain-opacity: 0.06;
   --spring: cubic-bezier(0.16, 1, 0.3, 1);
   --radius: 14px;
 }
@@ -57,6 +66,15 @@
     --shadow: 0 1px 2px oklch(0.2 0.02 265 / 0.06), 0 0 0 1px oklch(0.2 0.02 265 / 0.02);
     --shadow-pop: 0 24px 64px -16px oklch(0.2 0.02 265 / 0.25), 0 0 0 1px oklch(0.2 0.02 265 / 0.08);
     --halo: oklch(0.56 0.19 255 / 0.07);
+    --glass: oklch(1 0 0 / 0.58);
+    --glass-strong: oklch(1 0 0 / 0.86);
+    --edge: oklch(1 0 0 / 0.95);
+    --edge-soft: oklch(0.3 0.02 265 / 0.06);
+    --spot: oklch(0.6 0.18 255 / 0.07);
+    --aurora-1: oklch(0.80 0.12 255 / 0.55);
+    --aurora-2: oklch(0.84 0.10 310 / 0.45);
+    --aurora-3: oklch(0.88 0.09 200 / 0.50);
+    --grain-opacity: 0.035;
   }
 }
 :root[data-theme="light"] {
@@ -82,6 +100,15 @@
   --shadow: 0 1px 2px oklch(0.2 0.02 265 / 0.06), 0 0 0 1px oklch(0.2 0.02 265 / 0.02);
   --shadow-pop: 0 24px 64px -16px oklch(0.2 0.02 265 / 0.25), 0 0 0 1px oklch(0.2 0.02 265 / 0.08);
   --halo: oklch(0.56 0.19 255 / 0.07);
+  --glass: oklch(1 0 0 / 0.58);
+  --glass-strong: oklch(1 0 0 / 0.86);
+  --edge: oklch(1 0 0 / 0.95);
+  --edge-soft: oklch(0.3 0.02 265 / 0.06);
+  --spot: oklch(0.6 0.18 255 / 0.07);
+  --aurora-1: oklch(0.80 0.12 255 / 0.55);
+  --aurora-2: oklch(0.84 0.10 310 / 0.45);
+  --aurora-3: oklch(0.88 0.09 200 / 0.50);
+  --grain-opacity: 0.035;
 }
 
 @theme inline {
@@ -106,34 +133,101 @@
   --color-warn: var(--warn);
   --font-sans: var(--font-geist), ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-serif: var(--font-instrument), "Iowan Old Style", Georgia, serif;
 }
 
-html { background: var(--bg); }
+html { background: var(--bg); scroll-padding-top: 72px; /* focused or linked content clears the sticky top bar */ }
 body {
-  background-color: var(--bg);
+  background: transparent; /* the aurora layer paints the page */
   color: var(--ink);
-  font-feature-settings: "ss01", "cv11";
-  /* One quiet light source at the top, instead of coloured blobs. */
-  background-image: radial-gradient(1100px 420px at 50% -220px, var(--halo), transparent 70%);
-  background-repeat: no-repeat;
+  font-feature-settings: "ss01", "ss03", "cv11";
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3 { text-wrap: balance; letter-spacing: -0.015em; }
-.page-title { font-size: 28px; line-height: 1.15; font-weight: 600; letter-spacing: -0.028em; }
-.eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
-.num { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
-
-/* Surfaces: solid, hairline-bordered, barely shadowed. Hierarchy comes from spacing and type, not glow. */
-.card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  transition: border-color 200ms var(--spring), box-shadow 200ms var(--spring), background-color 200ms var(--spring);
+/* ---------- ambient light: a slow aurora with film grain, behind everything ---------- */
+.aurora { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: var(--bg); }
+.aurora span { position: absolute; border-radius: 50%; filter: blur(90px); will-change: transform; }
+.aurora span:nth-child(1) { width: 60vw; height: 50vh; left: -10vw; top: -22vh; background: var(--aurora-1); animation: drift-a 38s var(--spring) infinite alternate; }
+.aurora span:nth-child(2) { width: 45vw; height: 45vh; right: -12vw; top: -8vh; background: var(--aurora-2); animation: drift-b 46s ease-in-out infinite alternate; }
+.aurora span:nth-child(3) { width: 50vw; height: 40vh; left: 30vw; bottom: -30vh; background: var(--aurora-3); animation: drift-c 52s ease-in-out infinite alternate; }
+.aurora::after {
+  content: ""; position: absolute; inset: -50%; opacity: var(--grain-opacity); mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-a.card:hover, button.card:hover, .card-hover:hover { border-color: var(--line2); }
-.surface-pop { background: var(--panel); border-radius: 16px; box-shadow: var(--shadow-pop); }
+@keyframes drift-a { to { transform: translate3d(14vw, 10vh, 0) scale(1.15); } }
+@keyframes drift-b { to { transform: translate3d(-12vw, 14vh, 0) scale(0.9); } }
+@keyframes drift-c { to { transform: translate3d(-16vw, -10vh, 0) scale(1.2); } }
+
+/* ---------- type ---------- */
+h1, h2, h3 { text-wrap: balance; letter-spacing: -0.02em; }
+p { text-wrap: pretty; }
+.page-title {
+  font-size: clamp(30px, 2.5vw + 8px, 42px); line-height: 1.06; font-weight: 600; letter-spacing: -0.03em;
+  background: linear-gradient(180deg, var(--ink) 30%, color-mix(in oklch, var(--ink) 62%, var(--muted)) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: 0.06em;
+}
+.page-title em, .serif {
+  font-family: var(--font-serif); font-style: italic; font-weight: 400; letter-spacing: -0.012em;
+  padding-right: 0.06em;
+}
+.page-title em {
+  font-size: 1.1em; line-height: 0.9;
+  background: linear-gradient(100deg, var(--accent-hover), var(--violet) 60%, var(--cyan));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.eyebrow { font-size: 11.5px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); }
+.num { font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+.split-word { display: inline-block; white-space: pre; }
+/* Each moving word paints its own slice of the headline gradient (a transformed child escapes the parent's clip). */
+.page-title .split-word { background-image: inherit; -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: 0.08em; }
+
+@layer base {
+  /* Buttons respond like physical keys. */
+  button { transition-property: color, background-color, border-color, box-shadow, transform, opacity; transition-duration: 160ms; transition-timing-function: var(--spring); }
+  button:not(:disabled):active { transform: scale(0.975); }
+  a { transition: color 160ms var(--spring), background-color 160ms var(--spring); }
+}
+
+@layer components {
+  /* Frosted glass: translucent fill, a lit top edge, a soft drop, and a spotlight that follows the cursor. */
+  .card {
+    position: relative; isolation: isolate;
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
+    border: 1px solid var(--edge-soft);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 0 0 var(--edge) inset, var(--shadow);
+    transition: border-color 220ms var(--spring), box-shadow 220ms var(--spring), transform 320ms var(--spring);
+  }
+  .card::before {
+    content: ""; position: absolute; inset: -1px; z-index: -1; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(180deg, var(--edge), transparent 42%, var(--edge-soft));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  .card::after {
+    content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0;
+    background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 0%), var(--spot), transparent 45%);
+    transition: opacity 300ms var(--spring);
+  }
+  .card:hover::after { opacity: 1; }
+  a.card:hover, button.card:hover, .card-hover:hover { transform: translateY(-1px); box-shadow: 0 1px 0 0 var(--edge) inset, var(--shadow-pop); }
+
+  .surface-pop {
+    background: var(--glass-strong); border-radius: 16px; box-shadow: 0 1px 0 0 var(--edge) inset, var(--shadow-pop);
+    -webkit-backdrop-filter: blur(30px) saturate(180%); backdrop-filter: blur(30px) saturate(180%);
+  }
+  .glass-bar { background: color-mix(in oklch, var(--bg) 62%, transparent); -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%); }
+}
+
+/* Content eases in as it scrolls into view, driven by the scroll position itself (no JavaScript). */
+@supports (animation-timeline: view()) {
+  main .card:not(.no-reveal) {
+    animation: card-in linear both; animation-timeline: view(); animation-range: entry 0% entry 28%;
+  }
+}
+@keyframes card-in { from { opacity: 0; transform: translateY(18px) scale(0.985); } to { opacity: 1; transform: none; } }
+
 .glow { box-shadow: 0 0 0 1px color-mix(in oklch, var(--accent) 45%, transparent), 0 8px 32px -8px color-mix(in oklch, var(--accent) 45%, transparent); }
 
 input, textarea, select { background: var(--elev); color: var(--ink); }
@@ -161,10 +255,10 @@ select option { background: var(--panel); color: var(--ink); }
 
 .ai-ring { position: relative; }
 .ai-ring::before {
-  content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none;
-  background: conic-gradient(from var(--angle, 0deg), color-mix(in oklch, var(--accent) 80%, transparent), color-mix(in oklch, var(--violet) 70%, transparent), color-mix(in oklch, var(--cyan) 70%, transparent), color-mix(in oklch, var(--accent) 80%, transparent));
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 1;
+  background: conic-gradient(from var(--angle, 0deg), color-mix(in oklch, var(--accent) 85%, transparent), color-mix(in oklch, var(--violet) 75%, transparent), color-mix(in oklch, var(--cyan) 75%, transparent), color-mix(in oklch, var(--accent) 85%, transparent));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: spin-angle 4s linear infinite; opacity: 0.9;
+  animation: spin-angle 4s linear infinite; opacity: 0.95;
 }
 @property --angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
 @keyframes spin-angle { to { --angle: 360deg; } }
@@ -177,17 +271,30 @@ select option { background: var(--panel); color: var(--ink); }
 .react-flow__attribution { background: transparent !important; }
 .react-flow__attribution a { color: var(--faint) !important; }
 
-/* Page changes: a short cross-fade with a small lift (View Transitions API). */
-::view-transition-old(page) { animation: vt-out 160ms var(--spring) both; }
-::view-transition-new(page) { animation: vt-in 320ms var(--spring) both; }
-@keyframes vt-out { to { opacity: 0; transform: translateY(-4px); } }
-@keyframes vt-in { from { opacity: 0; transform: translateY(8px); } }
+/* Lenis smooth scrolling */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
 
-@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-.rise { animation: rise 420ms var(--spring) both; }
+/* Page changes: the chrome stays still; the page lifts out of focus and the next one settles in. */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+::view-transition-old(page) { animation: vt-out 180ms cubic-bezier(0.4, 0, 1, 1) both; }
+::view-transition-new(page) { animation: vt-in 460ms var(--spring) both; }
+@keyframes vt-out { to { opacity: 0; transform: scale(0.992); filter: blur(4px); } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(12px); filter: blur(6px); } }
+
+@keyframes rise { from { opacity: 0; transform: translateY(8px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+.rise { animation: rise 520ms var(--spring) both; }
+
+/* People who ask the system for less transparency get solid panels. */
+@media (prefers-reduced-transparency: reduce) {
+  .card, .surface-pop, .glass-bar { background: var(--panel) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .rise, .shimmer, .skeleton, .ai-ring::before { animation: none; }
+  .rise, .shimmer, .skeleton, .ai-ring::before, .aurora span { animation: none; }
+  main .card { animation: none !important; }
   ::view-transition-old(page), ::view-transition-new(page) { animation: none; }
-  .card { transition: none; }
+  .card, button { transition: none; }
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { PageTitle } from "@/components/ui";
 import { Avatar } from "@/components/ViewerSwitch";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -100,7 +101,7 @@ export default function PeopleView() {
               <Avatar name={p.name} size={56} />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="page-title">{p.name}</h1>
+                  <PageTitle key={p.id}>{p.name}</PageTitle>
                   {p.leave.away_now
                     ? <span className="rounded-full bg-warn/15 px-2 py-0.5 text-xs text-warn">Away today</span>
                     : <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs text-success">Available</span>}

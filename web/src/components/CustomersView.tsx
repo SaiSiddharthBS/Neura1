@@ -1,5 +1,6 @@
 "use client";
 
+import { PageTitle } from "@/components/ui";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, MessageSquareWarning, Ticket } from "lucide-react";
@@ -37,7 +38,7 @@ export default function CustomersView() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="page-title">Customers</h1>
+        <PageTitle>Every <em>customer</em></PageTitle>
         <p className="mt-1 text-sm text-muted">Each account across sales, production, support and engineering: orders, field units, tickets, escalations and who knows them.</p>
       </div>
       <div className="grid gap-3 md:grid-cols-3">

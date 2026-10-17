@@ -1,5 +1,7 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
+import { PageTitle, Ticker } from "@/components/ui";
 import { toast } from "sonner";
 import { AlertTriangle, CheckCircle2, CircleHelp, ClipboardCopy, Download, FileText, ShieldX } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -97,9 +99,7 @@ export default function ImpactView({ source, item, price, lead, asOf }: Props) {
           <div className="text-xs uppercase tracking-wide text-muted">
             {r.change.source_id ? "Supplier notice" : "What-if"} · as of {r.change.as_of}
           </div>
-          <h1 className="mt-1 page-title">
-            {r.part.id} <span className="font-normal text-muted">{r.part.name}</span>
-          </h1>
+          <PageTitle className="mt-1">{r.part.id} <em>{r.part.name}</em></PageTitle>
           <div className="mt-2 flex flex-wrap gap-2 text-sm">
             {r.change.new_unit_price !== null && (
               <Chip>Price {inr(baseline)} → <b>{inr(r.change.new_unit_price)}</b>
@@ -130,15 +130,15 @@ export default function ImpactView({ source, item, price, lead, asOf }: Props) {
 
       {/* Headline numbers */}
       <section className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Stat label="Product revisions affected" value={applicable.length}
+        <Stat label="Product revisions affected" value={<Ticker value={applicable.length} />}
               note={`${excluded.length} excluded (${excluded.map((e) => `${e.revision} ${e.status}`).join(", ")})`} />
-        <Stat label="Builds at risk" value={`${atRisk.length} of ${r.builds.length}`}
+        <Stat label="Builds at risk" value={<><Ticker value={atRisk.length} className="text-danger" /><span className="text-[18px] text-muted"> of {r.builds.length}</span></>}
               note={r.builds[0]?.supply_eta_if_ordered_today ? `new supply ~${r.builds[0].supply_eta_if_ordered_today}` : ""} />
-        <Stat label="Customer orders exposed" value={orders.length}
+        <Stat label="Customer orders exposed" value={<Ticker value={orders.length} />}
               note={`${orders.filter((o) => o.penalty).length} with a penalty clause`} warn={orders.some((o) => o.penalty)} />
-        <Stat label="Cost increase" value={r.cost ? inr(r.cost.total_delta) : "unknown"}
+        <Stat label="Cost increase" value={r.cost ? <Ticker value={Number(r.cost.total_delta)} format={(n) => inr(Math.round(n))} /> : "unknown"}
               note={r.cost ? r.cost.formula : r.cost_error ?? ""} />
-        <Stat label="People to involve" value={owners.size} note={`${r.actions.length} tasks under HB-ENG-04`} />
+        <Stat label="People to involve" value={<Ticker value={owners.size} />} note={`${r.actions.length} tasks under HB-ENG-04`} />
       </section>
 
       {/* Graph + actions */}
@@ -158,15 +158,22 @@ export default function ImpactView({ source, item, price, lead, asOf }: Props) {
 
       {/* Department lenses over the same graph */}
       <section className="card">
-        <div className="flex gap-1 overflow-x-auto border-b border-line px-2 pt-2">
+        <div className="flex gap-1 overflow-x-auto border-b border-line px-3 pt-2">
           {LENSES.map((l) => (
             <button key={l} onClick={() => setLens(l)}
-                    className={`whitespace-nowrap rounded-t-md px-3 py-2 text-sm ${lens === l ? "border border-b-0 border-line bg-panel font-medium" : "text-muted hover:text-ink"}`}>
+                    className={`relative whitespace-nowrap px-3 pb-2.5 pt-2 text-[13.5px] ${lens === l ? "font-medium text-ink" : "text-muted hover:text-ink"}`}>
               {l}
+              {lens === l && <motion.span layoutId="impact-lens" className="absolute inset-x-2 -bottom-px h-[2px] rounded-full bg-accent"
+                                          transition={{ type: "spring", stiffness: 500, damping: 38 }} />}
             </button>
           ))}
         </div>
-        <div className="p-4 text-sm">{renderLens(lens, r, setOpen)}</div>
+        <AnimatePresence mode="wait">
+          <motion.div key={lens} className="p-4 text-sm" initial={{ opacity: 0, y: 6, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                      exit={{ opacity: 0, y: -4, filter: "blur(2px)" }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}>
+            {renderLens(lens, r, setOpen)}
+          </motion.div>
+        </AnimatePresence>
       </section>
 
       {open && <EvidenceDrawer key={open.chunk} chunk={open.chunk} quote={open.quote} onClose={() => setOpen(null)} />}
@@ -175,15 +182,15 @@ export default function ImpactView({ source, item, price, lead, asOf }: Props) {
 }
 
 function Chip({ children }: { children: React.ReactNode }) {
-  return <span className="rounded-full border border-line bg-panel px-3 py-1">{children}</span>;
+  return <span className="rounded-full border border-line bg-elev px-3 py-1 text-[13px] backdrop-blur">{children}</span>;
 }
 
 function Stat({ label, value, note, warn }: { label: string; value: React.ReactNode; note?: string; warn?: boolean }) {
   return (
-    <div className={`card p-3 ${warn ? "border-warn/40" : ""}`}>
-      <div className="text-xs text-muted">{label}</div>
-      <div className="mt-1 text-xl font-semibold">{value}</div>
-      {note && <div className="mt-1 truncate text-xs text-muted" title={note}>{note}</div>}
+    <div className={`card card-hover px-4 py-3.5 ${warn ? "ring-1 ring-warn/30" : ""}`}>
+      <div className="text-[12px] text-muted">{label}</div>
+      <div className="num mt-1.5 text-[28px] font-semibold leading-none">{value}</div>
+      {note && <div className="mt-2 truncate text-[12px] text-muted" title={note}>{note}</div>}
     </div>
   );
 }

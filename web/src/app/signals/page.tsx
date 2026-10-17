@@ -1,5 +1,6 @@
 "use client";
 
+import { PageTitle } from "@/components/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -30,7 +31,7 @@ export default function Signals() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       <section>
-        <h1 className="page-title">Signals</h1>
+        <PageTitle>What just <em>changed</em></PageTitle>
         <p className="mt-1 text-sm text-muted">
           What arrives at Flyvi: supplier notices, customer escalations, leave notices. Each one opens the analysis that fits it.
         </p>
