@@ -82,6 +82,21 @@ async def llm_down(_: Request, exc: LLMUnavailable):
     return JSONResponse(status_code=503, content={"error": "model_unavailable", "detail": str(exc)})
 
 
+_ai_calls: dict[str, list[float]] = {}
+
+
+def ai_rate_limit(request: Request):
+    """A public demo shares one model: at most 8 AI requests a minute from one visitor."""
+    import time
+    who = request.headers.get("cf-connecting-ip") or request.headers.get("x-forwarded-for", "").split(",")[0].strip() \
+        or (request.client.host if request.client else "local")
+    now = time.monotonic()
+    recent = [t for t in _ai_calls.get(who, []) if now - t < 60]
+    if len(recent) >= settings.ai_per_minute:
+        raise HTTPException(429, "Neura1 is answering a lot of questions right now. Please try again in a minute.")
+    _ai_calls[who] = recent + [now]
+
+
 def require_passcode(x_demo_passcode: str | None = Header(default=None)):
     if x_demo_passcode != settings.demo_passcode:
         raise HTTPException(status_code=403, detail="Writes need the demo passcode")
@@ -453,12 +468,12 @@ def _ask(g, body: AskIn, v: access.Viewer, on_step=None) -> dict:
     return guard_money(result, v)
 
 
-@app.post("/api/ask")
+@app.post("/api/ask", dependencies=[Depends(ai_rate_limit)])
 def ask(body: AskIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
     return _ask(g, body, v)
 
 
-@app.post("/api/ask/stream")
+@app.post("/api/ask/stream", dependencies=[Depends(ai_rate_limit)])
 def ask_stream(body: AskIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
     """Server-sent events: each tool call as it happens, then the full answer."""
     import queue
@@ -920,7 +935,7 @@ def docs_check(body: BlocksIn, g=Depends(graph), v: access.Viewer = Depends(curr
     return {"flags": documents.check(g, body.blocks, v)}
 
 
-@app.post("/api/docs/ai")
+@app.post("/api/docs/ai", dependencies=[Depends(ai_rate_limit)])
 def docs_ai(body: BlocksIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
     from neura1 import documents
     if not body.instruction.strip():

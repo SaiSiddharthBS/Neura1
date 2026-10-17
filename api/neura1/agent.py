@@ -26,6 +26,8 @@ Answer questions using ONLY the results of your tools. Rules:
   or a chat message is not an approval. Use the alternates tool and repeat its approval wording.
 - Use ids exactly as the tools return them (e.g. NB54360, PDU-28-C).
 - Quantities and costs must come from tool results, not your own arithmetic, unless you show the formula.
+- Refer to people by name or as "they". Never assume anyone's gender: do not use he, she, his, her, him, hers,
+  Mr. or Ms. for anyone.
 - Be concise: a short direct answer, then the supporting facts."""
 
 WRITE = re.compile(r"\b(CREATE|MERGE|SET|DELETE|DETACH|REMOVE|DROP|LOAD|CALL\s+db\.idx\.\w+\.(create|drop))\b", re.I)

@@ -68,14 +68,20 @@ Neura1 answers in one view:
 
 ## ✦ See it
 
+> **Try it:** open the live demo link from the submission (or run `scripts/serve_public.sh`, see [docs/DEPLOY.md](docs/DEPLOY.md)) and press **Take the 3-minute tour** on the Overview. It follows one supplier notice through the whole company.
+
 <table>
   <tr>
-    <td width="50%"><img src="docs/demo/overview.png" alt="Overview"><br><sub><b>Overview</b>: today's signals (a supplier change, a customer escalation, a leave notice), the risk radar, work in flight, projects and the latest knowledge.</sub></td>
+    <td width="50%"><img src="docs/demo/overview.png" alt="Overview"><br><sub><b>Overview</b>: one supplier change ripples through FalkorDB, ring by ring, to revisions, builds, orders, customers and people; then today's signals and the company at a glance.</sub></td>
     <td width="50%"><img src="docs/demo/overview-light.png" alt="Overview, light theme"><br><sub><b>Light or dark</b>: frosted glass over a slow aurora, following the system theme. OKLCH tokens, Geist with an Instrument Serif accent, View Transitions, Motion, Lenis momentum scroll and scroll-driven reveals.</sub></td>
   </tr>
   <tr>
     <td width="50%"><img src="docs/demo/risk-radar.png" alt="Risk radar"><br><sub><b>Risk radar</b>: FalkorDB betweenness centrality, community detection and traversals find the company's chokepoints, single-sourced parts, one-person knowledge and customer concentration.</sub></td>
     <td width="50%"><img src="docs/demo/my-day.png" alt="My day"><br><sub><b>My day</b>: each person's open work, decisions waiting for them, signals touching what they own, and who in their team is away.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/demo/tour.png" alt="Guided tour"><br><sub><b>Guided tour</b>: nine steps through the story, each spotlighting the record that matters, here the decision that rejected the cheaper part in 2025.</sub></td>
+    <td><img src="docs/demo/my-day.png" alt="Morning brief"><br><sub><b>A brain that acts</b>: a morning brief posted at 09:00 IST, and forwarded supplier emails that turn into analysed signals on their own.</sub></td>
   </tr>
   <tr>
     <td><img src="docs/demo/capability-map.png" alt="Capability map"><br><sub><b>Capability map</b>: what Flyvi is good at, from recorded work. Areas, people with finished work vs active now, and where Flyvi is thin (power sequencing: one person). As leadership sees it.</sub></td>

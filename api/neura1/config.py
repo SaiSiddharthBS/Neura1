@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     slack_signing_secret: str | None = None
     webhook_secret: str = "change-me"
 
+    # AI requests allowed per visitor per minute (a public demo shares one model).
+    ai_per_minute: int = 8
+
     # Background jobs: the mail-drop inbox and the 09:00 IST morning brief. Off in tests.
     background: bool = True
 

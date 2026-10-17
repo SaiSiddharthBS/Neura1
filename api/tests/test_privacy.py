@@ -52,3 +52,19 @@ def test_leave_notices_stay_with_people_allowed_to_see_the_leave(fresh_graph):
     finally:
         m.get_graph = orig
         main.app.dependency_overrides.clear()
+
+
+def test_ai_requests_are_rate_limited_per_visitor(monkeypatch):
+    import pytest
+    from fastapi import HTTPException
+    from starlette.requests import Request
+    monkeypatch.setattr(main.settings, "ai_per_minute", 2)
+    main._ai_calls.clear()
+    req = lambda ip: Request({"type": "http", "headers": [(b"cf-connecting-ip", ip.encode())], "client": ("1.1.1.1", 1)})
+    main.ai_rate_limit(req("10.0.0.1"))
+    main.ai_rate_limit(req("10.0.0.1"))
+    with pytest.raises(HTTPException) as e:
+        main.ai_rate_limit(req("10.0.0.1"))
+    assert e.value.status_code == 429
+    main.ai_rate_limit(req("10.0.0.2"))  # another visitor is not affected
+    main._ai_calls.clear()
