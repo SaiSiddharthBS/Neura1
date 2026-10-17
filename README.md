@@ -258,7 +258,7 @@ read-only, and tasks are drafts until a person confirms them.
 | **Organisation** | Datasol (parent) → Flyvi in three tiers: the directors Suresh (Director - Business Development), Sathish (Director - Finance) and Jayaram (Founder & Managing Director) as peers; under them the leadership team, Anil (President & Executive Officer), Markande (COO), Hithesh (CTO) and Praveen (General Manager); and 23 employees. Only the directors and the leadership team have titles. The org chart shows open work and who is away today. | Organisation |
 | **Employee 360** | For anyone: reporting chain, current and finished work, leave, stated skills plus knowledge derived from their work, projects, ownership, decisions, team, recent messages | People |
 | **Roles your team can maintain** | Edit role, team, manager, backup, skills and leave in the app, or import CSVs. Every change is stored as an event in the graph. | People → Edit · Import |
-| **Permissions from the graph** | "Viewing as" any person. Flyvi has three tiers: the directors, the leadership team under them, and employees. Leave details are visible to the person, their backup, and the directors and leadership team; so is money. Everyone else sees it redacted, including rupee amounts written inside messages and answers. | Sidebar → Viewing as |
+| **Permissions from the graph** | A demo control, "view as anyone", shows how the same graph looks to each person (see [Sign-in in production](#sign-in-in-production)). Flyvi has three tiers: the directors, the leadership team under them, and employees. Leave details are visible to the person, their backup, and the directors and leadership team; so is money. Everyone else sees it redacted, including rupee amounts written inside messages and answers. | Sidebar → Viewing as |
 | **Neura1 Chat** | A full messenger: channels (anyone can create one), direct messages and private groups (add, remove, rename, leave), with unread counts and @mentions, replies, edits, deletes, emoji reactions, read receipts ("Seen"), typing indicators, online status and message search. Every channel message becomes a linked passage in the graph, so chat feeds search, "who knows" and timelines. `@neura1` answers as a reply with sources; `/impact`, `/who`, `/away`, `/risk` answer instantly without a model. Replies only show what *every* reader may see (money and leave are redacted per audience). #leadership is open only to the directors and leadership team. Direct messages and groups stay private by construction: they never become searchable company knowledge, and a deleted message leaves the graph. Approved plans, finished tasks and new notices are posted to the right channel automatically. | Chat |
 | **Neura1 Docs** | A Word editor inside the brain (pages, toolbar, tables, tracked changes, comments, .docx in and out, PDF). Templates are written from the graph: an engineering change notice (HB-ENG-04), a customer response, a leave handover (HB-HR-02). The **Neura1 AI** side panel rewrites a selection, a section or the whole document on request, and every AI edit lands as a tracked change you accept or reject. **Check facts** tests every claim against the graph with fixed rules (a rejected part, an unapproved alternate, an expired quote, an obsolete revision, a price no quote supports, someone on leave, an ID that doesn't exist) and cites the proof. **Insert facts** drops live tables (where used, decisions, orders, who knows, history) at the cursor. Saved documents become knowledge linked to what they name; documents with amounts or someone's leave are only open to people allowed to see them. | Documents |
 | **Capability map** | What Flyvi can do, built from recorded work: the model tags every task and project with the skills it needs, choosing only from Flyvi's own skill list (code rejects anything else). Each area shows people with finished work, people active now, and whether more work lies ahead than behind; **Where Flyvi is thin** lists skills open work needs that only one person holds or nobody has finished work in yet. Evidence, not ratings: no scores or rankings exist anywhere. A person's full expertise is visible only to them, their management chain, HR and leadership; names in the company map only to HR and leadership (managers see their own reports). | Capability map · People |
@@ -464,6 +464,23 @@ A tool that tells a company which part to use has to be careful about what it le
 - If FalkorDB is unreachable, the API returns `503 graph_unavailable`. It never pretends to have traversed the graph.
 - A chat message can record a rejection but can never approve a part.
 - Approvals are re-computed on the server, so a browser can't submit made-up tasks.
+
+### Sign-in in production
+
+The public demo has no accounts on purpose: a judge can open the link and, with **view as anyone**, watch the same
+graph change for each person in seconds (Hithesh sees the ₹37,400; Keerthana sees it redacted). That switch is a demo
+control. Anyone with the link can use it, so the demo workspace holds synthetic data only, and the chat says so.
+
+In a real deployment the switch goes away and only one thing changes: where the answer to "who is this?" comes from.
+
+1. People sign in through the company's single sign-on (Google Workspace, Microsoft Entra, or a free self-hosted
+   OpenID Connect provider such as Keycloak or Authentik).
+2. The verified email is matched to its `Person` in the graph, and the API issues a signed, HTTP-only session.
+3. Every request takes the viewer from that session, never from the browser. Today it comes from the
+   `X-Neura1-As` header, which is why the switch exists.
+
+Everything downstream stays as it is: money, leave, private chats and expertise follow the graph exactly as in the
+demo. "View as" can stay for the directors and leadership as a "preview what this person sees" tool.
 
 <br>
 

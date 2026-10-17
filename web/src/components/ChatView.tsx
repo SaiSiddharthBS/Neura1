@@ -576,7 +576,10 @@ export default function ChatView() {
               {editing ? <Check size={18} /> : <SendHorizontal size={18} />}
             </button>
           </div>
-          <div className="mt-1.5 hidden px-1 text-[11px] text-faint sm:block">Enter to send · Shift+Enter for a new line · ↑ to edit your last message · Esc to cancel</div>
+          <div className="mt-1.5 flex flex-wrap gap-x-3 px-1 text-[11px] text-faint">
+            <span className="text-warn/90">Demo workspace: anyone can view as anyone. Don&apos;t post real information.</span>
+            <span className="hidden sm:inline">Enter to send · Shift+Enter for a new line · ↑ to edit your last message · Esc to cancel</span>
+          </div>
         </form>
       </section>
 

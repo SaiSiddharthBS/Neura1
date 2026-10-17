@@ -59,7 +59,7 @@ export default function ViewerSwitch() {
         <Avatar name={current?.name ?? "?"} />
         <span className="min-w-0 flex-1 leading-tight">
           <span className="block truncate text-[13px] font-medium">{current?.name ?? "…"}</span>
-          <span className="block truncate text-[11.5px] text-muted">Viewing as · {current?.role ?? ""}</span>
+          <span className="block truncate text-[11.5px] text-muted"><span className="rounded bg-warn/15 px-1 text-[10px] font-medium text-warn">Demo</span> viewing as · {current?.role ?? ""}</span>
         </span>
         <ChevronsUpDown size={14} className="text-faint" />
       </button>
@@ -71,10 +71,10 @@ export default function ViewerSwitch() {
             <div className="border-b border-line p-2">
               <div className="flex items-center gap-2 rounded-lg bg-elev px-2">
                 <Search size={13} className="text-faint" />
-                <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="View the brain as…"
+                <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Demo: view as anyone…"
                        className="h-8 flex-1 bg-transparent text-[13px] outline-none" style={{ background: "transparent" }} />
               </div>
-              <p className="mt-1.5 px-1 text-[11px] text-faint">What you see follows this person&apos;s place in the graph: money and leave plans for the directors and leadership; leave plans also for the person and their backup.</p>
+              <p className="mt-1.5 px-1 text-[11px] text-faint">A demo control: switch person to see how permissions change. What you see follows their place in the graph: money and leave plans for the directors and leadership; leave plans also for the person and their backup. In production, people sign in through company single sign-on and cannot switch.</p>
             </div>
             <ul role="listbox" className="max-h-72 overflow-y-auto p-1">
               {shown.map((p) => (
