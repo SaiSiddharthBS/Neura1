@@ -8,7 +8,7 @@ import { Clock, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EvidenceDrawer from "@/components/EvidenceDrawer";
 import { useResolvedTheme } from "@/lib/theme";
-import { api } from "@/lib/api";
+import { api, plain } from "@/lib/api";
 
 type GNode = { id: string; label: string; name: string; kind?: string };
 type GEdge = { source: string; target: string; label: string };
@@ -144,7 +144,7 @@ export default function ExploreView() {
                 <span className="absolute -left-[5px] top-1.5 h-2.5 w-2.5 rounded-full bg-accent" />
                 <div className="text-[11px] text-muted">{e.at.slice(0, 10)} · {e.kind}</div>
                 <button onClick={() => e.ref?.includes("#") && setOpen(e.ref)} className="text-left text-sm font-medium hover:underline">{e.title}</button>
-                <div className="line-clamp-3 text-xs text-muted">{e.detail}</div>
+                <div className="line-clamp-3 text-xs text-muted">{plain(e.detail)}</div>
               </li>
             ))}
             {!events.length && <li className="text-sm text-muted">No dated history for this record.</li>}

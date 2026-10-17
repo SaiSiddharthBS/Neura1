@@ -16,7 +16,7 @@ import { credentials, forgetPasscode } from "@/lib/session";
 import { pendingKey } from "@/components/docs/DocsHome";
 
 // The parts of SuperDoc's Document API that Neura1 uses. Calls may return values or promises; both are awaited.
-type Block = { nodeId: string; type: string; text: string; headingLevel?: number };
+type Block = { nodeId: string; type: string; text: string; headingLevel?: number; tableContext?: { tableOrdinal: number; rowIndex: number } };
 type Target = { kind: "selection"; start: { kind: "text"; blockId: string; offset: number }; end: { kind: "text"; blockId: string; offset: number } };
 type Sel = { empty: boolean; text?: string; target: { segments?: { blockId: string }[] } | null;
              selectionTarget: { start?: { blockId?: string; offset?: number }; end?: { blockId?: string; offset?: number } } | null };
@@ -67,6 +67,23 @@ async function liveSelection(d: DocApi, last: Sel | null): Promise<Sel | null> {
     if (s && (s.selectionTarget || s.target)) return s;
   } catch {}
   return last;
+}
+
+/** The document as passages for the graph: each paragraph on its own, each table as one passage with a row per line,
+ *  so a cell like "MX-3360" is read together with the rest of its row. */
+function passages(blocks: Block[]): string[] {
+  const out: string[] = [];
+  let table: number | null = null, row: number | null = null, rows: string[][] = [];
+  const flush = () => { if (rows.length) out.push(rows.map((r) => r.filter(Boolean).join(" | ")).join("\n")); rows = []; table = null; row = null; };
+  for (const b of blocks) {
+    const tc = b.tableContext;
+    if (!tc) { flush(); if (b.text.trim()) out.push(b.text); continue; }
+    if (tc.tableOrdinal !== table) { flush(); table = tc.tableOrdinal; }
+    if (tc.rowIndex !== row) { rows.push([]); row = tc.rowIndex; }
+    rows[rows.length - 1].push(b.text.trim());
+  }
+  flush();
+  return out;
 }
 
 const blockRange = (blockId: string, start: number, end: number): Target =>
@@ -209,7 +226,7 @@ export default function DocEditor({ id }: { id: string }) {
       const form = new FormData();
       form.append("file", new File([blob], `${title || "document"}.docx`, { type: DOCX }));
       form.append("title", title || "Untitled document");
-      form.append("blocks", JSON.stringify(ex.blocks.map((b) => b.text)));
+      form.append("blocks", JSON.stringify(passages(ex.blocks)));
       const res = await fetch(`/api/docs/${id}`, { method: "PUT", body: form,
         headers: { "x-neura1-as": viewerId(), "x-demo-passcode": c.pass } });
       const body = await res.json().catch(() => ({}));

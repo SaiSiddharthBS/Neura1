@@ -92,7 +92,10 @@ def file_path(doc_id: str) -> Path:
 def save(graph: Graph, doc_id: str, docx: bytes, title: str, blocks: list[str], by: Viewer) -> dict:
     """Keep the .docx and make its text company knowledge (re-saving updates the same passages in place)."""
     file_path(doc_id).write_bytes(docx)
-    text = "\n\n".join(b.strip() for b in blocks if b and b.strip())
+    blocks = [b.strip() for b in blocks if b and b.strip()]
+    if blocks and blocks[0] == title.strip():
+        blocks = blocks[1:]  # the title is written once, as the heading
+    text = "\n\n".join(blocks)
     current = rows(graph, "MATCH (d:Document {id:$id}) RETURN d.audience AS a", {"id": doc_id})
     rules = [r for r in ((current[0]["a"] if current else "") or "").split(",") if r.startswith("leave:")]
     rules += ["money"] if MONEY_TEXT.search(text) else []

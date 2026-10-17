@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { CalendarOff, CheckCircle2, CircleDot, Newspaper, Radio, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { PageTitle } from "@/components/ui";
+import { api, plain } from "@/lib/api";
 
 type Work = { id: string; title: string; status: string; project: string | null; kind: string; created_at: string; completed_at: string | null };
 type Me = {
@@ -22,13 +23,13 @@ export default function MyDay() {
   if (!d) return <div className="p-6 text-muted">Preparing your day…</div>;
   if (d.status !== "ok") return <div className="card p-6 text-muted">Choose who you are in “Viewing as” to see your day.</div>;
   const m = d.me;
-  const hour = new Date().getHours();
+  const today = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div>
-        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-cyan"><Sun size={13} /> My day</div>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Good {hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening"}, {m.name}</h1>
-        <p className="mt-1 text-sm text-muted">{m.role} · {m.team}{m.manager ? ` · reports to ${m.manager}` : ""}. What changed in your areas, what is waiting for you, and who is away.</p>
+        <div className="flex items-center gap-1.5 text-[13px] text-muted"><Sun size={13} /> {today}</div>
+        <PageTitle className="mt-1">{"Your day,"} <em>{m.name}</em></PageTitle>
+        <p className="mt-1.5 text-[15px] text-muted">{m.role} · {m.team}{m.manager ? ` · reports to ${m.manager}` : ""}. What changed in your areas, what is waiting for you, and who is away.</p>
       </div>
       <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
         <section className="card p-5">
@@ -74,7 +75,7 @@ export default function MyDay() {
         <div className="flex items-center gap-2 font-medium"><Newspaper size={15} className="text-accent-hover" /> What changed in things you own or work on (last 45 days)</div>
         <div className="mt-3 divide-y divide-line">
           {d.news.map((n) => (
-            <div key={n.chunk} className="py-2 text-sm"><span className="text-xs text-muted">{n.ts?.slice(0, 10)} · {n.title}{n.author ? ` · ${n.author}` : ""} · about {n.about.join(", ")}</span><div className="line-clamp-2">{n.text}</div></div>
+            <div key={n.chunk} className="py-2 text-sm"><span className="text-xs text-muted">{n.ts?.slice(0, 10)} · {n.title}{n.author ? ` · ${n.author}` : ""} · about {n.about.join(", ")}</span><div className="line-clamp-2">{plain(n.text)}</div></div>
           ))}
           {!d.news.length && <div className="text-sm text-muted">Quiet.</div>}
         </div>

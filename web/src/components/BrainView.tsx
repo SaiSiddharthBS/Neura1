@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import AskBox from "@/components/AskBox";
 import WhoKnows from "@/components/WhoKnows";
 import EvidenceDrawer from "@/components/EvidenceDrawer";
-import { api } from "@/lib/api";
+import { api, plain } from "@/lib/api";
 
 type Overview = {
   labels: { label: string; n: number }[];
@@ -70,7 +70,7 @@ export default function BrainView() {
               {hits.hits.map((h) => (
                 <li key={h.chunk} className="cursor-pointer py-2 text-sm hover:bg-elev" onClick={() => setOpen(h.chunk)}>
                   <div className="text-xs text-muted">{h.kind} · {h.title}{h.author ? ` · ${h.author}` : ""}{h.page ? ` · p.${h.page}` : ""}</div>
-                  <div className="line-clamp-2">{h.text}</div>
+                  <div className="line-clamp-2">{plain(h.text)}</div>
                 </li>
               ))}
             </ul>

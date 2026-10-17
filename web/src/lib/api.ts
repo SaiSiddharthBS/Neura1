@@ -97,3 +97,7 @@ export const inr = (n: number | string | null | undefined, currency = "INR") =>
   n === null || n === undefined
     ? "—"
     : new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(Number(n));
+
+/** Message text for previews: drop Markdown emphasis and code marks so feeds read as plain sentences. */
+export const plain = (t: string | null | undefined) =>
+  (t ?? "").replace(/\*\*(.+?)\*\*/g, "$1").replace(/__(.+?)__/g, "$1").replace(/`([^`]+)`/g, "$1").replace(/^#+\s*/gm, "");

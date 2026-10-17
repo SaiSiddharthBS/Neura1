@@ -5,7 +5,7 @@ import { AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 import DraftTask from "@/components/DraftTask";
 import EvidenceDrawer from "@/components/EvidenceDrawer";
-import { api } from "@/lib/api";
+import { api, plain } from "@/lib/api";
 
 type Item = { kind: string; at: string; who: string | null; what: string; detail: string; ref: string };
 type ActionItem = { id: string; task: string; due: string | null; quote: string; owner: string; chunk: string; meeting: string; at: string };
@@ -34,7 +34,7 @@ export default function Changes() {
               <span className={`h-fit shrink-0 rounded px-1.5 py-0.5 text-[11px] ${KIND[f.kind] ?? "bg-bg"}`}>{f.kind}</span>
               <button disabled={!f.ref.includes("#")} onClick={() => setOpen(f.ref)} className="min-w-0 flex-1 text-left enabled:hover:underline">
                 <div className="font-medium">{f.what}{f.who ? <span className="font-normal text-muted"> · {f.who}</span> : null}</div>
-                <div className="line-clamp-2 text-muted">{f.detail}</div>
+                <div className="line-clamp-2 text-muted">{plain(f.detail)}</div>
               </button>
             </li>
           ))}

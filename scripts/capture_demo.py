@@ -200,6 +200,12 @@ def main() -> None:
             shot("docs-ai-edit")
         except Exception:
             print("AI edit skipped: model not available")
+        if page.is_closed():
+            # The tab can be lost under memory pressure while the local model runs; carry on in a fresh one.
+            page = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1, color_scheme="dark")
+            page.add_init_script(STILL)
+            page.goto(base)
+            page.evaluate(f"() => {{ localStorage.setItem('neura1-passcode', '{args.passcode}'); }}")
 
         # 7d People and organisation, seen as an R&D engineer and then as a software engineer
         page.evaluate("() => localStorage.setItem('neura1-viewer', 'P-VISHWAS')")

@@ -8,7 +8,7 @@ import { CalendarOff, CheckCircle2, ChevronRight, CircleDot, Lock, Pencil, Searc
 import { useCallback, useEffect, useMemo, useState } from "react";
 import EvidenceDrawer from "@/components/EvidenceDrawer";
 import PlanPanel, { type PlanAction, type PlanInvestigation } from "@/components/PlanPanel";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, plain } from "@/lib/api";
 import { credentials, forgetPasscode } from "@/lib/session";
 
 type Row = { id: string; name: string; role: string; team: string };
@@ -197,7 +197,7 @@ export default function PeopleView() {
             <Card title="Recently said">
               {p.recent.map((r) => (
                 <button key={r.chunk} onClick={() => setOpen(r.chunk)} className="block w-full rounded-lg px-2 py-1.5 text-left text-sm hover:bg-elev">
-                  <span className="text-xs text-muted">{r.title} · {r.ts?.slice(0, 10)}</span><div className="line-clamp-2">{r.text}</div>
+                  <span className="text-xs text-muted">{r.title} · {r.ts?.slice(0, 10)}</span><div className="line-clamp-2">{plain(r.text)}</div>
                 </button>
               ))}
               {!p.recent.length && <Empty />}
