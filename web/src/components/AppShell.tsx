@@ -8,8 +8,8 @@ import Lenis from "lenis";
 import { motion } from "motion/react";
 import { Toaster } from "sonner";
 import {
-  Bell, Brain, Building2, ChevronRight, FileText, FolderKanban, History, Inbox, KanbanSquare, LayoutDashboard, Menu, MessageCircle,
-  Compass, FlaskConical, Handshake, LifeBuoy, Network, Package, Radar, Search, Sparkles, Sun, Target, Upload, Users, Waypoints,
+  AudioLines, Bell, Brain, Building2, ChevronRight, FileText, FolderKanban, History, Inbox, KanbanSquare, LayoutDashboard, Menu, MessageCircle,
+  Compass, FlaskConical, Handshake, HeartPulse, LifeBuoy, Network, Package, Radar, Search, Sparkles, Sun, Target, Upload, Users, Waypoints,
 } from "lucide-react";
 import CommandPalette from "@/components/CommandPalette";
 import ModelStatus from "@/components/ModelStatus";
@@ -31,6 +31,8 @@ const NAV: { section: string; items: Item[]; collapsible?: boolean }[] = [
   { section: "Company brain", items: [
     { href: "/brain", label: "Ask & search", icon: Brain },
     { href: "/docs", label: "Documents", icon: FileText },
+    { href: "/meetings", label: "Meetings", icon: AudioLines },
+    { href: "/knowledge", label: "Knowledge health", icon: HeartPulse },
     { href: "/explore", label: "Graph explorer", icon: Waypoints },
     { href: "/capabilities", label: "Capability map", icon: Target },
     { href: "/risk", label: "Risk radar", icon: Radar },
@@ -112,7 +114,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return () => { clearTimeout(first); clearInterval(t); };
   }, [path]);
 
-  const active = (href: string) => (href === "/" ? path === "/" : path.startsWith(href)) ||
+  // Whole path segments only: "/meetings" is not "/me".
+  const active = (href: string) => (href === "/" ? path === "/" : path === href || path.startsWith(`${href}/`)) ||
     (href === "/signals" && path.startsWith("/impact"));
   const here = NAV.flatMap((g) => g.items.map((i) => ({ ...i, section: g.section }))).find((i) => active(i.href));
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CalendarOff, CheckCircle2, CircleDot, Newspaper, Radio, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import BriefCard from "@/components/BriefCard";
+import MyBrief from "@/components/MyBrief";
 import { PageTitle } from "@/components/ui";
 import { api, plain } from "@/lib/api";
 
@@ -32,6 +33,7 @@ export default function MyDay() {
         <PageTitle className="mt-1">{"Your day,"} <em>{m.name}</em></PageTitle>
         <p className="mt-1.5 text-[15px] text-muted">{m.role}. What changed in your areas, what is waiting for you, and who is away.</p>
       </div>
+      <MyBrief />
       <BriefCard />
       <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
         <section className="card p-5">

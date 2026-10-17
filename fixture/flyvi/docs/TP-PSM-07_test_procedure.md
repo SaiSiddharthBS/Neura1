@@ -1,6 +1,6 @@
 # TP-PSM-07: PSU thermal and load qualification
 
-Synthetic document. Owner: Satish (Quality).
+Synthetic document. Owner: Satish.
 
 ## Scope
 

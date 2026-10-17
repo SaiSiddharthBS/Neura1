@@ -16,6 +16,12 @@ class Settings(BaseSettings):
     fixture_dir: Path = REPO_ROOT / "fixture" / "flyvi"
     # Where a company's own uploaded documents are kept (not committed).
     data_dir: Path = REPO_ROOT / "data"
+    # Speech to text for meeting recordings: local open-source Whisper by default; or any OpenAI-compatible
+    # transcription endpoint (for example one hosted on the DGX) when stt_base_url is set.
+    stt_model: str = "small.en"
+    stt_base_url: str | None = None
+    stt_api_key: str | None = None
+    stt_remote_model: str = "whisper-1"
 
     # Any OpenAI-compatible endpoint: a local DGX (vLLM / Ollama / SGLang) or a hosted provider.
     llm_base_url: str | None = None

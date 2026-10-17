@@ -7,9 +7,12 @@ import {
   ArrowDownLeft, ArrowUpRight, Boxes, Brain, CalendarClock, CheckCircle2, Clock3, Handshake, Lock, MapPin, PackageCheck,
   Search, ShieldAlert, Sparkles, Truck, Waypoints,
 } from "lucide-react";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import PurchasePanel from "@/components/PurchasePanel";
 import { PageTitle, Pill, Ticker } from "@/components/ui";
-import { api, inr } from "@/lib/api";
+import { api, ApiError, inr } from "@/lib/api";
+import { credentials, forgetPasscode } from "@/lib/session";
 
 type Row = {
   id: string; name: string; mpn: string | null; manufacturer: string | null; category: string | null; location: string | null;
@@ -17,6 +20,11 @@ type Row = {
   status: "ok" | "below_reorder" | "short" | "no_record"; available: number | null; planned_need: number; on_order: number; next_delivery: string | null;
   last_price: number | null; stock_value: number | null; orders: number;
   last_order: { id: string; ordered_on: string; supplier: string; qty: number; unit_price: string | null } | null;
+  outlook?: string | null; forecast?: { runs_short: { date: string } | null; below_reorder_on: string | null; order_by: string | null; late: boolean } | null;
+};
+type Forecast = {
+  points: { date: string; level: number }[]; runs_short: { date: string; short: number; build: string | null } | null;
+  below_reorder_on: string | null; order_by: string | null; late: boolean; lead_weeks: number | null; monthly_usage: number;
 };
 type Order = {
   id: string; qty: number; unit_price: string | null; ordered_on: string; expected_on: string | null; status: string;
@@ -34,6 +42,7 @@ type Detail = {
   where_used: { revision: string; product: string; status: string; per_unit: number }[];
   owner: { id: string; name: string } | null; decisions: { id: string; outcome: string; summary: string }[];
   alternates: { id: string; status: string; note: string }[]; insights: string[]; money_visible: boolean; today: string;
+  forecast: Forecast | null;
 };
 
 const STATUS: Record<Row["status"], { label: string; tone: "danger" | "warn" | "success" | "neutral" }> = {
@@ -53,15 +62,19 @@ function Inventory() {
   const [rows, setRows] = useState<Row[]>([]);
   const [q, setQ] = useState("");
   const [d, setD] = useState<Detail | null>(null);
-  const selected = params.get("item") ?? rows.find((r) => r.status === "below_reorder")?.id ?? rows[0]?.id ?? null;
+  const [drafting, setDrafting] = useState(params.get("draft") === "1");
+  const [receiving, setReceiving] = useState<string | null>(null);
+  const [version, setVersion] = useState(0);
+  const selected = params.get("item") ?? rows.find((r) => r.status === "short")?.id ?? rows[0]?.id ?? null;
 
-  useEffect(() => { api<Row[]>("/api/inventory").then(setRows).catch(() => {}); }, []);
+  const reload = useCallback(() => setVersion((v) => v + 1), []);
+  useEffect(() => { api<Row[]>("/api/inventory").then(setRows).catch(() => {}); }, [version]);
   useEffect(() => {
     if (!selected) return;
     let live = true;
     api<Detail>(`/api/inventory/${encodeURIComponent(selected)}`).then((x) => live && setD(x)).catch(() => {});
     return () => { live = false; };
-  }, [selected]);
+  }, [selected, version]);
 
   const shown = useMemo(() => rows.filter((r) => !q || `${r.id} ${r.name} ${r.category} ${r.mpn}`.toLowerCase().includes(q.toLowerCase())), [rows, q]);
   const below = rows.filter((r) => r.status === "below_reorder" || r.status === "short").length;
@@ -117,6 +130,11 @@ function Inventory() {
                       </div>
                     )}
                     {r.on_order > 0 && <div className="mt-1 flex items-center gap-1 text-[11px] text-accent"><Truck size={11} /> {num(r.on_order)} on order · {fmt(r.next_delivery)}</div>}
+                    {r.forecast?.order_by && (
+                      <div className={`mt-1 flex items-center gap-1 text-[11px] ${r.forecast.late ? "text-danger" : "text-warn"}`}>
+                        <CalendarClock size={11} /> {r.forecast.late ? "Order now" : `Order by ${fmt(r.forecast.order_by)}`}
+                      </div>
+                    )}
                   </button>
                 </li>
               );
@@ -145,6 +163,10 @@ function Inventory() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    {d.money_visible && d.stock.on_hand !== null && (
+                      <button onClick={() => setDrafting(true)} className="press flex items-center gap-1.5 rounded-xl bg-ink px-3 py-1.5 text-[12.5px] font-medium text-[var(--bg)] hover:opacity-90">
+                        <Sparkles size={13} /> Draft purchase order</button>
+                    )}
                     <Link href={`/brain?ask=${encodeURIComponent(`Tell me everything about ${d.item.id}: stock, orders, prices and what depends on it`)}`}
                           className="press flex items-center gap-1.5 rounded-xl bg-accent px-3 py-1.5 text-[12.5px] font-medium text-accent-ink hover:bg-accent-hover"><Brain size={13} /> Ask about it</Link>
                     <Link href={`/explore?id=${encodeURIComponent(d.item.id)}`} className="flex items-center gap-1.5 rounded-xl border border-line px-3 py-1.5 text-[12.5px] text-muted hover:border-line2 hover:text-ink"><Waypoints size={13} /> In the graph</Link>
@@ -172,6 +194,16 @@ function Inventory() {
                       </motion.li>
                     ))}
                   </ul>
+                </section>
+              )}
+
+              {d.forecast && (
+                <section className="card p-5">
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <h3 className="text-[14px] font-semibold">Outlook, next 26 weeks</h3>
+                    <span className="text-[12px] text-muted">free stock, minus planned builds on their dates, plus orders as they arrive, then about {num(d.forecast.monthly_usage)} a month</span>
+                  </div>
+                  <OutlookChart f={d.forecast} reorder={d.item.reorder_level} today={d.today} />
                 </section>
               )}
 
@@ -228,12 +260,22 @@ function Inventory() {
                         {d.money_visible && <td className="num">{o.unit_price ? inr(Number(o.unit_price)) : "—"}</td>}
                         <td>{fmt(o.ordered_on)}</td><td>{o.received_on ? fmt(o.received_on) : <span className="text-accent">due {fmt(o.expected_on)}</span>}</td>
                         <td className="num">{o.lead_days ?? "—"}</td>
-                        <td>{o.status === "open" ? <Pill tone="accent">open</Pill> : o.on_time === false ? <Pill tone="warn">late</Pill> : <Pill tone="success">received</Pill>}</td>
+                        <td>{o.status === "open" || o.status === "partially_received"
+                          ? (d.money_visible
+                            ? <button onClick={() => setReceiving(receiving === o.id ? null : o.id)} className="rounded-full bg-accent/15 px-2.5 py-0.5 text-[11.5px] font-medium text-accent hover:bg-accent/25">{o.status === "open" ? "open · receive" : "partial · receive"}</button>
+                            : <Pill tone="accent">{o.status === "open" ? "open" : "partly received"}</Pill>)
+                          : o.on_time === false ? <Pill tone="warn">late</Pill> : <Pill tone="success">received</Pill>}</td>
                       </tr>
                     ))}</tbody>
                   </table>
                   {!d.orders.length && <p className="text-[13px] text-muted">No purchase orders on record.</p>}
                 </div>
+                <AnimatePresence>
+                  {receiving && (() => {
+                    const o = d.orders.find((x) => x.id === receiving);
+                    return o ? <Receive key={o.id} po={o} onClose={() => setReceiving(null)} onDone={() => { setReceiving(null); reload(); }} /> : null;
+                  })()}
+                </AnimatePresence>
               </section>
 
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
@@ -278,6 +320,93 @@ function Inventory() {
           )}
         </AnimatePresence>
       </div>
+      <AnimatePresence>
+        {drafting && selected && <PurchasePanel key={selected} item={selected} onClose={() => setDrafting(false)} onDone={reload} />}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/** Book a delivery: goods received, the stock ledger and stock on hand move together. */
+function Receive({ po, onClose, onDone }: { po: Order; onClose: () => void; onDone: () => void }) {
+  const remaining = po.qty - po.received_qty - po.rejected_qty;
+  const [qty, setQty] = useState(remaining);
+  const [rejected, setRejected] = useState(0);
+  const [lot, setLot] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  async function save() {
+    if (!credentials()) return;
+    setBusy(true); setError(null);
+    try {
+      const r = await api<{ receipt: string; accepted: number }>("/api/purchasing/receive", { method: "POST", write: true, body: JSON.stringify({ po: po.id, qty, rejected, lot }) });
+      toast.success(`${r.receipt} booked`, { description: `${r.accepted.toLocaleString("en-IN")} added to stock against ${po.id}` });
+      onDone();
+    } catch (e) {
+      const msg = e instanceof ApiError && e.body && typeof e.body === "object" && "detail" in e.body ? String((e.body as { detail: unknown }).detail) : (e as Error).message;
+      if (e instanceof ApiError && e.status === 403 && msg.toLowerCase().includes("passcode")) forgetPasscode();
+      setError(msg);
+    } finally { setBusy(false); }
+  }
+  const field = "rounded-lg border border-line px-2.5 py-1.5 text-[13px]";
+  return (
+    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+      <div className="mt-3 flex flex-wrap items-end gap-2 rounded-2xl border border-accent/30 bg-accent/[0.06] p-3">
+        <div className="w-full text-[12.5px] font-medium">Receive against <span className="font-mono">{po.id}</span> <span className="font-normal text-muted">· {remaining.toLocaleString("en-IN")} still to come</span></div>
+        <label className="text-[11.5px] text-muted">Received<input type="number" min={1} max={remaining} value={qty} onChange={(e) => setQty(Number(e.target.value))} className={`mt-0.5 block w-28 ${field}`} /></label>
+        <label className="text-[11.5px] text-muted">Rejected at inspection<input type="number" min={0} max={qty} value={rejected} onChange={(e) => setRejected(Number(e.target.value))} className={`mt-0.5 block w-28 ${field}`} /></label>
+        <label className="text-[11.5px] text-muted">Lot or date code<input value={lot} onChange={(e) => setLot(e.target.value)} maxLength={40} placeholder="optional" className={`mt-0.5 block w-36 ${field}`} /></label>
+        <div className="ml-auto flex gap-2">
+          <button onClick={onClose} className="rounded-lg px-3 py-1.5 text-[12.5px] text-muted hover:bg-elev">Cancel</button>
+          <button onClick={save} disabled={busy || qty < 1 || qty > remaining || rejected < 0 || rejected > qty}
+                  className="press flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-[12.5px] font-medium text-accent-ink disabled:opacity-40">
+            {busy ? "Booking…" : <><PackageCheck size={13} /> Book delivery</>}</button>
+        </div>
+        {error && <div className="w-full text-[12px] text-warn">{error}</div>}
+      </div>
+    </motion.div>
+  );
+}
+
+/** The projected free stock, the reorder level, and the dates that matter. */
+function OutlookChart({ f, reorder, today }: { f: Forecast; reorder: number | null; today: string }) {
+  const pts = f.points;
+  if (!pts.length) return null;
+  const t0 = new Date(today).getTime(), t1 = new Date(pts[pts.length - 1].date).getTime();
+  const lo = Math.min(0, ...pts.map((p) => p.level)), hi = Math.max(reorder ?? 0, ...pts.map((p) => p.level)) * 1.1 || 1;
+  const x = (d: string) => PAD.l + ((new Date(d).getTime() - t0) / (t1 - t0 || 1)) * (CW - PAD.l - PAD.r);
+  const y = (v: number) => PAD.t + (1 - (v - lo) / (hi - lo || 1)) * (CH - PAD.t - PAD.b);
+  let path = "";
+  pts.forEach((p, i) => { path += `${i ? " L" : "M"} ${x(p.date).toFixed(1)} ${(i ? y(pts[i - 1].level) : y(p.level)).toFixed(1)} L ${x(p.date).toFixed(1)} ${y(p.level).toFixed(1)}`; });
+  const marks = [
+    f.order_by && f.order_by >= today ? { at: f.order_by, label: "order by", cls: "var(--warn)" } : null,
+    f.runs_short ? { at: f.runs_short.date, label: "runs short", cls: "var(--danger)" } : null,
+    !f.runs_short && f.below_reorder_on ? { at: f.below_reorder_on, label: "below reorder", cls: "var(--warn)" } : null,
+  ].filter(Boolean) as { at: string; label: string; cls: string }[];
+  return (
+    <div className="mt-2">
+      <svg viewBox={`0 0 ${CW} ${CH}`} className="w-full overflow-visible" role="img" aria-label="Projected stock">
+        <defs><linearGradient id="outlook" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" style={{ stopColor: "var(--accent)" }} stopOpacity="0.28" /><stop offset="100%" style={{ stopColor: "var(--accent)" }} stopOpacity="0" /></linearGradient></defs>
+        {[lo, (lo + hi) / 2, hi].map((v) => (
+          <g key={v}><line x1={PAD.l} x2={CW - PAD.r} y1={y(v)} y2={y(v)} style={{ stroke: "var(--line)" }} strokeDasharray="2 4" />
+            <text x={PAD.l - 6} y={y(v) + 3} textAnchor="end" style={{ fill: "var(--muted)", fontSize: 10 }}>{Math.round(v).toLocaleString("en-IN")}</text></g>
+        ))}
+        {lo < 0 && <rect x={PAD.l} y={y(0)} width={CW - PAD.l - PAD.r} height={y(lo) - y(0)} style={{ fill: "var(--danger)", opacity: 0.08 }} />}
+        <line x1={PAD.l} x2={CW - PAD.r} y1={y(0)} y2={y(0)} style={{ stroke: "var(--line2)" }} />
+        {reorder ? <g><line x1={PAD.l} x2={CW - PAD.r} y1={y(reorder)} y2={y(reorder)} style={{ stroke: "var(--warn)" }} strokeDasharray="5 4" opacity={0.8} />
+          <text x={CW - PAD.r} y={y(reorder) - 4} textAnchor="end" style={{ fill: "var(--warn)", fontSize: 10 }}>reorder level {reorder}</text></g> : null}
+        <motion.path d={`${path} L ${x(pts[pts.length - 1].date)} ${y(lo)} L ${x(pts[0].date)} ${y(lo)} Z`} style={{ fill: "url(#outlook)" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.9 }} />
+        <motion.path d={path} fill="none" style={{ stroke: "var(--accent)" }} strokeWidth={2} initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }} />
+        {marks.map((m, i) => (
+          <g key={m.label}>
+            <line x1={x(m.at)} x2={x(m.at)} y1={PAD.t} y2={CH - PAD.b} style={{ stroke: m.cls }} strokeDasharray="3 3" />
+            <text x={x(m.at) + 4} y={PAD.t + 10 + i * 12} style={{ fill: m.cls, fontSize: 10.5, fontWeight: 600 }}>{m.label} · {fmt(m.at)}</text>
+          </g>
+        ))}
+        <text x={PAD.l} y={CH - 8} style={{ fill: "var(--muted)", fontSize: 10 }}>today</text>
+        <text x={CW - PAD.r} y={CH - 8} textAnchor="end" style={{ fill: "var(--muted)", fontSize: 10 }}>{fmt(pts[pts.length - 1].date)}</text>
+      </svg>
+      {f.late && <p className="mt-1 text-[12.5px] text-danger">At {f.lead_weeks} weeks to deliver, the order-by date has already passed: order now, and replan what cannot be reached.</p>}
     </div>
   );
 }

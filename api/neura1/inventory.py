@@ -7,7 +7,7 @@ how many, where, what it cost over time, when it was last ordered and from whom,
 what the planned builds need, and what the company already decided about it. Everything here is computed by code.
 """
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from falkordb import Graph
@@ -76,6 +76,55 @@ ORDER BY revision
 DEMAND = supply.DEMAND
 
 
+HORIZON_DAYS = 182  # how far ahead stock is projected
+
+
+def usage(ledger: list[dict], today: date, days: int = 365) -> int:
+    """Units issued to builds over the last `days` (adjustments and scrap are not usage)."""
+    since = (today - timedelta(days=days)).isoformat()
+    return -sum(m["qty"] for m in ledger if m["kind"] == "issue" and m["date"] >= since and (m["qty"] or 0) < 0)
+
+
+def forecast(free: int, reorder: int, demand: list[dict], orders: list[dict], ledger: list[dict],
+             lead_weeks: int | None, today: date) -> dict:
+    """Project free stock forward: planned builds take their parts on their dates, open orders arrive on their
+    expected dates, and after the last planned build the part keeps being used at last year's rate.
+    Returns when it first runs short, when it drops below the reorder level, and the last day to order."""
+    events: dict[str, int] = {}
+    for d in demand:
+        if d["planned_date"] and d["planned_date"] >= today.isoformat():
+            events[d["planned_date"]] = events.get(d["planned_date"], 0) - int(d["need"] or 0)
+    for o in orders:
+        if o["status"] in ("open", "partially_received") and o.get("expected_on"):
+            left = int(o["qty"] or 0) - int(o.get("received_qty") or 0)
+            day = max(o["expected_on"], today.isoformat())
+            events[day] = events.get(day, 0) + left
+    last_build = max((d["planned_date"] for d in demand if d["planned_date"]), default=today.isoformat())
+    daily = usage(ledger, today) / 365
+    level, points, first_short, below = float(free), [], None, None
+    for i in range(HORIZON_DAYS + 1):
+        day = today + timedelta(days=i)
+        iso = day.isoformat()
+        before = level
+        level += events.get(iso, 0)
+        if iso > last_build:
+            level -= daily
+        if level < 0 and first_short is None:
+            first_short = {"date": iso, "short": int(round(-level)) if before >= 0 else int(round(-level)),
+                           "build": next((d["build"] for d in demand if d["planned_date"] == iso), None)}
+        if reorder and level < reorder and below is None:
+            below = iso
+        if i % 7 == 0 or iso in events:
+            points.append({"date": iso, "level": round(level)})
+    trigger = first_short["date"] if first_short else below
+    order_by = None
+    if trigger and lead_weeks is not None:
+        order_by = (date.fromisoformat(trigger) - timedelta(weeks=lead_weeks)).isoformat()
+    return {"points": points, "runs_short": first_short, "below_reorder_on": below, "order_by": order_by,
+            "late": bool(order_by and order_by < today.isoformat()), "lead_weeks": lead_weeks,
+            "monthly_usage": round(daily * 30.4), "horizon_days": HORIZON_DAYS}
+
+
 def _num(v) -> Decimal | None:
     try:
         return Decimal(str(v)) if v not in (None, "") else None
@@ -95,7 +144,7 @@ def _stock(on_hand, allocated, reorder, planned: int, on_order: int) -> dict:
     return {"on_hand": on_hand, "allocated": allocated or 0, "free": free, "available": available, "status": status}
 
 
-def items(graph: Graph, today: date | None = None) -> list[dict]:
+def items(graph: Graph, today: date | None = None, with_forecast: bool = True) -> list[dict]:
     """Every part: stock against its reorder level, the last order, and what is on order now."""
     today = today or date.today()
     out = []
@@ -114,13 +163,29 @@ def items(graph: Graph, today: date | None = None) -> list[dict]:
             "stock_value": float(price * r["on_hand"]) if price is not None and r["on_hand"] else None,
             "orders": len(pos),
         })
+    if with_forecast:
+        notes = supply.notices(graph)
+        for r in out:
+            if r["free"] is None:
+                r["forecast"] = None
+                continue
+            ledger = rows(graph, LEDGER, {"id": r["id"]})
+            demand = [d | {"need": int(d["need"] or 0)} for d in rows(graph, DEMAND, {"id": r["id"]})]
+            orders = [o | {"received_qty": sum((g or {}).get("qty") or 0 for g in o["receipts"])}
+                      for o in rows(graph, ORDERS, {"id": r["id"]})]
+            lead = supply.lead_time(graph, r["id"], today, notes.get(r["id"]))
+            f = forecast(r["free"], r["reorder_level"] or 0, demand, orders, ledger, lead["weeks"], today)
+            r["forecast"] = {k: f[k] for k in ("runs_short", "below_reorder_on", "order_by", "late", "lead_weeks",
+                                               "monthly_usage")}
+            r["outlook"] = outlook(r["id"], f, today) if (f["runs_short"] or f["below_reorder_on"]) else None
     return out
+
 
 
 def item(graph: Graph, item_id: str, today: date | None = None) -> dict:
     """Everything about one part."""
     today = today or date.today()
-    found = [r for r in items(graph, today) if r["id"].upper() == item_id.upper()
+    found = [r for r in items(graph, today, with_forecast=False) if r["id"].upper() == item_id.upper()
              or (r["mpn"] or "").upper() == item_id.upper()]
     if not found:
         return {"status": "unknown_item", "item": item_id}
@@ -173,6 +238,9 @@ def item(graph: Graph, item_id: str, today: date | None = None) -> dict:
 
     demand = [d | {"need": int(d["need"] or 0), "per_unit": int(d["per_unit"] or 0)} for d in rows(graph, DEMAND, {"id": pid})]
     need = sum(d["need"] for d in demand)
+    lead = supply.lead_time(graph, pid, today, notice)
+    projection = forecast(base["free"], base["reorder_level"] or 0, demand, orders, ledger, lead["weeks"], today) \
+        if base["free"] is not None else None
     ctx = (rows(graph, CONTEXT, {"id": pid}) or [{}])[0]
     alts = supply.alternates(graph, pid, today)
     last = next((o for o in orders if o["status"] != "cancelled"), None)
@@ -192,9 +260,21 @@ def item(graph: Graph, item_id: str, today: date | None = None) -> dict:
         "decisions": [d for d in ctx.get("decisions", []) if d.get("id")],
         "tasks": [t for t in ctx.get("tasks", []) if t.get("id")],
         "dependents": [d for d in ctx.get("dependents", []) if d.get("id")],
-        "alternates": alts,
-        "insights": insights(base, orders, prices, notice, demand, need, alts, ledger, today),
+        "alternates": alts, "forecast": projection, "lead": {k: lead.get(k) for k in ("weeks", "basis", "source")},
+        "insights": insights(base, orders, prices, notice, demand, need, alts, ledger, today, projection),
     }
+
+
+def outlook(item_id: str, p: dict, today: date) -> str:
+    """One sentence: when the part runs short or low, and when to order by."""
+    short = p["runs_short"]
+    what = (f"{item_id} runs short on {short['date']}" + (f" ({short['build']} is {short['short']} short)" if short.get("build") else "")
+            if short else f"{item_id} drops below its reorder level around {p['below_reorder_on']}")
+    if p["order_by"] is None:
+        return f"{what}; no lead time is on record, so ask for a quote now."
+    if p["late"]:
+        return f"{what}. At {p['lead_weeks']} weeks to deliver, it should have been ordered by {p['order_by']}: order now."
+    return f"{what}. At {p['lead_weeks']} weeks to deliver, order by {p['order_by']}."
 
 
 def _rupees(v) -> str:
@@ -202,9 +282,11 @@ def _rupees(v) -> str:
     return f"₹{v:,.2f}".rstrip("0").rstrip(".") if v % 1 else f"₹{v:,.0f}"
 
 
-def insights(base, orders, prices, notice, demand, need, alts, ledger, today) -> list[str]:
+def insights(base, orders, prices, notice, demand, need, alts, ledger, today, projection=None) -> list[str]:
     """Plain sentences a buyer would want first, each computed from the records."""
     out = []
+    if projection and (projection["runs_short"] or projection["below_reorder_on"]):
+        out.append(outlook(base["id"], projection, today))
     free, reorder = base["free"], base["reorder_level"]
     if base["status"] == "no_record":
         out.append("No stock is on record for this part.")

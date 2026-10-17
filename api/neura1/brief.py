@@ -94,8 +94,119 @@ def start_scheduler(get_graph, every: float = 60.0) -> None:
             try:
                 if datetime.now(IST).hour >= HOUR:
                     post(get_graph())
+                    post_everyone(get_graph())
             except Exception:
                 pass  # try again next minute
             time.sleep(every)
 
     threading.Thread(target=loop, daemon=True, name="neura1-brief").start()
+
+
+# ---------- each person's own brief, in their private Neura1 conversation ----------
+
+def personal(graph: Graph, person_id: str, today: date | None = None, shared: dict | None = None) -> dict | None:
+    """One person's morning: their work, what waits for them, what changed in what they own, stock running short on
+    their parts, pages they maintain that are out of date, and who is away (only what they may see)."""
+    from neura1 import access, inventory, knowledge_health, people
+
+    today = today or datetime.now(IST).date()
+    v = access.viewer(graph, person_id)
+    if not v.id:
+        return None
+    shared = shared or {}
+    day = people.my_day(graph, v, today)
+    if day.get("status") != "ok":
+        return None
+    first = v.name.split()[0]
+    work = day["me"]["work"]["current"]
+    watching = set(day["watching"])
+    lines = [f"Good morning, {first}. Here is your {today:%A %d %B}."]
+
+    if work:
+        top = sorted(work, key=lambda w: (w.get("status") != "in_progress", w.get("title") or ""))[:3]
+        lines.append(f"• Your work: {len(work)} open. " + "; ".join(f"**{w['title']}**" for w in top) + ".")
+    else:
+        lines.append("• Nothing is assigned to you right now.")
+    if day["approvals"]:
+        lines.append("• Waiting for you: " + "; ".join(a["title"] for a in day["approvals"][:3]) + ".")
+    since = (today - timedelta(days=1)).isoformat()
+    fresh = [n for n in day["news"] if (n.get("ts") or "") >= since and n.get("author") != "Neura1"]
+    if fresh:
+        lines.append(f"• Changed since yesterday in what you own or work on: {len(fresh)} update"
+                     f"{'s' if len(fresh) != 1 else ''}, the latest from {fresh[0]['author'] or fresh[0]['title']} "
+                     f"in {fresh[0]['title']}.")
+    sig = [s for s in day["signals"] if not s.get("investigation")]
+    if sig:
+        lines.append("• Signals touching your work: " + "; ".join(
+            "a leave notice" if s["kind"] == "leave" else s["title"] for s in sig[:3]) + ".")
+
+    stock = shared.get("stock")
+    if stock is None:
+        stock = inventory.items(graph, today)
+    mine = [r for r in stock if r.get("outlook") and (r["id"] in watching or v.leader)]
+    mine.sort(key=lambda r: ((r.get("forecast") or {}).get("order_by") or "9999"))
+    if mine:
+        lines.append("• Stock: " + " ".join(r["outlook"] for r in mine[:3]))
+
+    health = shared.get("health")
+    if health is None:
+        health = knowledge_health.sweep(graph, access.Viewer(), today)
+    pages = []
+    for d in health["documents"]:
+        if d["owner_id"] != person_id:
+            continue
+        seen = [f for f in d["findings"] if f["kind"] != "away" or v.sees_leave_of(f["person"])]
+        if seen:
+            pages.append((d, len(seen)))
+    if pages:
+        lines.append("• Pages you maintain: " + "; ".join(
+            f"“{d['title']}” has {n} out-of-date fact{'s' if n != 1 else ''}" for d, n in pages) + ".")
+
+    if day["team_away"]:
+        lines.append("• Away soon: " + "; ".join(f"{a['name']} {a['start_date']} to {a['end_date']}"
+                                                  for a in day["team_away"][:3]) + ".")
+    lines.append("Reply here to ask me anything.")
+    text = "\n".join(lines)
+    if not v.sees_money:
+        from neura1.access import MONEY_TEXT
+        text = MONEY_TEXT.sub("[amount hidden]", text)
+    return {"date": today.isoformat(), "person": person_id, "text": text,
+            "links": [{"label": "My day", "href": "/me"}] + ([{"label": "Inventory", "href": "/inventory"}] if mine else [])
+            + ([{"label": "Knowledge health", "href": "/knowledge"}] if pages else [])}
+
+
+def post_personal(graph: Graph, person_id: str, today: date | None = None, force: bool = False,
+                  shared: dict | None = None) -> dict | None:
+    from neura1 import chat
+    today = today or datetime.now(IST).date()
+    if not force and rows(graph, "MATCH (x:Brief {date:$d, person:$p}) RETURN count(x) AS n",
+                          {"d": today.isoformat(), "p": person_id})[0]["n"]:
+        return None
+    b = personal(graph, person_id, today, shared)
+    if not b:
+        return None
+    cid = chat.bot_channel(graph, person_id)
+    chat.post(graph, cid, b["text"], chat.BOT, None, kind="brief", links=b["links"])
+    graph.query("MERGE (x:Brief {date:$d, person:$p}) SET x.posted_at = $at",
+                {"d": b["date"], "p": person_id, "at": datetime.now(IST).isoformat()})
+    return b | {"channel": cid}
+
+
+def post_everyone(graph: Graph, today: date | None = None) -> int:
+    """Everyone's brief, computing the company-wide parts once."""
+    from neura1 import inventory, knowledge_health
+    from neura1.access import Viewer
+    today = today or datetime.now(IST).date()
+    people = rows(graph, "MATCH (p:Person) RETURN count(p) AS n")[0]["n"]
+    done = rows(graph, "MATCH (x:Brief {date:$d}) WHERE x.person IS NOT NULL RETURN count(DISTINCT x.person) AS n",
+                {"d": today.isoformat()})[0]["n"]
+    if done >= people:
+        return 0  # everyone has today's brief: nothing to compute
+    shared = {"stock": inventory.items(graph, today), "health": knowledge_health.sweep(graph, Viewer(), today)}
+    sent = 0
+    for p in rows(graph, "MATCH (p:Person) RETURN p.id AS id ORDER BY id"):
+        try:
+            sent += 1 if post_personal(graph, p["id"], today, shared=shared) else 0
+        except Exception:
+            continue  # one person's brief must not stop the others
+    return sent

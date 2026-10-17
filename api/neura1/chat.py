@@ -41,7 +41,7 @@ ROUTES = {"supplier_change": "supply", "evidence": "engineering", "plan": "gener
           "absence": "general", "task_done": "general"}
 
 MONEY_CHANNELS = {"chat/leadership"}
-PRIVATE = ("dm", "group")
+PRIVATE = ("dm", "group", "bot")  # "bot": a person's own conversation with Neura1
 REACTIONS = ["👍", "❤️", "😂", "🎉", "👀", "✅", "🙏", "🔥"]
 MAX_TEXT = 4000
 
@@ -152,7 +152,7 @@ def channels(graph: Graph, viewer_id: str | None, viewer_name: str | None = None
                         "preview": None if not p else {"author": p["author"], "mine": p["author_id"] == me and bool(me),
                                                        "text": "Message deleted" if p["deleted"] else (p["text"] or "")[:140],
                                                        "kind": p["kind"]}})
-    order = {"channel": 0, "group": 1, "dm": 2}
+    order = {"channel": 0, "bot": 1, "group": 2, "dm": 2}
     return sorted(out, key=lambda c: (order.get(c["kind"], 3), -_ts_key(c["last"] or c["created_at"]) if c["kind"] != "channel" else 0,
                                       c["name"].lower()))
 
@@ -180,6 +180,17 @@ def dm_channel(graph: Graph, a: str, b: str) -> str:
     cid = f"chat/dm-{pair[0]}-{pair[1]}".lower()
     graph.query("""MERGE (c:Channel {id:$id}) ON CREATE SET c.kind='dm', c.members=$m, c.name=$name, c.created_at=$ts""",
                 {"id": cid, "m": pair, "name": " & ".join(names[p] for p in pair), "ts": _now()})
+    return cid
+
+
+def bot_channel(graph: Graph, person_id: str) -> str:
+    """The person's private conversation with Neura1: their morning brief, and questions without @neura1."""
+    if person_id not in _names(graph):
+        raise ChatError(404, "Unknown person")
+    cid = f"chat/neura1-{person_id}".lower()
+    graph.query("""MERGE (c:Channel {id:$id}) ON CREATE SET c.kind='bot', c.members=$m, c.name='Neura1',
+                   c.purpose='Your brief every morning, and anything you want to ask', c.created_at=$ts""",
+                {"id": cid, "m": [person_id], "ts": _now()})
     return cid
 
 
@@ -219,7 +230,7 @@ def update_conversation(graph: Graph, channel_id: str, by_id: str, name: str | N
     ch = channel(graph, channel_id)
     if not ch:
         raise ChatError(404, "Unknown conversation")
-    if ch["kind"] == "dm" or ch["default"]:
+    if ch["kind"] in ("dm", "bot") or ch["default"]:
         raise ChatError(400, "This conversation cannot be renamed")
     if ch["kind"] == "group" and by_id not in (ch["members"] or []):
         raise ChatError(403, "Only members can change the group")
@@ -618,10 +629,15 @@ def handle(graph: Graph, channel_id: str, text: str, author: str, author_id: str
     if stripped.startswith("/"):
         reply = command(graph, stripped, Audience(graph, channel_id))
         post(graph, channel_id, reply["text"], BOT, None, kind="command", links=reply.get("links"), reply_to=msg["id"])
-    elif re.search(r"@neura1\b", text, re.I):
+    elif re.search(r"@neura1\b", text, re.I) or _is_bot_channel(graph, channel_id):
         ask_in_channel(graph, channel_id, re.sub(r"@neura1\b", "", text, flags=re.I).strip(), author_id, msg["id"])
         msg["thinking"] = True
     return msg
+
+
+def _is_bot_channel(graph: Graph, channel_id: str) -> bool:
+    ch = rows(graph, "MATCH (c:Channel {id:$id}) RETURN c.kind AS kind", {"id": channel_id})
+    return bool(ch) and ch[0]["kind"] == "bot"
 
 
 def _remind(graph: Graph, channel_id: str, text: str, message_id: str) -> None:

@@ -39,16 +39,23 @@ def _primary_up() -> bool:
     if not settings.llm_fallback_base_url:
         return True
     with _lock:
-        if time.monotonic() - _state["checked"] < 30:
+        # A good answer is trusted for 30 s; a failure is looked at again after 10 s, so a busy moment on the DGX
+        # never leaves the company on the fallback for long.
+        if time.monotonic() - _state["checked"] < (30 if _state["up"] else 10):
             return _state["up"]
-        try:
-            r = httpx.get(f"{settings.llm_base_url.rstrip('/')}/models", timeout=3,
-                          headers={"Authorization": f"Bearer {settings.llm_api_key}"})
-            _state["up"] = r.status_code < 500
-        except httpx.HTTPError:
-            _state["up"] = False
-        _state["checked"] = time.monotonic()
-        return _state["up"]
+        up = False
+        for attempt in range(2):  # one retry: a DGX busy generating can be slow to answer for a moment
+            try:
+                r = httpx.get(f"{settings.llm_base_url.rstrip('/')}/models", timeout=6,
+                              headers={"Authorization": f"Bearer {settings.llm_api_key}"})
+                up = r.status_code < 500
+            except httpx.HTTPError:
+                up = False
+            if up:
+                break
+            time.sleep(0.3)
+        _state.update(up=up, checked=time.monotonic())
+        return up
 
 
 def _mark_down() -> None:

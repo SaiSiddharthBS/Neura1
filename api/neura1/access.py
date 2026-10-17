@@ -130,7 +130,8 @@ def points_at_hidden(obj, hidden: set[str]) -> bool:
 
 def redact_money(obj, keys=("value", "unit_price", "max_penalty", "open_value", "value_at_risk", "total_delta",
                             "material_delta", "one_time_total", "baseline_unit_price", "new_unit_price",
-                            "cost_total", "amount", "price", "last_price", "stock_value", "purchase_value")):
+                            "cost_total", "amount", "price", "last_price", "stock_value", "purchase_value", "total",
+                            "saving_vs_notice")):
     """Replace money fields anywhere in a response with None and mark the response."""
     if isinstance(obj, dict):
         out = {}

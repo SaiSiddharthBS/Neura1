@@ -26,7 +26,7 @@ export default function InfoPanel({ c, me, people, onClose, onRename, onAdd, onR
   return (
     <aside className="flex h-full min-h-0 flex-col">
       <div className="flex items-center border-b border-line px-4 py-3">
-        <span className="text-[13.5px] font-semibold">{c.kind === "dm" ? "Contact" : c.kind === "group" ? "Group" : "Channel"} details</span>
+        <span className="text-[13.5px] font-semibold">{c.kind === "dm" ? "Contact" : c.kind === "group" ? "Group" : c.kind === "bot" ? "Neura1" : "Channel"} details</span>
         <button onClick={onClose} aria-label="Close details" className="ml-auto rounded-md p-1 text-muted hover:bg-elev hover:text-ink"><X size={15} /></button>
       </div>
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4" data-lenis-prevent>
@@ -57,7 +57,10 @@ export default function InfoPanel({ c, me, people, onClose, onRename, onAdd, onR
             {c.id === "chat/leadership" ? "Open to the directors and the leadership team. Amounts are shown here." : "Open to everyone at Flyvi. Messages become company knowledge; amounts are hidden from people who may not see them."}
           </p>
         )}
-        {c.kind !== "channel" && (
+        {c.kind === "bot" && (
+          <p className="rounded-xl bg-elev p-3 text-[12px] text-muted">Only you can read this conversation. Neura1 posts your brief here every morning at 09:00, and answers anything you write, with sources and only what you may see.</p>
+        )}
+        {c.kind !== "channel" && c.kind !== "bot" && (
           <p className="rounded-xl bg-elev p-3 text-[12px] text-muted">Private to its members. These messages never become company knowledge and never appear in anyone else&apos;s search.</p>
         )}
 

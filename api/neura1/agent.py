@@ -107,6 +107,11 @@ TOOLS = [
                   "time, on time or late, rejections); price history (paid, quoted, supplier notices); the stock "
                   "ledger; what planned builds need. Pass a part id, or nothing for every part's stock status.",
      {"item_id": {"type": ["string", "null"]}}),
+    ("draft_purchase_order", "What Flyvi should order for a part now, worked out by code: quantity (planned builds, "
+                             "reorder level, free stock, open orders, minimum order), supplier and price from the valid "
+                             "quote, saving from ordering before a notified price rise, expected arrival, which builds it "
+                             "can or cannot reach, last-time-buy advice. A draft only: nothing is ordered.",
+     {"item_id": {"type": "string"}}),
     ("can_we_promise", "Whether Flyvi can deliver a quantity of a product by a date: parts and free stock, the newest "
                        "lead times (supplier notices beat quotes), people and knowledge, certifications. Returns the "
                        "verdict, the earliest realistic date, the limiting part and what would change the answer. "
@@ -276,8 +281,8 @@ def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
                                               "received_on", "status", "lead_days", "on_time", "rejected_qty")}
                            for o in r["orders"]],
                 "recent_ledger": r["ledger"][-6:]}
-        return [{k: x[k] for k in ("id", "name", "category", "on_hand", "allocated", "free", "planned_need", "available",
-                                   "reorder_level", "status", "on_order", "next_delivery", "last_price")} | {
+        parts = [{k: x[k] for k in ("id", "name", "category", "on_hand", "allocated", "free", "planned_need", "available",
+                                    "reorder_level", "status", "on_order", "next_delivery", "last_price", "outlook")} | {
                     "last_order": (x["last_order"] or {}).get("id"), "last_ordered_on": (x["last_order"] or {}).get("ordered_on"),
                     "last_supplier": (x["last_order"] or {}).get("supplier"),
                     "status_meaning": {"short": "planned builds need more than free stock plus what is on order",
@@ -287,7 +292,19 @@ def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
                     f"free {x['free']} (on hand {x['on_hand']} minus {x['allocated']} allocated) - planned builds "
                     f"{x['planned_need']} = {x['available']} available, + {x['on_order']} on order, vs reorder level "
                     f"{x['reorder_level']}"}
-                for x in inventory.items(graph)]
+                 for x in inventory.items(graph)]
+        return {"needs_ordering": [{"id": x["id"], "status": x["status"], "outlook": x["outlook"]} for x in parts
+                                   if x["status"] in ("short", "below_reorder")],
+                "parts": parts}
+    if name == "draft_purchase_order":
+        from neura1 import purchasing
+        try:
+            r = purchasing.suggest(graph, str(args["item_id"]))
+        except purchasing.PurchasingError as exc:
+            return {"error": str(exc)}
+        trace.steps.append({"name": "draft_purchase_order", "cypher": "(purchasing: stock, demand, quotes, notices)",
+                            "params": args, "rows": 1, "ms": 0})
+        return {k: v for k, v in r.items() if k not in ("email", "stock")}
     if name == "can_we_promise":
         from datetime import date as _date
         from neura1 import promise

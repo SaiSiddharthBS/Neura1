@@ -20,3 +20,11 @@ Before recording: open http://localhost:3000, choose *Viewing as Hithesh* (CTO),
 
 Tips: keep the cursor still while speaking; cut between scenes rather than waiting for loads; the Ask answer can be
 recorded separately and spliced in, since it takes a few seconds on the DGX.
+
+## Extended cut (about 70 seconds more)
+
+| Screen | What to do | What to say |
+|---|---|---|
+| Inventory → NB54360 → *Draft purchase order* | Let the panel open; point at the saving and the warnings; approve | "Neura1 doesn't just warn, it drafts the order: six hundred units, from the valid quote, before the price rises on the first of November, which saves forty-two thousand rupees. It says honestly that at twenty-two weeks this order cannot save the November builds, sizes a last-time-buy from real usage, and refuses the rejected part. A leader approves; stock, promises and the sandbox count it at once." |
+| Meetings → *Try the sample* | Let it process; click the first decision | "A build meeting, recorded. Whisper runs on our own machine, primed with Flyvi's names and part numbers; the DGX finds the decisions and action items, and keeps only what it can quote from the transcript. Click a decision and you hear the moment it was made." |
+| Knowledge health → Buying guide | Expand; click *Ask Ambika to update it* | "And it keeps our documents honest. This buying guide still says six weeks and still suggests the rejected part. Each stale sentence, with its proof, goes to the person who maintains the page." |

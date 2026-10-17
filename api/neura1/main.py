@@ -813,6 +813,12 @@ class DmIn(BaseModel):
     person_id: str
 
 
+@app.post("/api/chat/bot")
+def chat_bot(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    """The viewer's own conversation with Neura1 (created on first use)."""
+    return {"id": _chat(chat.bot_channel, g, _me(v))}
+
+
 @app.post("/api/chat/dm")
 def chat_dm(body: DmIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
     return {"id": _chat(chat.dm_channel, g, _me(v), body.person_id)}
@@ -985,6 +991,132 @@ def inventory_item(item_id: str, g=Depends(graph), v: access.Viewer = Depends(cu
         raise HTTPException(404, f"No part called {item_id}")
     out["money_visible"] = v.sees_money
     return out if v.sees_money else access.redact_money(out)
+
+
+# ---------- purchasing: Neura1 drafts, a person approves ----------
+
+def _buyer(v: access.Viewer) -> str:
+    if not v.id or not (v.leader or v.unrestricted):
+        raise HTTPException(403, "Purchase orders carry prices, so they are raised and received by the directors and "
+                                 "the leadership team")
+    return v.name
+
+
+@app.get("/api/purchasing/draft")
+def purchasing_draft(item: str, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import purchasing
+    _buyer(v)
+    try:
+        return purchasing.suggest(g, item, by=v.name)
+    except purchasing.PurchasingError as exc:
+        raise HTTPException(400, str(exc))
+
+
+class RaiseIn(BaseModel):
+    item: str
+    qty: int | None = None
+
+
+@app.post("/api/purchasing/orders", dependencies=[Depends(require_passcode)])
+def purchasing_raise(body: RaiseIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import purchasing
+    by = _buyer(v)
+    try:
+        return purchasing.create(g, body.item, body.qty, by)
+    except purchasing.PurchasingError as exc:
+        raise HTTPException(400, str(exc))
+
+
+class ReceiveIn(BaseModel):
+    po: str
+    qty: int
+    rejected: int = 0
+    lot: str | None = None
+
+
+@app.post("/api/purchasing/receive", dependencies=[Depends(require_passcode)])
+def purchasing_receive(body: ReceiveIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import purchasing
+    by = _buyer(v)
+    try:
+        return purchasing.receive(g, body.po, body.qty, body.rejected, (body.lot or "").strip()[:40] or None, by)
+    except purchasing.PurchasingError as exc:
+        raise HTTPException(400, str(exc))
+
+
+# ---------- meetings ----------
+
+@app.get("/api/meetings")
+def meetings_list(g=Depends(graph)):
+    from neura1 import meetings
+    return meetings.list_meetings(g)
+
+
+@app.post("/api/meetings", dependencies=[Depends(require_passcode)])
+async def meetings_upload(file: UploadFile = File(...), title: str | None = Form(None), g=Depends(graph),
+                          v: access.Viewer = Depends(current_viewer)):
+    from neura1 import meetings
+    if not v.id:
+        raise HTTPException(400, "Choose who you are first")
+    data = await file.read()
+    try:
+        return {"id": meetings.start(g, file.filename or "recording", data, title, v.name)}
+    except meetings.MeetingError as exc:
+        raise HTTPException(400, str(exc))
+
+
+@app.post("/api/meetings/sample", dependencies=[Depends(require_passcode)])
+def meetings_sample(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    """The synthetic BO-0415 build sync recording from the fixture."""
+    from neura1 import meetings
+    path = settings.fixture_dir / "samples" / "meeting_BO-0415_build_sync.m4a"
+    if not path.exists():
+        raise HTTPException(404, "The sample recording is missing")
+    return {"id": meetings.start(g, path.name, path.read_bytes(), "BO-0415 build sync", v.name or "Demo")}
+
+
+@app.get("/api/meetings/{meeting_id}")
+def meetings_get(meeting_id: str, g=Depends(graph)):
+    from neura1 import meetings
+    out = meetings.get(g, meeting_id)
+    if not out:
+        raise HTTPException(404, "Unknown meeting")
+    return out
+
+
+@app.get("/api/meetings/{meeting_id}/audio")
+def meetings_audio(meeting_id: str):
+    from fastapi.responses import FileResponse
+    from neura1 import meetings
+    path = meetings.audio_path(meeting_id)
+    if not path:
+        raise HTTPException(404, "No recording")
+    kinds = {".m4a": "audio/mp4", ".mp4": "audio/mp4", ".mp3": "audio/mpeg", ".mpeg": "audio/mpeg", ".wav": "audio/wav",
+             ".aiff": "audio/aiff", ".aif": "audio/aiff", ".ogg": "audio/ogg", ".webm": "audio/webm", ".flac": "audio/flac"}
+    return FileResponse(path, media_type=kinds.get(path.suffix.lower(), "application/octet-stream"))
+
+
+# ---------- knowledge health ----------
+
+@app.get("/api/knowledge-health")
+def knowledge_health_sweep(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import knowledge_health
+    return knowledge_health.sweep(g, v)
+
+
+class ReviewRequest(BaseModel):
+    source: str
+
+
+@app.post("/api/knowledge-health/review", dependencies=[Depends(require_passcode)])
+def knowledge_health_review(body: ReviewRequest, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import knowledge_health
+    if not v.id:
+        raise HTTPException(400, "Choose who you are first")
+    try:
+        return knowledge_health.request_review(g, body.source, v)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
 
 
 # ---------- can we promise this? ----------
@@ -1303,8 +1435,10 @@ def reset_demo():
         _reset.update(running=True, error=None)
         try:
             load()
-            from neura1 import guard
+            from neura1 import guard, meetings
             guard.forget()
+            for f in meetings.folder().glob("MTG-*"):
+                f.unlink(missing_ok=True)
             for f in (settings.data_dir / "documents").glob("DOC-*"):
                 f.unlink(missing_ok=True)
             _reset["last"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -1334,6 +1468,22 @@ def brief_today(g=Depends(graph)):
 def brief_send(g=Depends(graph)):
     from neura1 import brief
     return brief.post(g, force=True)
+
+
+@app.get("/api/brief/me")
+def brief_mine(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import brief
+    if not v.id:
+        raise HTTPException(400, "Choose who you are first")
+    return brief.personal(g, v.id)
+
+
+@app.post("/api/brief/me", dependencies=[Depends(require_passcode)])
+def brief_send_mine(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import brief
+    if not v.id:
+        raise HTTPException(400, "Choose who you are first")
+    return brief.post_personal(g, v.id, force=True)
 
 
 @app.post("/api/inbox/check", dependencies=[Depends(require_passcode)])

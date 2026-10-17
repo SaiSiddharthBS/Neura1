@@ -1,12 +1,15 @@
 "use client";
 
-import { Hash, Lock, PenSquare, Search, Users, X } from "lucide-react";
+import { Bot, Hash, Lock, PenSquare, Search, Sparkles, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Avatar } from "@/components/ViewerSwitch";
 import { api } from "@/lib/api";
 import { type Conversation, type Hit, when } from "./types";
 
 export function ConversationAvatar({ c, me, size = 38 }: { c: Conversation; me: string; size?: number }) {
+  if (c.kind === "bot") {
+    return <span className="grid shrink-0 place-items-center rounded-full bg-gradient-to-br from-accent to-violet text-white shadow-[0_0_18px_-4px_var(--accent)]" style={{ width: size, height: size }}><Bot size={size * 0.46} /></span>;
+  }
   if (c.kind === "channel") {
     return <span className="grid shrink-0 place-items-center rounded-xl bg-elev-strong text-muted" style={{ width: size, height: size }}><Hash size={size * 0.42} /></span>;
   }
@@ -33,7 +36,7 @@ function Row({ c, me, active, onOpen }: { c: Conversation; me: string; active: b
   const preview = !p ? (c.purpose ?? "No messages yet")
     : p.kind === "system" ? p.text
     : p.mine ? `You: ${p.text}`
-    : c.kind === "dm" && p.author !== "Neura1" ? p.text
+    : (c.kind === "dm" && p.author !== "Neura1") || c.kind === "bot" ? p.text
     : `${p.author}: ${p.text}`;
   return (
     <button onClick={onOpen} aria-current={active ? "true" : undefined}
@@ -58,9 +61,9 @@ function Row({ c, me, active, onOpen }: { c: Conversation; me: string; active: b
   );
 }
 
-export default function ConversationList({ conversations, me, current, onOpen, onNew, onHit }: {
+export default function ConversationList({ conversations, me, current, onOpen, onNew, onHit, onBot }: {
   conversations: Conversation[]; me: string; current: string; onOpen: (id: string) => void; onNew: () => void;
-  onHit: (h: Hit) => void;
+  onHit: (h: Hit) => void; onBot: () => void;
 }) {
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<Hit[]>([]);
@@ -99,6 +102,13 @@ export default function ConversationList({ conversations, me, current, onOpen, o
             <div className="px-2.5 pb-1 pt-1 text-[11px] font-medium text-faint">Channels</div>
             {chans.map((c) => <Row key={c.id} c={c} me={me} active={c.id === current} onOpen={() => onOpen(c.id)} />)}
           </div>
+        )}
+        {!conversations.some((c) => c.kind === "bot") && !q && (
+          <button onClick={onBot} className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left hover:bg-elev">
+            <span className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full bg-gradient-to-br from-accent to-violet text-white"><Bot size={17} /></span>
+            <span className="min-w-0 flex-1"><span className="block text-[13.5px] font-medium">Neura1</span>
+              <span className="flex items-center gap-1 truncate text-[12.5px] text-muted"><Sparkles size={11} /> Your brief every morning, and anything you ask</span></span>
+          </button>
         )}
         <div>
           <div className="px-2.5 pb-1 pt-1 text-[11px] font-medium text-faint">Direct messages and groups</div>

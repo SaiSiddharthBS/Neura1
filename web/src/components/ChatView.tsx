@@ -130,7 +130,7 @@ export default function ChatView() {
           const had = before.get(c.id) ?? 0;
           if (c.id !== current && c.unread > had && c.preview && !c.preview.mine && c.preview.kind !== "system") {
             toast(c.kind === "channel" ? `#${c.name}` : c.name, {
-              description: `${c.kind === "dm" ? "" : `${c.preview.author}: `}${c.preview.text}`.slice(0, 120),
+              description: `${c.kind === "dm" || c.kind === "bot" ? "" : `${c.preview.author}: `}${c.preview.text}`.slice(0, 120),
               action: { label: "Open", onClick: () => open(c.id) },
             });
           }
@@ -330,7 +330,7 @@ export default function ChatView() {
   }
 
   const mentionPool = useMemo(() => {
-    const pool = conv && conv.kind !== "channel" ? conv.members.filter((m) => m.id !== me).map((m) => m.name) : people.filter((p) => p.id !== me).map((p) => p.name);
+    const pool = conv?.kind === "bot" ? [] : conv && conv.kind !== "channel" ? conv.members.filter((m) => m.id !== me).map((m) => m.name) : people.filter((p) => p.id !== me).map((p) => p.name);
     return ["neura1", ...pool];
   }, [conv, people, me]);
   const mentions = mention === null ? [] : mentionPool.filter((n) => n.toLowerCase().startsWith(mention.q)).slice(0, 6);
@@ -439,12 +439,14 @@ export default function ChatView() {
 
   // ---------- read receipts ----------
   const lastMine = [...msgs].reverse().find((m) => m.author_id === me && !m.deleted && m.kind !== "system");
-  const seenBy = lastMine && conv && conv.kind !== "channel"
+  const seenBy = lastMine && conv && (conv.kind === "dm" || conv.kind === "group")
     ? conv.members.filter((m) => m.id !== me && (readState[m.id] ?? "") >= lastMine.ts).map((m) => m.name)
     : [];
 
   const groups = grouped(msgs);
-  const placeholder = conv
+  const placeholder = conv?.kind === "bot"
+    ? "Ask Neura1 anything about Flyvi…"
+    : conv
     ? `Message ${conv.kind === "channel" ? `#${conv.name}` : conv.name} · / for commands, @neura1 to ask`
     : "Message · / for commands, @neura1 to ask";
   const showList = !routed;
@@ -453,7 +455,8 @@ export default function ChatView() {
     <div className="-mb-12 flex h-[calc(100dvh-7rem)] min-h-[480px] gap-3">
       <aside className={`card min-h-0 w-full shrink-0 overflow-hidden md:block md:w-[300px] ${showList ? "block" : "hidden"}`}>
         <ConversationList conversations={conversations} me={me} current={current} onOpen={(id) => open(id)}
-                          onNew={() => { setDialogError(null); setCreating(true); }} onHit={(h: Hit) => open(h.channel, h.id)} />
+                          onNew={() => { setDialogError(null); setCreating(true); }} onHit={(h: Hit) => open(h.channel, h.id)}
+                          onBot={async () => { try { const r = await api<{ id: string }>("/api/chat/bot", { method: "POST" }); await loadConversations(); open(r.id); } catch (e) { setError(errorText(e)); } }} />
       </aside>
 
       <section className={`card min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:flex ${showList ? "hidden" : "flex"}`}>
@@ -465,6 +468,7 @@ export default function ChatView() {
             <div className="truncate text-[12px] text-muted">
               {typing.length ? <span className="text-accent">{typing.join(", ")} {typing.length > 1 ? "are" : "is"} typing…</span>
                 : !conv ? "" : conv.kind === "channel" ? (conv.purpose ?? "Channel")
+                : conv.kind === "bot" ? "Your brief every morning · ask anything, no @neura1 needed"
                 : conv.kind === "dm" ? (() => { const o = conv.members.find((m) => m.id !== me); return o?.online ? "Online" : roleOf.get(o?.id ?? "") ?? ""; })()
                 : conv.members.map((m) => (m.id === me ? "You" : m.name)).join(", ")}
             </div>
@@ -481,7 +485,7 @@ export default function ChatView() {
               <div className="grid h-full place-items-center px-6 text-center">
                 <div className="max-w-sm space-y-2">
                   {conv && <div className="mx-auto w-fit"><ConversationAvatar c={conv} me={me} size={56} /></div>}
-                  <div className="text-[15px] font-semibold">{conv?.kind === "dm" ? `This is the start of your conversation with ${conv.name}` : "No messages yet"}</div>
+                  <div className="text-[15px] font-semibold">{conv?.kind === "dm" ? `This is the start of your conversation with ${conv.name}` : conv?.kind === "bot" ? "Your own conversation with Neura1" : "No messages yet"}</div>
                   <p className="text-[13px] text-muted">Say hello, type <code className="rounded bg-elev px-1">/</code> for graph commands, or ask <span className="text-cyan">@neura1</span> anything about Flyvi.</p>
                 </div>
               </div>
@@ -533,7 +537,7 @@ export default function ChatView() {
                 <CheckCheck size={13} className="text-accent" /> {conv?.kind === "dm" ? "Seen" : `Seen by ${seenBy.join(", ")}`}
               </div>
             )}
-            {lastMine && !seenBy.length && conv && conv.kind !== "channel" && msgs[msgs.length - 1]?.id === lastMine.id && (
+            {lastMine && !seenBy.length && conv && (conv.kind === "dm" || conv.kind === "group") && msgs[msgs.length - 1]?.id === lastMine.id && (
               <div className="mt-1 flex items-center justify-end gap-1 pr-1 text-[11px] text-faint"><Check size={13} /> Sent</div>
             )}
             {waiting && (

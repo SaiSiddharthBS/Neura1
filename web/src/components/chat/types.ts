@@ -1,6 +1,6 @@
 export type Member = { id: string; name: string; online: boolean };
 export type Conversation = {
-  id: string; name: string; purpose: string | null; kind: "channel" | "group" | "dm";
+  id: string; name: string; purpose: string | null; kind: "channel" | "group" | "dm" | "bot";
   members: Member[]; created_by: string | null; default: boolean; created_at: string | null;
   messages: number; last: string | null; unread: number; mentions: number;
   preview: { author: string; mine: boolean; text: string; kind: string } | null;
