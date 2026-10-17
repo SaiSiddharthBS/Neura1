@@ -433,7 +433,7 @@ function renderLens(lens: Lens, r: ImpactReport, onOpen: (o: Open) => void) {
             <h3 className="mb-2 font-medium">Firmware and test dependencies</h3>
             <Table head={["Item", "Why it depends on the part", "Owner", "Evidence"]}
                    rows={r.dependents.map((d) => [
-                     d.name, d.note, `${d.owner ?? "—"}${d.team ? ` (${d.team})` : ""}`,
+                     d.name, d.note, d.owner ?? "—",
                      <div key="e" className="flex flex-wrap gap-1">
                        {d.evidence.filter((e) => e.chunk).map((e) => (
                          <button key={e.chunk} onClick={() => onOpen({ chunk: e.chunk })}
@@ -473,7 +473,7 @@ function renderLens(lens: Lens, r: ImpactReport, onOpen: (o: Open) => void) {
       );
     case "Sales":
       return (
-        <Table head={["Order", "Customer", "Qty", "Due", "Via build", "Contract note", "Account manager"]}
+        <Table head={["Order", "Customer", "Qty", "Due", "Via build", "Contract note", "Account owner"]}
                rows={r.builds.flatMap((b) => b.orders.map((o) => [
                  <span key="o" className="font-mono">{o.order}</span>, o.customer, o.qty, o.due, b.build,
                  o.penalty ? <span key="p" className="text-warn">{o.penalty}</span> : "—", o.account_manager ?? "—",

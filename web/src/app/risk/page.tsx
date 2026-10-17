@@ -13,7 +13,7 @@ type Risk = {
   bus_factor: { id: string; label: string; person: string; person_id: string; share: number; away: string[] }[];
   concentration: { customer: string; value: number; share: number }[];
   load: { id: string; name: string; open_tasks: number; upcoming_absence: string[] }[];
-  communities: { members: string[]; people: string[]; teams: string[]; crosses_teams: boolean }[];
+  communities: { members: string[]; people: string[]; records: number }[];
   trace: { name: string; cypher: string; ms: number }[];
 };
 
@@ -80,11 +80,11 @@ export default function RiskRadar() {
           ))}
         </Panel>
 
-        <Panel icon={Users} title="How work actually clusters" note="Community detection (label propagation) on who owns, leads and works on what. Clusters that cross team lines show how the company really works, beyond the org chart.">
+        <Panel icon={Users} title="How work actually clusters" note="Community detection (label propagation) on who owns, leads and works on what. Each cluster is a group of people who actually work together, whatever the org chart says.">
           {r.communities.map((c, i) => (
             <div key={i} className="rounded-xl border border-line bg-elev p-3 text-sm">
               <div className="font-medium">{c.people.join(", ")}</div>
-              <div className="mt-1 text-xs text-muted">{c.teams.join(" · ")}{c.crosses_teams ? " · crosses teams" : ""}</div>
+              <div className="mt-1 text-xs text-muted">{c.people.length} people · {c.records} shared records</div>
               <div className="mt-1 font-mono text-[11px] text-muted">{c.members.filter((m) => !m.startsWith("P-")).join(" · ")}</div>
             </div>
           ))}

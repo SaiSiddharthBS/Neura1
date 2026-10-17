@@ -1,0 +1,114 @@
+{
+  "system": "rag",
+  "model": "ornith-1.5-35b-a3b",
+  "state": "base",
+  "split": "all",
+  "passed": 3,
+  "total": 5,
+  "results": [
+    {
+      "id": "q23",
+      "category": "ownership",
+      "split": "heldout",
+      "pass": false,
+      "missing": [
+        "Employee"
+      ],
+      "seconds": 1.05,
+      "question": "Which team is Satish in?",
+      "answer": "Satish is in team **T-EMP** (people record id=P-SATISH).",
+      "retrieved": [
+        "chats/slack_fw-team_2026-09.json#m2",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "records/people.csv#19",
+        "chats/slack_fw-team_2026-09.json#m4",
+        "docs/TP-PSM-07_test_procedure.md#p1",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "chats/slack_hw-power_2025-03.json#m3",
+        "tickets/SUP-1057.json#comment-2"
+      ]
+    },
+    {
+      "id": "q43",
+      "category": "org",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.83,
+      "question": "Who reports to Vishwas?",
+      "answer": "Not recorded. The only team reference provided is Vishwas's own record (id=P-VISHWAS, team_id=T-EMP), but no record lists other people's team assignments or a reporting structure showing who reports to Vishwas.",
+      "retrieved": [
+        "tickets/SUP-1057.json#description",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "docs/onboarding_hardware.md#p2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "records/absences.csv#0",
+        "records/people.csv#7",
+        "chats/slack_hw-power_2025-03.json#m4",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p1"
+      ]
+    },
+    {
+      "id": "b07",
+      "category": "ownership",
+      "split": "blind",
+      "pass": false,
+      "missing": [
+        "Employee"
+      ],
+      "seconds": 1.08,
+      "question": "Which team is Gurumurthy in?",
+      "answer": "Gurumurthy is in team **T-EMP** (people record id=P-GURUMURTHY).",
+      "retrieved": [
+        "chats/slack_fw-team_2026-09.json#m2",
+        "records/people.csv#22",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "chats/slack_hw-power_2025-03.json#m3",
+        "tickets/SUP-1057.json#comment-2",
+        "chat/general#ec97aa396d",
+        "chats/slack_fw-team_2026-09.json#m1",
+        "chats/slack_fw-team_2026-09.json#m3"
+      ]
+    },
+    {
+      "id": "b10",
+      "category": "org",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.16,
+      "question": "Who reports directly to Markande?",
+      "answer": "Not recorded. The provided records contain only Markande's own people record (id=P-MARKANDE, role=COO, team_id=T-LEAD) and no management hierarchy or reporting structure indicating who reports to them.",
+      "retrieved": [
+        "tickets/SUP-1057.json#description",
+        "records/people.csv#4",
+        "records/dependencies.csv#0",
+        "records/dependencies.csv#1",
+        "records/projects.csv#0",
+        "records/projects.csv#1",
+        "chats/slack_fw-team_2026-09.json#m2",
+        "chats/slack_fw-team_2026-09.json#m4"
+      ]
+    },
+    {
+      "id": "b18",
+      "category": "org",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 1.64,
+      "question": "Who reports to Sharath?",
+      "answer": "Not recorded. The provided documents only contain a people record for Sharath (id=P-SHARATH, role=Employee, team_id=T-EMP) with no reporting structure or manager-employee relationships listed.",
+      "retrieved": [
+        "tickets/SUP-1057.json#description",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "records/people.csv#23",
+        "docs/ops_review_2026-09-28.md#p1",
+        "records/dependencies.csv#0",
+        "records/dependencies.csv#1",
+        "records/projects.csv#0"
+      ]
+    }
+  ]
+}

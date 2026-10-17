@@ -1,0 +1,106 @@
+{
+  "system": "graph",
+  "model": "ornith-1.5-35b-a3b",
+  "state": "base",
+  "split": "all",
+  "passed": 5,
+  "total": 5,
+  "results": [
+    {
+      "id": "q23",
+      "category": "ownership",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.33,
+      "question": "Which team is Satish in?",
+      "answer": "Satish is in the Employees team. They are backed up by Yogish and report at the Employees tier.",
+      "tool_calls": [
+        {
+          "tool": "person",
+          "args": {
+            "name": "Satish"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q43",
+      "category": "org",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.62,
+      "question": "Who reports to Vishwas?",
+      "answer": "Vishwas has no direct reports. They are an employee with no manager and no one reporting to them.",
+      "tool_calls": [
+        {
+          "tool": "organisation",
+          "args": {
+            "name": "Vishwas"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b07",
+      "category": "ownership",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 1.81,
+      "question": "Which team is Gurumurthy in?",
+      "answer": "Gurumurthy is in the **Employees** team.",
+      "tool_calls": [
+        {
+          "tool": "person",
+          "args": {
+            "name": "Gurumurthy"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b10",
+      "category": "org",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 4.03,
+      "question": "Who reports directly to Markande?",
+      "answer": "No one is recorded as a direct report of Markande. Their profile shows an empty direct-reports list and no one backed up to them.",
+      "tool_calls": [
+        {
+          "tool": "organisation",
+          "args": {
+            "name": "Markande"
+          }
+        },
+        {
+          "tool": "person",
+          "args": {
+            "name": "Markande"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b18",
+      "category": "org",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.47,
+      "question": "Who reports to Sharath?",
+      "answer": "No one reports to Sharath. Sharath has no direct reports (manager is null, and the direct_reports list is empty). Dileep backs up Sharath, but that is a backup relationship, not a reporting one.",
+      "tool_calls": [
+        {
+          "tool": "organisation",
+          "args": {
+            "name": "Sharath"
+          }
+        }
+      ]
+    }
+  ]
+}

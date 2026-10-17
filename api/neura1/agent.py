@@ -29,6 +29,8 @@ Answer questions using ONLY the results of your tools. Rules:
 - Quantities and costs must come from tool results, not your own arithmetic, unless you show the formula.
 - Refer to people by name or as "they". Never assume anyone's gender: do not use he, she, his, her, him, hers,
   Mr. or Ms. for anyone.
+- Titles exist only for the directors and the leadership team. Everyone else is an employee: never describe anyone as
+  belonging to a department or function, or give them a title, because of the work they do or the records they own.
 - Be concise: a short direct answer, then the supporting facts."""
 
 WRITE = re.compile(r"\b(CREATE|MERGE|SET|DELETE|DETACH|REMOVE|DROP|LOAD|CALL\s+db\.idx\.\w+\.(create|drop))\b", re.I)
@@ -84,8 +86,8 @@ TOOLS = [
       "lead_weeks": {"type": ["integer", "null"]}}),
     ("dependents", "Firmware modules, test procedures and other items that depend on a part, with their owners.",
      {"item_id": {"type": "string"}}),
-    ("exposure", "Planned builds (with planner), customer orders (due dates, penalty notes), customers and account "
-                 "managers, and units already shipped to the field. Pass a part, a product (e.g. PDU-28) or a revision "
+    ("exposure", "Planned builds (with planner), customer orders (due dates, penalty notes), customers and the people who "
+                 "own those accounts, and units already shipped to the field. Pass a part, a product (e.g. PDU-28) or a revision "
                  "(e.g. PDU-28-C).",
      {"item_id": {"type": "string"}}),
     ("decisions", "Recorded decisions about an item or its alternates, with who decided and verbatim evidence.",
@@ -97,14 +99,14 @@ TOOLS = [
     ("certifications", "Certifications (EMI/EMC, aircraft power, environmental), the product revision each covers, the "
                        "items whose change forces a retest, and the owner. Pass an item, a product, a revision, or nothing.",
      {"item_id": {"type": ["string", "null"]}}),
-    ("organisation", "Flyvi's leadership and their titles (Managing Director, directors, COO, CTO, General Manager), "
-                     "and, given a person's name, their manager, direct reports, team and backup.",
+    ("organisation", "How Flyvi is organised: the directors, the leadership team under them, and everyone else "
+                     "(employees). Given a person's name, also their tier, title and backup.",
      {"name": {"type": ["string", "null"]}}),
     ("notices", "Supplier notices received (price, lead-time, end-of-life changes), with their full text.", {}),
     ("who_knows", "Who knows about something: a part, project, customer, order or alias like 'pmic_seq.c'. "
                   "Returns people ranked with the reasons (owns it, decided, discussed, works on it).",
      {"text": {"type": "string"}}),
-    ("person", "A person's profile: role, team, manager, backup, stated skills, what they own, projects, decisions, "
+    ("person", "A person's profile: title, tier, backup, stated skills, what they own, projects, decisions, "
                "open tasks, recently finished work, topics.",
      {"name": {"type": "string"}}),
     ("project", "A project's lead, members, scope, related decisions, open tasks and recent discussion. "
@@ -230,17 +232,23 @@ def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
             RETURN c.id AS id, c.name AS name, r.id AS certifies_revision, retest_if_changed, o.name AS owner""",
             {"id": args.get("item_id")})
     if name == "organisation":
-        leaders = trace.run("leadership", """MATCH (p:Person)-[:MEMBER_OF]->(:Team {id:'T-LEAD'})
-                                              OPTIONAL MATCH (p)-[r:HOLDS_ROLE]->(o:Organization)
-                                              RETURN p.name AS name, coalesce(r.role, p.role) AS title, o.name AS organisation
-                                              ORDER BY name""", {})
-        out = {"leadership": leaders}
+        tiers = trace.run("tiers", """MATCH (p:Person)-[:MEMBER_OF]->(t:Team)
+                                       OPTIONAL MATCH (p)-[r:HOLDS_ROLE]->(o:Organization)
+                                       RETURN t.id AS tier, p.name AS name, coalesce(r.role, p.role) AS title,
+                                              o.name AS organisation ORDER BY name""", {})
+        out = {"structure": "Three tiers. The directors are peers; the leadership team works under them; everyone "
+                            "else is an employee, with no title or department recorded.",
+               "directors": [x for x in tiers if x["tier"] == "T-DIR"],
+               "leadership": [x for x in tiers if x["tier"] == "T-LEAD"],
+               "employees": [x["name"] for x in tiers if x["tier"] not in ("T-DIR", "T-LEAD")]}
+        for x in out["directors"] + out["leadership"]:
+            x.pop("tier")
         if args.get("name"):
             out["person"] = trace.run("reporting_line", """
                 MATCH (p:Person) WHERE toLower(p.name) CONTAINS toLower($t)
                 OPTIONAL MATCH (p)-[:REPORTS_TO]->(m:Person) OPTIONAL MATCH (r:Person)-[:REPORTS_TO]->(p)
                 OPTIONAL MATCH (b:Person)-[:BACKS_UP]->(p) OPTIONAL MATCH (p)-[:MEMBER_OF]->(t:Team)
-                RETURN p.name AS name, p.role AS role, t.name AS team, m.name AS manager,
+                RETURN p.name AS name, p.role AS role, t.name AS tier, m.name AS manager,
                        collect(DISTINCT r.name) AS direct_reports, collect(DISTINCT b.name) AS backed_up_by""",
                 {"t": args["name"]})
         return out
@@ -273,7 +281,7 @@ def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
         r["reporting"] = trace.run("reporting", """
             MATCH (p:Person {id:$id}) OPTIONAL MATCH (p)-[:REPORTS_TO]->(m:Person)
             OPTIONAL MATCH (b:Person)-[:BACKS_UP]->(p) OPTIONAL MATCH (p)-[:MEMBER_OF]->(t:Team)
-            RETURN m.name AS manager, collect(b.name) AS backed_up_by, t.name AS team""", {"id": found[0]["id"]})
+            RETURN m.name AS manager, collect(b.name) AS backed_up_by, t.name AS tier""", {"id": found[0]["id"]})
         return r
     if name == "project":
         found = trace.run("find_project", """MATCH (p:Project) WHERE toLower(p.name) CONTAINS toLower($t)

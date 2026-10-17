@@ -19,8 +19,11 @@ NOTICE = "inbox/notice_NB54360_2026-10-14.md"
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://localhost:3000")
-    ap.add_argument("--passcode", default="change-me")
+    ap.add_argument("--passcode", default=None, help="defaults to NEURA1_DEMO_PASSCODE in api/.env")
     args = ap.parse_args()
+    if args.passcode is None:
+        from neura1.config import settings
+        args.passcode = settings.demo_passcode or "change-me"
     base = args.base
     OUT.mkdir(parents=True, exist_ok=True)
     shots = []
@@ -213,7 +216,7 @@ def main() -> None:
         page.wait_for_timeout(2000)
         shot("capability-map")
 
-        # 7d People and organisation, seen as an R&D engineer and then as a software engineer
+        # 7d People and organisation, seen by two employees
         page.evaluate("() => localStorage.setItem('neura1-viewer', 'P-VISHWAS')")
         for name, url, wait in (("my-day", "/me", "Your work"),
                                 ("organisation", "/org", "Organisation"),

@@ -124,7 +124,11 @@
   category: ownership
   question: Which team is Satish in?
   # Corrected 2026-10-17: the team is named "Testing" (id T-QA) in the records; "Quality" never matched the data.
-  all: [Testing]
+  # Changed 2026-10-17, after every published run: Flyvi's owners restructured the organisation into directors,
+  # leadership and employees, with no departments or reporting lines below leadership. Published runs were scored
+  # against the earlier records and are left as published; see docs/EVAL.md.
+  before_restructure: {all: [Testing]}   # what every published run was scored against
+  all: [Employee]
 - id: q24
   split: heldout
   category: policy
@@ -236,8 +240,12 @@
   category: org
   question: Who reports to Vishwas?
   # Corrected 2026-10-17: after the leadership restructure, Satish reports to Hithesh (records/reports_to.csv).
-  all: [Raghavendra, Sai]
+  # Changed 2026-10-17, after every published run: Flyvi's owners restructured the organisation into directors,
+  # leadership and employees, with no departments or reporting lines below leadership. Published runs were scored
+  # against the earlier records and are left as published; see docs/EVAL.md.
+  any: [[nobody, no one, "no direct reports", "no reports", not recorded, "no reporting", none recorded, "does not have", "doesn't have", "no one reports"]]
 
+  before_restructure: {all: [Raghavendra, Sai]}   # what every published run was scored against
 # Added 2026-10-16 with the Flyvi organisation, people and work history. Written before running any model.
 - id: q44
   split: heldout
@@ -303,7 +311,11 @@
   split: blind
   category: ownership
   question: Which team is Gurumurthy in?
-  all: [Quality Assurance]
+  # Changed 2026-10-17, after every published run: Flyvi's owners restructured the organisation into directors,
+  # leadership and employees, with no departments or reporting lines below leadership. Published runs were scored
+  # against the earlier records and are left as published; see docs/EVAL.md.
+  before_restructure: {all: [Quality Assurance]}   # what every published run was scored against
+  all: [Employee]
 - id: b08
   split: blind
   category: dependency
@@ -318,7 +330,11 @@
   split: blind
   category: org
   question: Who reports directly to Markande?
-  all: [Praveen, Gurumurthy, Sharath, Ambika, Tejaswini]
+  # Changed 2026-10-17, after every published run: Flyvi's owners restructured the organisation into directors,
+  # leadership and employees, with no departments or reporting lines below leadership. Published runs were scored
+  # against the earlier records and are left as published; see docs/EVAL.md.
+  before_restructure: {all: [Praveen, Gurumurthy, Sharath, Ambika, Tejaswini]}   # what every published run was scored against
+  any: [[nobody, no one, "no direct reports", "no reports", not recorded, "no reporting", none recorded, "does not have", "doesn't have", "no one reports"]]
 - id: b11
   split: blind
   category: exposure
@@ -360,4 +376,8 @@
   split: blind
   category: org
   question: Who reports to Sharath?
-  all: [Dileep, Pradeep]
+  # Changed 2026-10-17, after every published run: Flyvi's owners restructured the organisation into directors,
+  # leadership and employees, with no departments or reporting lines below leadership. Published runs were scored
+  # against the earlier records and are left as published; see docs/EVAL.md.
+  before_restructure: {all: [Dileep, Pradeep]}   # what every published run was scored against
+  any: [[nobody, no one, "no direct reports", "no reports", not recorded, "no reporting", none recorded, "does not have", "doesn't have", "no one reports"]]

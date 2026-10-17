@@ -48,7 +48,7 @@ export default function Capabilities() {
         </div>
         {m && (
           <span className="flex items-center gap-1.5 rounded-full border border-line bg-elev px-3 py-1 text-[12px] text-muted">
-            <Lock size={12} /> {m.visibility === "names" ? "You see names (HR and leadership)" : m.visibility === "your reports" ? "You see names of your reports" : "You see counts; names are private"}
+            <Lock size={12} /> {m.visibility === "names" ? "You see names (directors and leadership)" : m.visibility === "your reports" ? "You see names of your reports" : "You see counts; names are private"}
           </span>
         )}
       </div>

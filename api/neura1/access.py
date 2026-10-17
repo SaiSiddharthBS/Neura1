@@ -1,10 +1,10 @@
 """Who may see what, derived from the graph rather than from a separate permission table.
 
 The viewer is a Person (sent as the X-Neura1-As header by the web app). Rules:
-  * Money (order values, prices, penalties, cost changes): leadership, the board, business development,
-    purchase and project management.
-  * Leave details (dates and notes): the person themself, anyone above them in the reporting chain, their backup,
-    HR, and leadership. Everyone else only sees whether the person is away today.
+  * Money (order values, prices, penalties, cost changes): the directors and the leadership team.
+  * Leave details (dates and notes): the person themself, their backup, and the directors and leadership team.
+    Everyone else only sees whether the person is away today.
+Flyvi has three tiers: directors, leadership, and employees. Any reporting lines recorded in the graph also apply.
 With no viewer (internal calls, tests, MCP) everything is visible; the web app always sends a viewer.
 """
 
@@ -15,8 +15,9 @@ from falkordb import Graph
 
 from neura1.graph import rows
 
-MONEY_TEAMS = {"T-LEAD", "T-SALES", "T-SC"}
-LEAVE_TEAMS = {"T-LEAD", "T-HR"}
+LEADERSHIP = {"T-DIR", "T-LEAD"}   # directors, and the leadership team under them
+MONEY_TEAMS = LEADERSHIP
+LEAVE_TEAMS = LEADERSHIP
 
 VIEWER = """
 MATCH (p:Person {id:$id})
@@ -43,6 +44,10 @@ class Viewer:
         return self.id is None
 
     @property
+    def leader(self) -> bool:
+        return self.team in LEADERSHIP
+
+    @property
     def sees_money(self) -> bool:
         return self.unrestricted or self.team in MONEY_TEAMS
 
@@ -51,7 +56,7 @@ class Viewer:
                 or person_id in self.covers or self.team in LEAVE_TEAMS)
 
     def sees_profile_of(self, person_id: str) -> bool:
-        """A person's expertise from their work: themselves, their management chain, HR and leadership."""
+        """A person's expertise from their work: themselves, anyone they manage, and the directors and leadership."""
         return (self.unrestricted or person_id == self.id or person_id in self.reports
                 or self.team in LEAVE_TEAMS)
 
@@ -59,7 +64,7 @@ class Viewer:
         return {"id": self.id, "name": self.name, "role": self.role, "team": self.team_name,
                 "sees_money": self.sees_money, "reports": sorted(self.reports),
                 "leave_visible_for": "everyone" if self.unrestricted or self.team in LEAVE_TEAMS
-                else "self, reports and people they back up"}
+                else "self and people they back up"}
 
 
 def viewer(graph: Graph, person_id: str | None) -> Viewer:

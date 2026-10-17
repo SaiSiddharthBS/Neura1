@@ -30,7 +30,7 @@ export default function MyDay() {
       <div>
         <div className="flex items-center gap-1.5 text-[13px] text-muted"><Sun size={13} /> {today}</div>
         <PageTitle className="mt-1">{"Your day,"} <em>{m.name}</em></PageTitle>
-        <p className="mt-1.5 text-[15px] text-muted">{m.role} · {m.team}{m.manager ? ` · reports to ${m.manager}` : ""}. What changed in your areas, what is waiting for you, and who is away.</p>
+        <p className="mt-1.5 text-[15px] text-muted">{m.role}. What changed in your areas, what is waiting for you, and who is away.</p>
       </div>
       <BriefCard />
       <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">

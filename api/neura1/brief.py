@@ -58,7 +58,7 @@ def compose(graph: Graph, today: date | None = None) -> dict:
     if thin:
         lines.append("• Held by one person, with open work: " + ", ".join(thin) + ".")
     if away:
-        lines.append(f"• {away} {'person is' if away == 1 else 'people are'} away this week; managers can see the handover plans.")
+        lines.append(f"• {away} {'person is' if away == 1 else 'people are'} away this week; the leadership team can see the handover plans.")
     return {"date": t, "text": "\n".join(lines), "signals": len(signals), "builds": builds, "quotes": quotes,
             "thin": thin, "away": away}
 

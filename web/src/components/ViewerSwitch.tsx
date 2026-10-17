@@ -43,7 +43,8 @@ export default function ViewerSwitch() {
   const shown = useMemo(() => {
     const t = q.trim().toLowerCase();
     const list = t ? people.filter((p) => `${p.name} ${p.role} ${p.team}`.toLowerCase().includes(t)) : people;
-    return [...list].sort((a, b) => Number(b.team === "Leadership") - Number(a.team === "Leadership") || a.name.localeCompare(b.name));
+    const tier = (p: P) => (p.team === "Directors" ? 0 : p.team === "Leadership" ? 1 : 2);
+    return [...list].sort((a, b) => tier(a) - tier(b) || a.name.localeCompare(b.name));
   }, [people, q]);
 
   function pick(id: string) {
@@ -73,7 +74,7 @@ export default function ViewerSwitch() {
                 <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="View the brain as…"
                        className="h-8 flex-1 bg-transparent text-[13px] outline-none" style={{ background: "transparent" }} />
               </div>
-              <p className="mt-1.5 px-1 text-[11px] text-faint">What you see follows this person&apos;s place in the graph: money for leadership, BD and purchase; leave for their chain, backup and HR.</p>
+              <p className="mt-1.5 px-1 text-[11px] text-faint">What you see follows this person&apos;s place in the graph: money and leave plans for the directors and leadership; leave plans also for the person and their backup.</p>
             </div>
             <ul role="listbox" className="max-h-72 overflow-y-auto p-1">
               {shown.map((p) => (
@@ -83,7 +84,7 @@ export default function ViewerSwitch() {
                     <Avatar name={p.name} size={24} />
                     <span className="min-w-0 flex-1 leading-tight">
                       <span className="block truncate text-[13px]">{p.name}</span>
-                      <span className="block truncate text-[11px] text-muted">{p.role} · {p.team}</span>
+                      <span className="block truncate text-[11px] text-muted">{p.role}</span>
                     </span>
                     {p.id === me && <Check size={14} className="text-accent" />}
                   </button>

@@ -134,7 +134,7 @@ def _table(head: list[str], body: list[list]) -> str:
 
 def _money(v, viewer: Viewer) -> str:
     if not viewer.sees_money:
-        return "(visible to leadership, BD and purchase)"
+        return "(visible to the directors and the leadership team)"
     try:
         return f"₹{int(round(float(v))):,}"
     except (TypeError, ValueError):
@@ -254,7 +254,7 @@ def handover_note(graph: Graph, person_id: str, viewer: Viewer) -> tuple[str, st
         raise KeyError(person_id)
     p = a["person"]
     if not viewer.sees_leave_of(person_id):
-        raise PermissionError("Leave details are visible to the person, their management chain, backup, HR and leadership")
+        raise PermissionError("Leave details are visible to the person, their backup, and the directors and leadership team")
     title = f"Handover note: {p['name']}"
     period = f"{a['absence']['start']} to {a['absence']['end']}" if a.get("absence") else "dates to be confirmed"
     tasks = [[t["title"], t["status"], next((x["owner"] for x in a["actions"] if x.get("target") == t["id"]), p.get("backup"))]
@@ -263,7 +263,7 @@ def handover_note(graph: Graph, person_id: str, viewer: Viewer) -> tuple[str, st
     know = [[k["id"], f"{round(k['share'] * 100)}%", k.get("next_best") or "—"] for k in a["knowledge_at_risk"]]
     md = f"""# {title}
 
-{_table(["Field", "Value"], [["Away", period], ["Backup", p.get("backup")], ["Manager", p.get("manager")],
+{_table(["Field", "Value"], [["Away", period], ["Backup", p.get("backup")], ["Confirms the handover", "A member of the leadership team (HB-HR-02)"],
                              ["Prepared by", viewer.name], ["Policy", "HB-HR-02 Leave and handover"]])}
 
 ## Open work and who takes it

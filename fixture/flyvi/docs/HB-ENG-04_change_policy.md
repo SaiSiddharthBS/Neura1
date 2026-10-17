@@ -7,4 +7,4 @@ Synthetic document. Flyvi Technologies engineering handbook. Owner: Vishwas.
 3. Changes to power-path components need a firmware review by the owner of any module that depends on the part.
 4. Quality must requalify under the governing test procedure before the change is released.
 5. Procurement confirms pricing, MOQ, and lead time from a valid quote.
-6. Production replans affected builds, and account managers inform customers whose committed orders may move.
+6. Production replans affected builds, and the owner of each affected customer account informs customers whose committed orders may move.

@@ -132,7 +132,7 @@ def source_passages(graph: Graph, source_id: str) -> list[dict]:
     return rows(graph, """
         MATCH (c:Chunk)-[:PART_OF]->(:Source {id:$id})
         RETURN c.id AS id, c.text AS text, c.author AS author, c.ts AS ts, c.page AS page
-        ORDER BY c.ordinal""", {"id": source_id})
+        ORDER BY c.ordinal, c.ts""", {"id": source_id})
 
 
 def _prompt(passages: list[dict]) -> str:

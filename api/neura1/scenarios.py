@@ -113,6 +113,8 @@ def absence_impact(graph: Graph, person_id: str, start: str | None = None, end: 
 
     backup, manager = person["backup"], person["manager"]
     actions = []
+    # Flyvi records no line managers below leadership: work goes to the named backup, and anything that needs an
+    # approver is left for the leadership team to pick up (HB-HR-02 clause 5).
     for x in tasks:
         actions.append({"kind": "handover", "target": x["id"], "owner": backup or manager,
                         "title": f"Take over from {person['name']}: {x['title']}",
@@ -131,10 +133,9 @@ def absence_impact(graph: Graph, person_id: str, start: str | None = None, end: 
         actions.append({"kind": "handover_note", "target": person_id, "owner": person["name"],
                         "title": f"Write a handover note covering {topics}",
                         "why": "Knowledge only this person holds (HB-HR-02 clause 4)", "cites": cite})
-    if manager:
-        actions.append({"kind": "confirm_handover", "target": person_id, "owner": manager,
-                        "title": f"Confirm {person['name']}'s handover before {start or 'the leave'}",
-                        "why": "Manager confirms the handover (HB-HR-02 clause 5)", "cites": cite})
+    actions.append({"kind": "confirm_handover", "target": person_id, "owner": manager,
+                    "title": f"Confirm {person['name']}'s handover before {start or 'the leave'}",
+                    "why": "A member of the leadership team confirms the handover (HB-HR-02 clause 5)", "cites": cite})
 
     return {"status": "ok", "person": person | {"id": person_id}, "absence": {"start": start, "end": end},
             "absences": absences, "owned": owned, "open_tasks": tasks, "led_projects": led,
@@ -199,9 +200,10 @@ MATCH (prod)-[:HAS_REV]->(r:Revision)<-[:COVERS]-(pr:Project)<-[:LEADS]-(lead:Pe
 RETURN DISTINCT prod.id AS product, pr.id AS project, pr.name AS project_name, lead.name AS lead
 """
 
-TOP_OF_CHAIN = """
-MATCH (p:Person {id:$id})-[:REPORTS_TO*1..4]->(top:Person) WHERE NOT (top)-[:REPORTS_TO]->()
-RETURN top.name AS name LIMIT 1
+# Customer escalations from a top account are briefed to the Director - Business Development.
+BD_DIRECTOR = """
+MATCH (p:Person)-[r:HOLDS_ROLE]->(:Organization) WHERE r.role CONTAINS 'Business Development'
+RETURN p.name AS name LIMIT 1
 """
 
 
@@ -232,8 +234,7 @@ def customer_360(graph: Graph, customer_id: str, escalation: str | None = None) 
         tickets = [s for s in signals if s["kind"] == "ticket" and (s["status"] or "").lower() not in
                    ("closed", "resolved", "done")]
         fix = t.run("fix_path", FIX_PATH, {"source": esc})
-        top = (t.run("top_of_chain", TOP_OF_CHAIN, {"id": cust["manager_id"]}) or [{}])[0].get("name") \
-            if cust["manager_id"] else None
+        top = (t.run("bd_director", BD_DIRECTOR, {}) or [{}])[0].get("name")
         next_due = orders[0] if orders else None
         actions.append({"kind": "customer_response", "target": customer_id, "owner": cust["account_manager"],
                         "title": f"Reply to {cust['name']} with a fix plan and dates",
@@ -293,8 +294,7 @@ COMMUNITIES = """
 CALL algo.labelPropagation({nodeLabels:['Person', 'Project', 'Item', 'Customer'],
                             relationshipTypes:['OWNS', 'WORKS_ON', 'LEADS', 'COVERS']})
 YIELD node, communityId
-OPTIONAL MATCH (node)-[:MEMBER_OF]->(t:Team)
-RETURN communityId AS community, collect(node.id) AS members, collect(DISTINCT t.name) AS teams,
+RETURN communityId AS community, collect(node.id) AS members,
        collect(CASE WHEN node:Person THEN node.name END) AS people
 """
 
@@ -329,9 +329,12 @@ def risk_radar(graph: Graph, today: date | None = None) -> dict:
     today_s = (today or date.today()).isoformat()
 
     totals: dict[str, dict] = {}
+    # Only relationship types the graph actually has (a company may record no reporting lines, for example).
+    present = {r[0] for r in graph.query("CALL db.relationshipTypes()").result_set}
+    rels = [r for r in OPERATIONAL_RELS if r in present]
     for seed in CHOKEPOINT_SEEDS:
         for r in t.run(f"chokepoints_seed_{seed}", CHOKEPOINTS,
-                       {"labels": OPERATIONAL, "rels": OPERATIONAL_RELS, "size": 1000, "seed": seed}):
+                       {"labels": OPERATIONAL, "rels": rels, "size": 1000, "seed": seed}):
             totals.setdefault(r["id"], {**r, "score": 0.0})["score"] += r["score"] / len(CHOKEPOINT_SEEDS)
     chokepoints = sorted(totals.values(), key=lambda r: (-r["score"], r["id"]))[:8]
 
@@ -375,10 +378,9 @@ def risk_radar(graph: Graph, today: date | None = None) -> dict:
     communities = []
     for c in t.run("communities", COMMUNITIES, {}):
         people = [p for p in c["people"] if p]
-        teams = [x for x in c["teams"] if x]
         if len(people) >= 2:
-            communities.append({"members": c["members"], "people": people, "teams": teams,
-                                "crosses_teams": len(teams) > 1})
+            communities.append({"members": c["members"], "people": people,
+                                "records": len([m for m in c["members"] if not m.startswith("P-")])})
 
     return {"chokepoints": chokepoints, "single_source": single_source, "no_quote": no_quote, "bus_factor": bus_factor,
             "concentration": concentration, "load": load, "communities": communities, "trace": t.steps}

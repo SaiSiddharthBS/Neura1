@@ -23,7 +23,7 @@ the whole company (people, projects, products, customers, decisions) and turns i
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white">
   <img alt="React Flow" src="https://img.shields.io/badge/React_Flow-ff0072">
   <img alt="DGX Spark" src="https://img.shields.io/badge/DGX_Spark-ornith--1.5--35b-76B900?logo=nvidia&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-78_passing-2fd3a5">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-82_passing-2fd3a5">
   <img alt="MCP" src="https://img.shields.io/badge/MCP-16_tools-5b6cff">
   <img alt="Licence" src="https://img.shields.io/badge/licence-AGPL--3.0-a42e2b">
   <img alt="Cost" src="https://img.shields.io/badge/running_cost-₹0-2fd3a5">
@@ -59,7 +59,7 @@ Neura1 answers in one view:
 |---|---|---|
 | 🔩 | **3 regulators per PDU-28 Rev C**: two inside the PSM-28 module, one directly on the board (U12). **1 per BCU-24.** Draft Rev D and obsolete Rev B excluded, with the reason. | One variable-length Cypher traversal with `reduce()` |
 | 🏭 | **3 of 3 planned builds at risk.** 60 free parts cover part of the first build; supply ordered today lands around 19 Mar 2027. | Graph + deterministic stock allocation |
-| 🤝 | **3 customer orders exposed.** Nilgiri Aero Systems' SO-881 carries a late-delivery penalty (clause 9.2). | Build → order → customer → account manager |
+| 🤝 | **3 customer orders exposed.** Nilgiri Aero Systems' SO-881 carries a late-delivery penalty (clause 9.2). | Build → order → customer → account owner |
 | 💸 | **₹37,400 cost increase** = 420 × (₹320 − ₹250) + ₹8,000 requalification. The cheaper Q-099 quote expired on 30 June and is ignored. | `Decimal` maths in code, never the model |
 | 🧠 | **"Do not switch to NB54361-L."** Rejected as **DEC-117** by Vishwas on 12 Mar 2025, for thermal shutdown at 68 °C. Found in both Slack *and* Jira, quoted word for word. | Local model extracts, code verifies quotes |
 | ✅ | **11 tasks for 7 people**, from the company's own change policy. Approve once, never duplicated, remembered next session. | Idempotent `Investigation` / `Action` nodes |
@@ -85,7 +85,7 @@ Neura1 answers in one view:
   </tr>
   <tr>
     <td><img src="docs/demo/capability-map.png" alt="Capability map"><br><sub><b>Capability map</b>: what Flyvi is good at, from recorded work. Areas, people with finished work vs active now, and where Flyvi is thin (power sequencing: one person). As leadership sees it.</sub></td>
-    <td><img src="docs/demo/capability-map-restricted.png" alt="Capability map for an engineer"><br><sub><b>Private by design</b>: an engineer sees the same map with counts only. A person's expertise is visible to them, their chain, HR and leadership. No scores or rankings exist.</sub></td>
+    <td><img src="docs/demo/capability-map-restricted.png" alt="Capability map for an engineer"><br><sub><b>Private by design</b>: an engineer sees the same map with counts only. A person's expertise is visible to them and to the directors and leadership team. No scores or rankings exist.</sub></td>
   </tr>
   <tr>
     <td><img src="docs/demo/chat.png" alt="Neura1 Chat"><br><sub><b>Neura1 Chat</b>: the team talks inside the brain. Messages link to the parts and people they mention, slash commands answer from the graph, and approved plans post themselves.</sub></td>
@@ -97,7 +97,7 @@ Neura1 answers in one view:
   </tr>
   <tr>
     <td><img src="docs/demo/docs-change-notice.png" alt="Change notice"><br><sub><b>Change notice from the graph</b>: affected products, builds, orders, cost, rejected alternates and required reviews, written by code into a real Word document.</sub></td>
-    <td><img src="docs/demo/organisation.png" alt="Organisation"><br><sub><b>Organisation</b>: Datasol, Flyvi's directors Jayaram, Suresh and Sathish side by side, and every reporting line from the graph.</sub></td>
+    <td><img src="docs/demo/organisation.png" alt="Organisation"><br><sub><b>Organisation</b>: Datasol, Flyvi's three directors side by side, the leadership team under them, then everyone at Flyvi.</sub></td>
   </tr>
   <tr>
     <td><img src="docs/demo/customer-escalation.png" alt="Customer escalation"><br><sub><b>Customer escalation</b>: Konkan Naval threatens to hold acceptance of SO-884. Sales, support, firmware, production and the CTO each get a task.</sub></td>
@@ -204,7 +204,7 @@ through the same graph:
 |---|---|---|
 | **Supplier change** (price, lead time, end of life) | BOM where-used → builds → orders → customers · firmware and test dependencies · certifications · past decisions | Engineering, firmware, quality, procurement, production and sales tasks (HB-ENG-04) |
 | **Customer escalation** | Orders and their value, penalty exposure, field units, open tickets, the products involved, the project that can fix them, account rank | Account reply, root cause, fix decision, acceptance criteria, executive brief for top accounts |
-| **People change** (leave, departure) | What they own, open tasks, projects they lead, knowledge the company relies on them for, conflicts with other plans, backup and manager | Handover, interim owners and leads, handover note, manager confirmation (HB-HR-02) |
+| **People change** (leave, departure) | What they own, open tasks, projects they lead, knowledge the company relies on them for, conflicts with other plans, and their backup | Handover, interim owners and leads, handover note, confirmation by the leadership team (HB-HR-02) |
 | **Every day** | Betweenness centrality, community detection and traversals across the whole graph | **Risk radar**: chokepoints, single-sourced parts, one-person knowledge, customer concentration, workload and leave |
 
 **Plans interact because they share one graph.** Approving the supplier-change plan assigns Raghavendra the PSM-28 review. Her
@@ -255,11 +255,11 @@ read-only, and tasks are drafts until a person confirms them.
 
 | Capability | What Neura1 does | Where |
 |---|---|---|
-| **Organisation** | Datasol (parent) → Flyvi, led by Jayaram (Founder & MD), Anil (President & EO), Suresh (Director BD), Sathish (Director Finance), Markande (COO), Hithesh (CTO) and Praveen (GM) → 10 teams → 30 people, with reporting lines, backups and roles. The org chart shows open work and who is away today. | Organisation |
+| **Organisation** | Datasol (parent) → Flyvi in three tiers: the directors Suresh (Director - Business Development), Sathish (Director - Finance) and Jayaram (Founder & Managing Director) as peers; under them the leadership team, Anil (President & Executive Officer), Markande (COO), Hithesh (CTO) and Praveen (General Manager); and 23 employees. Only the directors and the leadership team have titles. The org chart shows open work and who is away today. | Organisation |
 | **Employee 360** | For anyone: reporting chain, current and finished work, leave, stated skills plus knowledge derived from their work, projects, ownership, decisions, team, recent messages | People |
 | **Roles your team can maintain** | Edit role, team, manager, backup, skills and leave in the app, or import CSVs. Every change is stored as an event in the graph. | People → Edit · Import |
-| **Permissions from the graph** | "Viewing as" any person. Leave details are visible to that person's management chain, backup, HR and leadership. Money is visible to leadership, BD and purchase. Everyone else sees it redacted, including rupee amounts written inside messages and answers. | Sidebar → Viewing as |
-| **Neura1 Chat** | Built-in team chat (channels and DMs). Every message becomes a linked passage in the graph, so chat feeds search, "who knows" and timelines. `@neura1` answers in the thread with sources; `/impact`, `/who`, `/away`, `/risk` answer instantly without a model. Replies only show what *every* reader of that channel may see (money and leave are redacted per audience). #leadership and #supply are open only to people cleared for money, and direct messages stay private by construction: they are never turned into searchable company knowledge. Approved plans, finished tasks and new notices are posted to the right channel automatically. | Chat |
+| **Permissions from the graph** | "Viewing as" any person. Flyvi has three tiers: the directors, the leadership team under them, and employees. Leave details are visible to the person, their backup, and the directors and leadership team; so is money. Everyone else sees it redacted, including rupee amounts written inside messages and answers. | Sidebar → Viewing as |
+| **Neura1 Chat** | A full messenger: channels (anyone can create one), direct messages and private groups (add, remove, rename, leave), with unread counts and @mentions, replies, edits, deletes, emoji reactions, read receipts ("Seen"), typing indicators, online status and message search. Every channel message becomes a linked passage in the graph, so chat feeds search, "who knows" and timelines. `@neura1` answers as a reply with sources; `/impact`, `/who`, `/away`, `/risk` answer instantly without a model. Replies only show what *every* reader may see (money and leave are redacted per audience). #leadership is open only to the directors and leadership team. Direct messages and groups stay private by construction: they never become searchable company knowledge, and a deleted message leaves the graph. Approved plans, finished tasks and new notices are posted to the right channel automatically. | Chat |
 | **Neura1 Docs** | A Word editor inside the brain (pages, toolbar, tables, tracked changes, comments, .docx in and out, PDF). Templates are written from the graph: an engineering change notice (HB-ENG-04), a customer response, a leave handover (HB-HR-02). The **Neura1 AI** side panel rewrites a selection, a section or the whole document on request, and every AI edit lands as a tracked change you accept or reject. **Check facts** tests every claim against the graph with fixed rules (a rejected part, an unapproved alternate, an expired quote, an obsolete revision, a price no quote supports, someone on leave, an ID that doesn't exist) and cites the proof. **Insert facts** drops live tables (where used, decisions, orders, who knows, history) at the cursor. Saved documents become knowledge linked to what they name; documents with amounts or someone's leave are only open to people allowed to see them. | Documents |
 | **Capability map** | What Flyvi can do, built from recorded work: the model tags every task and project with the skills it needs, choosing only from Flyvi's own skill list (code rejects anything else). Each area shows people with finished work, people active now, and whether more work lies ahead than behind; **Where Flyvi is thin** lists skills open work needs that only one person holds or nobody has finished work in yet. Evidence, not ratings: no scores or rankings exist anywhere. A person's full expertise is visible only to them, their management chain, HR and leadership; names in the company map only to HR and leadership (managers see their own reports). | Capability map · People |
 | **Graph explorer + time travel** | Open any part, person, project, customer or decision and walk its connections live from FalkorDB, click to expand. Beside it, the record's full history: decisions, quotes, messages, tasks, status changes, investigations, leave, newest first. | Graph explorer |

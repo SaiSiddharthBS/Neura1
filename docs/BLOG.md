@@ -14,7 +14,7 @@ real leadership structure and synthetic operational data.
 
 The question "what does this change break?" is a traversal. A regulator sits in a power-stage module, which sits in two
 product revisions (but not the obsolete one, and not the draft), which are built in three planned builds, which fulfil
-three customer orders, one with a penalty clause, owned by account managers, depending on firmware owned by an engineer
+three customer orders, one with a penalty clause, owned by the people who look after those accounts, depending on firmware owned by an engineer
 who is on leave in November. In FalkorDB that is one variable-length Cypher query with quantities multiplied along the
 path. In a document store it is a week of meetings.
 
@@ -29,7 +29,7 @@ documents and chats split into passages linked to what they mention, and the dec
 - **Numbers by code, not by model.** The ₹37,400 cost impact is computed from stock, demand and the valid quote, with
   expired quotes ignored and every assumption listed.
 - **Permissions from the org chart.** Who may see money and who may see someone's leave is derived from the graph:
-  reporting lines, teams, backups. The rule follows the data into search, chat replies, the agent and documents. Our own
+  the organisation's tiers and who backs up whom. The rule follows the data into search, chat replies, the agent and documents. Our own
   evaluation of privacy found a leak (leave notices in search) and we fixed it with a regression test.
 - **A brain that acts.** A morning brief at 09:00, a mail drop that turns a forwarded supplier email into an analysed
   signal, chat that posts plans and finished work to the right channel.

@@ -90,7 +90,7 @@ def ingest(graph: Graph, path: Path, kind: str) -> dict:
         chat.notify(graph, "escalation", "A customer escalation arrived. Neura1 linked it to the customer, orders and "
                     "tickets it names; the escalation plan is on the customer's page.", [{"label": "Signals", "href": "/signals"}])
     else:
-        chat.notify(graph, "absence", "A leave notice arrived. The handover plan is ready for the person's manager.",
+        chat.notify(graph, "absence", "A leave notice arrived. The handover plan is ready for the leadership team and the person's backup.",
                     [{"label": "Signals", "href": "/signals"}])
     return {"source_id": source_id, "kind": kind, "extraction": snap, "model_error": model_error}
 

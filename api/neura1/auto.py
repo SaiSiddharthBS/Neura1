@@ -43,6 +43,7 @@ def stale_sources(graph: Graph) -> list[dict]:
                s.updated_at AS updated_at""", {"kinds": READ_KINDS})
     chats = rows(graph, """
         MATCH (s:Source {kind:'chat'})<-[:PART_OF]-(c:Chunk) WHERE coalesce(c.author, '') <> $bot AND c.ts IS NOT NULL
+          AND NOT coalesce(c.deleted, false) AND coalesce(c.kind, '') <> 'system'
         WITH s, max(c.ts) AS last WHERE last > coalesce(s.read_until, '')
         RETURN s.id AS id, s.kind AS kind, s.title AS title, last AS version, last AS updated_at""", {"bot": BOT})
     live = []
@@ -67,7 +68,7 @@ def read_source(graph: Graph, src: dict) -> dict:
 
     passages = extract.source_passages(graph, src["id"])
     if src["kind"] == "chat":  # people's messages only: Neura1 does not mine its own replies for decisions
-        passages = [p for p in passages if p.get("author") != chat.BOT][-MAX_PASSAGES:]
+        passages = [p for p in passages if p.get("author") != chat.BOT and (p.get("text") or "").strip()][-MAX_PASSAGES:]
     result: dict = {"source": src["id"], "decisions": [], "actions": []}
     known = {r["id"] for r in rows(graph, "MATCH (d:Decision) RETURN d.id AS id")}
     if passages:

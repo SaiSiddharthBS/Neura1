@@ -81,6 +81,20 @@ this run. The blind result above is unchanged; a further blind set would be need
 - **b10** Who reports directly to Markande? Missing: Praveen. Answer: _P-GURUMURTHY, P-SHARATH, P-AMBIKA, and P-TEJASWINI report directly to P-MARKANDE (reports_to records)._
 - **b13** What is the unit price of the PSM-28 power stage module? Missing: forbidden ₹. Answer: _Not recorded. The records contain pricing only for the NB54360 part (quotes Q-099 at ₹230, Q-101 at ₹250), not for the PSM-28 assembly itself._
 
+## 5. After the organisation restructure
+
+On 2026-10-17, after every run above, Flyvi's owners restructured the organisation: three directors as peers, the leadership team under them, and everyone else an employee, with no departments or reporting lines below leadership. The expected answers of the questions about teams and reporting lines changed (q23, q43, b07, b10, b18); `golden.yaml` keeps both. The runs above stay scored against the records they were run on. These questions were then asked again, of every system, on the new records:
+
+| System | Passed |
+|---|---|
+| Neura1 graph agent | **5/5** |
+| Search only | **3/5** |
+| Whole corpus in the prompt | **5/5** |
+
+- Search only, **q23** Which team is Satish in? Missing: Employee. Answer: _Satish is in team **T-EMP** (people record id=P-SATISH)._
+
+- Search only, **b07** Which team is Gurumurthy in? Missing: Employee. Answer: _Gurumurthy is in team **T-EMP** (people record id=P-GURUMURTHY)._
+
 ## By question type (latest)
 
 | Category | Neura1 graph agent | Search only | Whole corpus in the prompt |

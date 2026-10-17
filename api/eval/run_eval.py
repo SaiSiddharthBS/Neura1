@@ -92,11 +92,15 @@ def main() -> None:
     ap.add_argument("--system", choices=["graph", "rag", "context"], required=True)
     ap.add_argument("--split", choices=["dev", "heldout", "blind", "all"], default="all")
     ap.add_argument("--state", choices=["base", "updated"], default="base")
+    ap.add_argument("--ids", help="comma-separated question ids, to re-run only those (any split)")
     args = ap.parse_args()
 
     cases = [c for c in yaml.safe_load((HERE / "golden.yaml").read_text())
              if c.get("state", "base") == args.state
              and (c["split"] == args.split or (args.split == "all" and c["split"] in ("dev", "heldout")))]
+    if args.ids:
+        wanted = set(args.ids.split(","))
+        cases = [c for c in yaml.safe_load((HERE / "golden.yaml").read_text()) if c["id"] in wanted]
     graph = get_graph()
     docs = corpus(graph, args.state == "updated") if args.system != "graph" else []
     if args.system == "graph":
@@ -127,7 +131,8 @@ def main() -> None:
     out_dir = HERE / "results"
     out_dir.mkdir(exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
-    (out_dir / f"{args.system}-{args.state}-{args.split}-{stamp}.json").write_text(json.dumps(
+    label = "ids" if args.ids else args.split
+    (out_dir / f"{args.system}-{args.state}-{label}-{stamp}.json").write_text(json.dumps(
         {"system": args.system, "model": llm.last_model or settings.llm_model, "state": args.state, "split": args.split,
          "passed": passed, "total": len(results), "results": results}, indent=2, ensure_ascii=False))
 

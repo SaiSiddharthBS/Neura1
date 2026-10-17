@@ -62,8 +62,8 @@ async def hide_amounts_in_text(request: Request, call_next):
     headers = {k: val for k, val in response.headers.items() if k.lower() != "content-length"}
     if hidden:
         if access.points_at_hidden(data, hidden):
-            return JSONResponse({"detail": "This leave notice is visible to the person, their management chain, "
-                                           "their backup, HR and leadership"}, status_code=403)
+            return JSONResponse({"detail": "This leave notice is visible to the person, their backup, "
+                                           "and the directors and leadership team"}, status_code=403)
         data = access.drop_hidden(data, hidden)
     if not v.sees_money:
         data = access.redact_money_text(data)
@@ -620,7 +620,7 @@ def absence(person_id: str, start: str | None = None, end: str | None = None, g=
         raise HTTPException(404, "Unknown person")
     if not v.sees_leave_of(person_id):
         return {"status": "restricted", "person": {"name": r["person"]["name"]},
-                "detail": "Leave plans are visible to the person, their management chain, their backup, HR and leadership."}
+                "detail": "Leave plans are visible to the person, their backup, and the directors and leadership team."}
     r["investigation"] = actions.find_investigation(g, person_id, _signal_for(g, "leave", person_id))
     return r
 
@@ -773,9 +773,40 @@ def action_items(g=Depends(graph)):
 
 # ---------- Neura1 Chat ----------
 
+def _chat(fn, *args, **kwargs):
+    """Run a chat operation, turning its refusals into HTTP errors."""
+    try:
+        return fn(*args, **kwargs)
+    except chat.ChatError as exc:
+        raise HTTPException(exc.status, str(exc))
+
+
+def _chat_member(g, channel_id: str, v: access.Viewer) -> dict:
+    ch = chat.channel(g, channel_id)
+    if not ch:
+        raise HTTPException(404, "Unknown conversation")
+    _chat(chat.may_read, ch, v)
+    return ch
+
+
+def _me(v: access.Viewer) -> str:
+    if not v.id:
+        raise HTTPException(400, "Choose who you are first")
+    return v.id
+
+
 @app.get("/api/chat/channels")
 def chat_channels(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
-    return [c for c in chat.channels(g, v.id) if v.sees_money or c["id"] not in chat.MONEY_CHANNELS]
+    return [c for c in chat.channels(g, v.id, v.name) if v.sees_money or c["id"] not in chat.MONEY_CHANNELS]
+
+
+@app.get("/api/chat/unread")
+def chat_unread(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    if not v.id:
+        return {"total": 0, "mentions": 0, "conversations": 0}
+    cs = [c for c in chat.channels(g, v.id, v.name) if v.sees_money or c["id"] not in chat.MONEY_CHANNELS]
+    return {"total": sum(c["unread"] for c in cs), "mentions": sum(c["mentions"] for c in cs),
+            "conversations": sum(1 for c in cs if c["unread"])}
 
 
 class DmIn(BaseModel):
@@ -784,44 +815,142 @@ class DmIn(BaseModel):
 
 @app.post("/api/chat/dm")
 def chat_dm(body: DmIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
-    if not v.id:
-        raise HTTPException(400, "Choose who you are first")
-    return {"id": chat.dm_channel(g, v.id, body.person_id)}
+    return {"id": _chat(chat.dm_channel, g, _me(v), body.person_id)}
+
+
+class GroupIn(BaseModel):
+    name: str
+    members: list[str]
+
+
+@app.post("/api/chat/groups", dependencies=[Depends(require_passcode)])
+def chat_group(body: GroupIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    return {"id": _chat(chat.create_group, g, _me(v), body.name, body.members)}
+
+
+class ChannelIn(BaseModel):
+    name: str
+    purpose: str | None = None
+
+
+@app.post("/api/chat/channels", dependencies=[Depends(require_passcode)])
+def chat_new_channel(body: ChannelIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    return {"id": _chat(chat.create_channel, g, _me(v), body.name, body.purpose)}
+
+
+class ConversationEdit(BaseModel):
+    channel: str
+    name: str | None = None
+    purpose: str | None = None
+
+
+@app.patch("/api/chat/channels", dependencies=[Depends(require_passcode)])
+def chat_edit_channel(body: ConversationEdit, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    _chat_member(g, body.channel, v)
+    _chat(chat.update_conversation, g, body.channel, _me(v), body.name, body.purpose)
+    return chat.channel(g, body.channel)
+
+
+class MembersIn(BaseModel):
+    channel: str
+    add: list[str] = []
+    remove: str | None = None
+
+
+@app.post("/api/chat/members", dependencies=[Depends(require_passcode)])
+def chat_members(body: MembersIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    _chat_member(g, body.channel, v)
+    members = None
+    if body.add:
+        members = _chat(chat.add_members, g, body.channel, _me(v), body.add)
+    if body.remove:
+        members = _chat(chat.remove_member, g, body.channel, _me(v), body.remove)
+    return {"members": members}
 
 
 @app.get("/api/chat/messages")
 def chat_messages(channel: str, after: str | None = None, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
-    ch = rows(g, "MATCH (c:Channel {id:$id}) RETURN c.kind AS kind, c.members AS members", {"id": channel})
-    if not ch:
-        raise HTTPException(404, "Unknown channel")
-    _may_read_channel(ch[0], channel, v)
-    return chat.messages(g, channel, after)
-
-
-def _may_read_channel(ch: dict, channel: str, v: access.Viewer) -> None:
-    if ch["kind"] == "dm" and v.id not in (ch["members"] or []):
-        raise HTTPException(403, "Direct messages are visible to their two people only")
-    if channel in chat.MONEY_CHANNELS and not v.sees_money:
-        raise HTTPException(403, "This channel discusses prices and order values; it is open to leadership, BD and purchase")
+    ch = _chat_member(g, channel, v)
+    chat.seen(v.id)
+    cursor = chat.recent_cursor()
+    return {"messages": chat.messages(g, channel, after), "cursor": cursor,
+            "typing": chat.who_is_typing(channel, v.id),
+            "read": chat.read_state(g, channel) if ch["kind"] in chat.PRIVATE else {}}
 
 
 class ChatIn(BaseModel):
     channel: str
     text: str
+    reply_to: str | None = None
 
 
 @app.post("/api/chat/messages", dependencies=[Depends(require_passcode)])
 def chat_post(body: ChatIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
-    if not v.id:
-        raise HTTPException(400, "Choose who you are first")
-    if not body.text.strip() or len(body.text) > 4000:
+    me = _me(v)
+    if not body.text.strip() or len(body.text) > chat.MAX_TEXT:
         raise HTTPException(400, "Message is empty or too long")
     chat.ensure_channels(g)
-    ch = rows(g, "MATCH (c:Channel {id:$id}) RETURN c.kind AS kind, c.members AS members", {"id": body.channel})
-    if not ch:
-        raise HTTPException(404, "Unknown channel")
-    _may_read_channel(ch[0], body.channel, v)
-    return chat.handle(g, body.channel, body.text.strip(), v.name, v.id)
+    _chat_member(g, body.channel, v)
+    if body.reply_to and not body.reply_to.startswith(body.channel + "#"):
+        raise HTTPException(400, "You can only reply to a message in the same conversation")
+    return chat.handle(g, body.channel, body.text.strip(), v.name, me, body.reply_to)
+
+
+class EditIn(BaseModel):
+    id: str
+    text: str
+
+
+@app.patch("/api/chat/messages", dependencies=[Depends(require_passcode)])
+def chat_edit(body: EditIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    _chat_member(g, body.id.split("#", 1)[0], v)
+    return _chat(chat.edit_message, g, body.id, _me(v), body.text)
+
+
+class MessageRef(BaseModel):
+    id: str
+
+
+@app.post("/api/chat/messages/delete", dependencies=[Depends(require_passcode)])
+def chat_delete(body: MessageRef, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    _chat_member(g, body.id.split("#", 1)[0], v)
+    return _chat(chat.delete_message, g, body.id, _me(v))
+
+
+class ReactIn(BaseModel):
+    id: str
+    emoji: str
+
+
+@app.post("/api/chat/react", dependencies=[Depends(require_passcode)])
+def chat_react(body: ReactIn, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    _chat_member(g, body.id.split("#", 1)[0], v)
+    return _chat(chat.react, g, body.id, _me(v), body.emoji)
+
+
+class ChannelRef(BaseModel):
+    channel: str
+
+
+@app.post("/api/chat/read")
+def chat_read(body: ChannelRef, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    """Read markers and typing are conversation metadata, so they need no passcode."""
+    _chat_member(g, body.channel, v)
+    chat.mark_read(g, body.channel, _me(v))
+    return {"ok": True}
+
+
+@app.post("/api/chat/typing")
+def chat_typing(body: ChannelRef, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    _chat_member(g, body.channel, v)
+    chat.typing(body.channel, _me(v), v.name)
+    return {"ok": True}
+
+
+@app.get("/api/chat/search")
+def chat_search(q: str, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    _me(v)
+    return chat.search(g, v, q)
 
 
 # ---------- graph explorer ----------
@@ -851,7 +980,7 @@ def _doc_or_404(g, doc_id: str, v: access.Viewer) -> dict:
     if not d:
         raise HTTPException(404, "Unknown document")
     if not documents.may_open(d, v):
-        raise HTTPException(403, "This document states amounts; it is open to leadership, BD and purchase")
+        raise HTTPException(403, "This document states amounts; it is open to the directors and the leadership team")
     return d
 
 

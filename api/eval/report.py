@@ -26,6 +26,15 @@ def load(folder: Path, split: str = "all") -> dict[str, dict]:
     return runs
 
 
+def as_scored(case: dict) -> dict:
+    """The expectations the saved runs were scored against. The organisation was restructured after every run in this
+    report (golden.yaml keeps the earlier expectations as `before_restructure`), so those runs are not rescored
+    against facts that did not exist when they ran."""
+    if "before_restructure" not in case:
+        return case
+    return {k: v for k, v in case.items() if k not in ("all", "any", "none")} | case["before_restructure"]
+
+
 def rescored(run: dict, cases: dict) -> list[dict]:
     out = []
     for r in run["results"]:
@@ -44,7 +53,8 @@ def row(name: str, results: list[dict]) -> str:
 
 
 def main() -> None:
-    cases = {c["id"]: c for c in yaml.safe_load((HERE / "golden.yaml").read_text())}
+    golden = yaml.safe_load((HERE / "golden.yaml").read_text())
+    cases = {c["id"]: as_scored(c) for c in golden}
     run1 = load(HERE / "results" / "run1")
     run2 = load(HERE / "results")
     model = next(iter(run1.values()))["model"]
@@ -98,6 +108,26 @@ def main() -> None:
             for x in fails:
                 ans = " ".join(str(x["answer"]).split())
                 lines.append(f"- **{x['id']}** {x['question']} Missing: {', '.join(map(str, x['missing']))}. "
+                             f"Answer: _{ans[:200]}{'…' if len(ans) > 200 else ''}_")
+    after = load(HERE / "results", "ids")
+    changed = [c for c in golden if "before_restructure" in c]
+    if after and changed:
+        lines += ["", "## 5. After the organisation restructure", "",
+                  "On 2026-10-17, after every run above, Flyvi's owners restructured the organisation: three directors as "
+                  "peers, the leadership team under them, and everyone else an employee, with no departments or reporting "
+                  "lines below leadership. The expected answers of the questions about teams and reporting lines changed "
+                  f"({', '.join(c['id'] for c in changed)}); `golden.yaml` keeps both. The runs above stay scored against "
+                  "the records they were run on. These questions were then asked again, of every system, on the new records:",
+                  "", "| System | Passed |", "|---|---|"]
+        for k in ORDER:
+            if k in after:
+                res = after[k]["results"]
+                lines.append(f"| {NAMES[k]} | **{sum(x['pass'] for x in res)}/{len(res)}** |")
+        for key in ORDER:
+            fails = [x for x in after.get(key, {}).get("results", []) if not x["pass"]]
+            for x in fails:
+                ans = " ".join(str(x["answer"]).split())
+                lines.append(f"\n- {NAMES[key]}, **{x['id']}** {x['question']} Missing: {', '.join(map(str, x['missing']))}. "
                              f"Answer: _{ans[:200]}{'…' if len(ans) > 200 else ''}_")
     final = {"graph": rescored(run2["graph"], cases) if "graph" in run2 else rescored(run1["graph"], cases)}
     final |= {k: rescored(run1[k], cases) for k in ("rag", "context") if k in run1}

@@ -34,7 +34,7 @@ def test_a_colleague_sees_only_stated_skills(fresh_graph):
     capabilities.load_tags(fresh_graph)
     e = capabilities.person_expertise(fresh_graph, "P-SAI", viewer(fresh_graph, "P-ANIRUDH"))
     assert e["restricted"] and "skills" not in e and "Embedded C" in e["stated"]
-    # The person, and their management chain, see it.
+    # The person, and the directors and leadership team, see it.
     assert not capabilities.person_expertise(fresh_graph, "P-SAI", viewer(fresh_graph, "P-SAI"))["restricted"]
     assert not capabilities.person_expertise(fresh_graph, "P-SAI", viewer(fresh_graph, "P-HITHESH"))["restricted"]
 

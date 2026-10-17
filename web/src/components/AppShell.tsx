@@ -19,14 +19,14 @@ import ViewerSwitch from "@/components/ViewerSwitch";
 import { api } from "@/lib/api";
 import { useResolvedTheme } from "@/lib/theme";
 
-type Item = { href: string; label: string; icon: typeof Sun; badge?: "signals" };
+type Item = { href: string; label: string; icon: typeof Sun; badge?: "signals" | "chat" };
 const NAV: { section: string; items: Item[]; collapsible?: boolean }[] = [
   { section: "Today", items: [
     { href: "/", label: "Overview", icon: LayoutDashboard },
     { href: "/me", label: "My day", icon: Sun },
     { href: "/signals", label: "Signals", icon: Inbox, badge: "signals" },
     { href: "/board", label: "Workboard", icon: KanbanSquare },
-    { href: "/chat", label: "Chat", icon: MessageCircle },
+    { href: "/chat", label: "Chat", icon: MessageCircle, badge: "chat" },
   ]},
   { section: "Company brain", items: [
     { href: "/brain", label: "Ask & search", icon: Brain },
@@ -55,6 +55,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const theme = useResolvedTheme();
   const [mobile, setMobile] = useState(false);
   const [openSignals, setOpenSignals] = useState(0);
+  const [unreadChat, setUnreadChat] = useState(0);
   const [moreOpen, setMoreOpen] = useState(false);
 
   // Momentum scrolling for the page. Anything that scrolls on its own (lists, chat, the editor, graphs) keeps native scroll.
@@ -95,6 +96,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     api<{ investigation: unknown }[]>("/api/signals").then((s) => setOpenSignals(s.filter((x) => !x.investigation).length)).catch(() => {});
+  }, [path]);
+
+  // Unread chat messages for whoever is viewing, refreshed while the app is open.
+  useEffect(() => {
+    const load = () => api<{ total: number }>("/api/chat/unread").then((u) => setUnreadChat(u.total)).catch(() => {});
+    const first = setTimeout(load, 0);
+    const t = setInterval(load, 15_000);
+    return () => { clearTimeout(first); clearInterval(t); };
   }, [path]);
 
   const active = (href: string) => (href === "/" ? path === "/" : path.startsWith(href)) ||
@@ -142,6 +151,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                       )}
                       <Icon size={15} strokeWidth={on ? 2.1 : 1.8} className={on ? "text-accent" : "text-muted group-hover:text-ink-soft"} />
                       <span className="flex-1 truncate">{label}</span>
+                      {badge === "chat" && unreadChat > 0 && (
+                        <span className="num min-w-[18px] rounded-full bg-accent px-1.5 text-center text-[11px] font-medium text-accent-ink">{unreadChat > 99 ? "99+" : unreadChat}</span>
+                      )}
                       {badge === "signals" && openSignals > 0 && (
                         <span className="num min-w-[18px] rounded-full bg-accent/15 px-1.5 text-center text-[11px] font-medium text-accent">{openSignals}</span>
                       )}

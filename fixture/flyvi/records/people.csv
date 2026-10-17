@@ -1,31 +1,31 @@
 id,name,role,team_id
-P-JAYARAM,Jayaram,Founder & Managing Director,T-LEAD
+P-SURESH,Suresh,Director - Business Development,T-DIR
+P-SATHISH,Sathish,Director - Finance,T-DIR
+P-JAYARAM,Jayaram,Founder & Managing Director,T-DIR
 P-ANIL,Anil,President & Executive Officer,T-LEAD
-P-SURESH,Suresh,Director - Business Development,T-LEAD
-P-SATHISH,Sathish,Director - Finance,T-LEAD
 P-MARKANDE,Markande,Chief Operating Officer,T-LEAD
 P-HITHESH,Hithesh,Chief Technology Officer,T-LEAD
 P-PRAVEEN,Praveen,General Manager,T-LEAD
-P-VISHWAS,Vishwas,Employee,T-HW
-P-RAGHAVENDRA,Raghavendra,Employee,T-HW
-P-PRAKUL,Prakul,Employee,T-HW
-P-SAI,Sai,Employee,T-FW
-P-ANIRUDH,Anirudh,Employee,T-FW
-P-PRUTHVI,Pruthvi,Employee,T-FW
-P-PRATHAM,Pratham,Employee,T-FW
-P-VINAY,Vinay,Employee,T-FW
-P-SACHIN,Sachin,Employee,T-FW
-P-MANOJ,Manoj,Employee,T-FW
-P-TARUN,Tarun,Employee,T-FW
-P-SHARMADA,Sharmada,Employee,T-FW
-P-SATISH,Satish,Employee,T-QA
-P-YOGISH,Yogish,Employee,T-QA
-P-UDAY,Uday,Employee,T-QA
-P-GURUMURTHY,Gurumurthy,Employee,T-QAD
-P-SHARATH,Sharath,Employee,T-OPS
-P-DILEEP,Dileep,Employee,T-OPS
-P-PRADEEP,Pradeep,Employee,T-OPS
-P-AMBIKA,Ambika,Employee,T-SC
-P-KEERTHANA,Keerthana,Employee,T-SALES
-P-NAGARJUN,Nagarjun,Employee,T-SUP
-P-TEJASWINI,Tejaswini,Employee,T-HR
+P-VISHWAS,Vishwas,Employee,T-EMP
+P-RAGHAVENDRA,Raghavendra,Employee,T-EMP
+P-PRAKUL,Prakul,Employee,T-EMP
+P-SAI,Sai,Employee,T-EMP
+P-ANIRUDH,Anirudh,Employee,T-EMP
+P-PRUTHVI,Pruthvi,Employee,T-EMP
+P-PRATHAM,Pratham,Employee,T-EMP
+P-VINAY,Vinay,Employee,T-EMP
+P-SACHIN,Sachin,Employee,T-EMP
+P-MANOJ,Manoj,Employee,T-EMP
+P-TARUN,Tarun,Employee,T-EMP
+P-SHARMADA,Sharmada,Employee,T-EMP
+P-SATISH,Satish,Employee,T-EMP
+P-YOGISH,Yogish,Employee,T-EMP
+P-UDAY,Uday,Employee,T-EMP
+P-GURUMURTHY,Gurumurthy,Employee,T-EMP
+P-SHARATH,Sharath,Employee,T-EMP
+P-DILEEP,Dileep,Employee,T-EMP
+P-PRADEEP,Pradeep,Employee,T-EMP
+P-AMBIKA,Ambika,Employee,T-EMP
+P-KEERTHANA,Keerthana,Employee,T-EMP
+P-NAGARJUN,Nagarjun,Employee,T-EMP
+P-TEJASWINI,Tejaswini,Employee,T-EMP

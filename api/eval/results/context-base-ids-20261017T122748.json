@@ -1,0 +1,60 @@
+{
+  "system": "context",
+  "model": "ornith-1.5-35b-a3b",
+  "state": "base",
+  "split": "all",
+  "passed": 5,
+  "total": 5,
+  "results": [
+    {
+      "id": "q23",
+      "category": "ownership",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 3.37,
+      "question": "Which team is Satish in?",
+      "answer": "Satish (P-SATISH) is in team **T-EMP** (Employees)."
+    },
+    {
+      "id": "q43",
+      "category": "org",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 4.08,
+      "question": "Who reports to Vishwas?",
+      "answer": "Not recorded. The company records contain no \"reports_to\" or manager field for any person. Vishwas (P-VISHWAS) is listed as an Employee in team T-EMP (people record; org_roles record), but no reporting relationships are documented."
+    },
+    {
+      "id": "b07",
+      "category": "ownership",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 1.96,
+      "question": "Which team is Gurumurthy in?",
+      "answer": "Gurumurthy (P-GURUMURTHY) is in team **T-EMP (Employees)** [people record; teams record]."
+    },
+    {
+      "id": "b10",
+      "category": "org",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 3.25,
+      "question": "Who reports directly to Markande?",
+      "answer": "Not recorded. The records include org roles, people, and team assignments, but there is no \"reports_to\" or manager field linking any person directly to Markande (P-MARKANDE)."
+    },
+    {
+      "id": "b18",
+      "category": "org",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 3.17,
+      "question": "Who reports to Sharath?",
+      "answer": "Not recorded. The records show P-SHARATH (Sharath) as an Employee in team T-EMP (org_roles, people), but there is no \"reports_to\" or direct-manager field anywhere in the data, so no reporting line is recorded."
+    }
+  ]
+}

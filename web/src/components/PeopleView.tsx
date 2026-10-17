@@ -64,7 +64,8 @@ export default function PeopleView() {
     const m = new Map<string, Row[]>();
     people.filter((r) => !q || `${r.name} ${r.role} ${r.team}`.toLowerCase().includes(q.toLowerCase()))
       .forEach((r) => m.set(r.team, [...(m.get(r.team) ?? []), r]));
-    return [...m.entries()].sort(([a], [b]) => (a === "Board" ? 1 : b === "Board" ? -1 : a.localeCompare(b)));
+    const tier = (t: string) => ["Directors", "Leadership"].indexOf(t) === -1 ? 9 : ["Directors", "Leadership"].indexOf(t);
+    return [...m.entries()].sort(([a], [b]) => tier(a) - tier(b) || a.localeCompare(b));
   }, [people, q]);
 
   return (
@@ -106,7 +107,7 @@ export default function PeopleView() {
                     ? <span className="rounded-full bg-warn/15 px-2 py-0.5 text-xs text-warn">Away today</span>
                     : <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs text-success">Available</span>}
                 </div>
-                <div className="text-sm text-muted">{p.role} · {p.team}{p.organization ? ` · ${p.organization}` : ""}</div>
+                <div className="text-sm text-muted">{p.role}{p.organization ? ` · ${p.organization}` : ""}</div>
                 <div className="mt-2 flex flex-wrap items-center gap-1 text-xs text-muted">
                   {[...p.reporting_chain].reverse().map((c) => (
                     <span key={c.id} className="flex items-center gap-1"><Link href={`/people?id=${c.id}`} className="hover:text-ink">{c.name}</Link><ChevronRight size={12} /></span>
@@ -160,7 +161,7 @@ export default function PeopleView() {
             </Card>
             <Card title="Leave">
               {p.leave.restricted ? (
-                <div className="flex items-center gap-2 text-sm text-muted"><Lock size={13} /> Leave dates are visible to {p.name}, their management chain, their backup, HR and leadership.</div>
+                <div className="flex items-center gap-2 text-sm text-muted"><Lock size={13} /> Leave dates are visible to {p.name}, their backup, and the directors and leadership team.</div>
               ) : (
                 <div className="space-y-1.5 text-sm">
                   {p.leave.current && <div className="text-warn">Away now until {p.leave.current.end_date}</div>}
@@ -344,7 +345,7 @@ function Expertise({ id, name }: { id: string; name: string }) {
       <div className="space-y-2">
         <div className="flex flex-wrap gap-1.5">{e.stated.map((s) => <span key={s} className={`rounded-full border px-2 py-0.5 text-xs ${LEVEL.stated.cls}`}>{s}</span>)}
           {!e.stated.length && <Empty text="No skills stated." />}</div>
-        <div className="flex items-center gap-1.5 text-xs text-muted"><Lock size={12} /> {name}&apos;s expertise from work is visible to them, their management chain, HR and leadership.</div>
+        <div className="flex items-center gap-1.5 text-xs text-muted"><Lock size={12} /> {name}&apos;s expertise from work is visible to them, and to the directors and leadership team.</div>
       </div>
     );
   }
@@ -372,7 +373,7 @@ function Expertise({ id, name }: { id: string; name: string }) {
         </ul>
       )}
       {!groups.length && <Empty text="No recorded work or stated skills yet." />}
-      <div className="text-[11px] text-faint">Evidence from recorded work, not a performance measure. Visible to {name}, their management chain, HR and leadership.</div>
+      <div className="text-[11px] text-faint">Evidence from recorded work, not a performance measure. Visible to {name}, and to the directors and leadership team.</div>
     </div>
   );
 }

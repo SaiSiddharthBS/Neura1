@@ -236,7 +236,7 @@ MATCH (b:Build)-[:BUILDS]->(:Revision) WHERE NOT (:Person)-[:OWNS]->(b)
 RETURN b.id AS record, 'Build' AS label, NULL AS chunk, 'no planner recorded' AS reason
 UNION ALL
 MATCH (c:Customer) WHERE NOT (:Person)-[:OWNS]->(c)
-RETURN c.id AS record, 'Customer' AS label, NULL AS chunk, 'no account manager recorded' AS reason
+RETURN c.id AS record, 'Customer' AS label, NULL AS chunk, 'no account owner recorded' AS reason
 """
 
 

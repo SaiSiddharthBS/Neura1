@@ -9,9 +9,9 @@ rejected by code. Tags are snapshotted (fixture/flyvi/extracted/skill_tags.json)
 is reproducible. Tasks created later without tags fall back to a fixed mapping by task kind.
 
 Who sees what (same graph-derived rules as money and leave):
-- a person's full expertise: the person, their management chain, HR and leadership; everyone else sees stated skills;
-- the company map: everyone sees areas, counts and gaps; names in the people grid only for HR and leadership, and for
-  managers, only their own reports.
+- a person's full expertise: the person, and the directors and leadership team; everyone else sees stated skills;
+- the company map: everyone sees areas, counts and gaps; names in the people grid only for the directors and the
+  leadership team.
 """
 
 import json
@@ -158,7 +158,7 @@ def person_expertise(graph: Graph, person_id: str, viewer: Viewer) -> dict:
                                             "ORDER BY name", {"id": person_id})]
     if not viewer.sees_profile_of(person_id):
         return {"restricted": True, "stated": stated,
-                "note": "Expertise from work is visible to the person, their management chain, HR and leadership."}
+                "note": "Expertise from work is visible to the person, and to the directors and leadership team."}
     by_skill: dict[str, dict] = {}
     for t in _task_skills(graph):
         if t["person"] != person_id:
@@ -213,7 +213,7 @@ def company_map(graph: Graph, viewer: Viewer, today: date | None = None) -> dict
                     e["involved"].add(t["person"])
 
     def names_visible(pid: str) -> bool:
-        return viewer.unrestricted or viewer.team in {"T-LEAD", "T-HR"} or pid in viewer.reports or pid == viewer.id
+        return viewer.unrestricted or viewer.leader or pid in viewer.reports or pid == viewer.id
 
     out_skills, areas = [], {}
     for e in skills.values():
@@ -237,7 +237,7 @@ def company_map(graph: Graph, viewer: Viewer, today: date | None = None) -> dict
             "skill": e["skill"], "area": e["area"], "status": status,
             "hands_on": len(hands_on), "involved": len(e["involved"] - e["hands_on"]), "stated": len(e["stated"]),
             "open_tasks": len(e["open_tasks"]), "projects": e["projects"], "finished_tasks": e["finished_tasks"],
-            "away_soon": away_n if viewer.unrestricted or viewer.team in {"T-LEAD", "T-HR"} else None,
+            "away_soon": away_n if viewer.unrestricted or viewer.leader else None,
             "people": [{"id": p, "name": people[p]["name"], "level": "hands-on"} for p in hands_on if names_visible(p)]
                       + [{"id": p, "name": people[p]["name"], "level": "involved"} for p in sorted(e["involved"] - e["hands_on"])
                          if names_visible(p)],
@@ -261,10 +261,10 @@ def company_map(graph: Graph, viewer: Viewer, today: date | None = None) -> dict
     area_rows.sort(key=lambda a: (-(a["open_tasks"] + a["finished_tasks"]), a["area"]))
     rank = {"gap": 0, "thin": 1, "unproven": 2, "covered": 3, "idle": 4}
     out_skills.sort(key=lambda s: (rank[s["status"]], -s["open_tasks"], s["skill"]))
-    grid_names = viewer.unrestricted or viewer.team in {"T-LEAD", "T-HR"} or bool(viewer.reports)
+    grid_names = viewer.unrestricted or viewer.leader or bool(viewer.reports)
     return {
         "areas": area_rows, "skills": out_skills,
-        "visibility": "names" if viewer.unrestricted or viewer.team in {"T-LEAD", "T-HR"}
+        "visibility": "names" if viewer.unrestricted or viewer.leader
                       else "your reports" if viewer.reports else "counts",
         "grid_names": grid_names,
         "note": "Evidence from recorded work, not a performance measure. No scores or rankings are kept.",

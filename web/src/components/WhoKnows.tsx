@@ -57,7 +57,7 @@ export default function WhoKnows({ onOpen, initial }: { onOpen?: (chunk: string)
               <li key={p.id} className="flex flex-wrap items-start gap-x-4 gap-y-1 py-2 text-sm">
                 <span className="w-5 text-muted">{i + 1}</span>
                 <Link href={`/people?id=${p.id}`} className="w-44 font-medium hover:underline">{p.name}
-                  <div className="text-xs font-normal text-muted">{p.role} · {p.team}</div></Link>
+                  <div className="text-xs font-normal text-muted">{p.role}</div></Link>
                 <div className="flex flex-1 flex-wrap gap-1">
                   {p.signals.map((s, k) => (
                     s.evidence.includes("#") && onOpen
