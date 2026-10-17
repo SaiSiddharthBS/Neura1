@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800" role="img" aria-label="How Neura1 works: sources are validated and read on Flyvi's own hardware, verified facts enter one FalkorDB graph, deterministic engines answer, and people use it through the web app, chat, the Ask agent and MCP.">
+  <defs>
+    <clipPath id="card"><rect width="1280" height="800" rx="28"/></clipPath>
+    <radialGradient id="g1" cx="50%" cy="48%" r="40%"><stop offset="0" stop-color="#3b6cff" stop-opacity=".35"/><stop offset="1" stop-color="#3b6cff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g2" cx="0%" cy="100%" r="50%"><stop offset="0" stop-color="#8b5cf6" stop-opacity=".25"/><stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g3" cx="100%" cy="0%" r="45%"><stop offset="0" stop-color="#22d3ee" stop-opacity=".18"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#fff" fill-opacity=".05"/></pattern>
+    <linearGradient id="glass" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".075"/><stop offset="1" stop-color="#ffffff" stop-opacity=".025"/></linearGradient>
+    <linearGradient id="fk" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#3b6cff" stop-opacity=".28"/><stop offset="1" stop-color="#8b5cf6" stop-opacity=".18"/></linearGradient>
+    <linearGradient id="flow" x1="0" x2="1"><stop offset="0" stop-color="#7aa2ff" stop-opacity=".15"/><stop offset="1" stop-color="#b48cff" stop-opacity=".8"/></linearGradient>
+    <style>
+      .t { font-family: Inter, "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+      .m { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+      .h { font-size: 12px; letter-spacing: 2.4px; font-weight: 700; fill: #8fa7ff; }
+      .ct { font-size: 15px; font-weight: 650; fill: #f2f5ff; }
+      .cs { font-size: 12.5px; fill: #a3acc2; }
+      .box { fill: url(#glass); stroke: #ffffff; stroke-opacity: .13; }
+      .flowline { stroke: url(#flow); stroke-width: 2; fill: none; stroke-dasharray: 6 10; animation: dash 1.4s linear infinite; }
+      @keyframes dash { to { stroke-dashoffset: -32; } }
+      .pulse { animation: pulse 3.2s ease-in-out infinite; }
+      @keyframes pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+    </style>
+  </defs>
+  <g clip-path="url(#card)">
+    <rect width="1280" height="800" fill="#05060b"/>
+    <rect width="1280" height="800" fill="url(#g1)"/><rect width="1280" height="800" fill="url(#g2)"/><rect width="1280" height="800" fill="url(#g3)"/>
+    <rect width="1280" height="800" fill="url(#dots)"/>
+
+    <g class="t">
+      <text x="64" y="70" font-size="13" letter-spacing="3.2" font-weight="700" fill="#9db4ff">HOW NEURA1 WORKS</text>
+      <text x="64" y="106" font-size="27" font-weight="700" fill="#ffffff" letter-spacing="-.5">Every fact is checked on the way in. Every number is computed by code.</text>
+
+      <!-- column headings -->
+      <text x="40" y="152" class="h">SOURCES</text>
+      <text x="290" y="152" class="h">UNDERSTAND</text>
+      <text x="560" y="152" class="h">ONE GRAPH</text>
+      <text x="870" y="152" class="h">ENGINES · CODE</text>
+      <text x="1104" y="152" class="h">PEOPLE USE IT</text>
+
+      <!-- sources -->
+      <g>
+        <rect x="40" y="170" width="200" height="88" rx="16" class="box"/><text x="58" y="203" class="ct">Records</text>
+        <text x="58" y="225" class="cs">BOM · stock · orders · people</text><text x="58" y="243" class="cs">CSV, KiCad, Altium exports</text>
+        <rect x="40" y="272" width="200" height="88" rx="16" class="box"/><text x="58" y="305" class="ct">Slack &amp; Jira</text>
+        <text x="58" y="327" class="cs">live webhooks and</text><text x="58" y="345" class="cs">exported threads</text>
+        <rect x="40" y="374" width="200" height="88" rx="16" class="box"/><text x="58" y="407" class="ct">Documents</text>
+        <text x="58" y="429" class="cs">Word, PDF, Markdown,</text><text x="58" y="447" class="cs">written in Neura1 Docs</text>
+        <rect x="40" y="476" width="200" height="88" rx="16" class="box"/><text x="58" y="509" class="ct">Email drop</text>
+        <text x="58" y="531" class="cs">supplier notices and</text><text x="58" y="549" class="cs">customer escalations</text>
+        <rect x="40" y="578" width="200" height="88" rx="16" class="box"/><text x="58" y="611" class="ct">Meeting audio</text>
+        <text x="58" y="633" class="cs">any recording, read by</text><text x="58" y="651" class="cs">open-source Whisper</text>
+      </g>
+
+      <!-- understand -->
+      <g>
+        <rect x="290" y="170" width="220" height="114" rx="16" class="box"/><text x="308" y="203" class="ct">Validator</text>
+        <text x="308" y="225" class="cs">every row and column</text><text x="308" y="243" class="cs">checked before anything</text><text x="308" y="261" class="cs">is written</text>
+        <rect x="290" y="298" width="220" height="114" rx="16" fill="#76b900" fill-opacity=".1" stroke="#76b900" stroke-opacity=".5"/>
+        <text x="308" y="331" class="ct">NVIDIA DGX Spark</text>
+        <text x="308" y="353" class="cs">ornith-1.5 reads notices,</text><text x="308" y="371" class="cs">chats, tickets and meetings,</text><text x="308" y="389" class="cs">and plans the agent's steps</text>
+        <rect x="290" y="426" width="220" height="114" rx="16" class="box"/><text x="308" y="459" class="ct">Word-for-word check</text>
+        <text x="308" y="481" class="cs">a proposed decision enters</text><text x="308" y="499" class="cs">only if its quotes are in</text><text x="308" y="517" class="cs">the source, exactly</text>
+        <rect x="290" y="554" width="220" height="112" rx="16" class="box"/><text x="308" y="587" class="ct">Graph-aware clean-up</text>
+        <text x="308" y="609" class="cs">"BO 0415" becomes BO-0415;</text><text x="308" y="627" class="cs">every passage is linked to</text><text x="308" y="645" class="cs">what it mentions</text>
+      </g>
+
+      <!-- FalkorDB -->
+      <g>
+        <rect x="560" y="170" width="260" height="496" rx="22" fill="url(#fk)" stroke="#7aa2ff" stroke-opacity=".55"/>
+        <text x="582" y="206" font-size="20" font-weight="800" fill="#ffffff" letter-spacing="-.3">FalkorDB</text>
+        <text x="582" y="228" class="cs" fill="#c7d2fe">the whole company, one graph</text>
+        <!-- a small living graph -->
+        <g transform="translate(690 330)">
+          <g stroke="#9db4ff" stroke-opacity=".5" stroke-width="1.2">
+            <line x1="0" y1="0" x2="-70" y2="-48"/><line x1="0" y1="0" x2="72" y2="-44"/><line x1="0" y1="0" x2="-76" y2="40"/>
+            <line x1="0" y1="0" x2="70" y2="46"/><line x1="72" y1="-44" x2="104" y2="-4"/><line x1="-70" y1="-48" x2="-40" y2="-82"/>
+            <line x1="-76" y1="40" x2="-104" y2="0"/><line x1="70" y1="46" x2="34" y2="80"/>
+          </g>
+          <circle r="34" fill="#5b8cff" fill-opacity=".25" class="pulse"/>
+          <circle r="12" fill="#cfdcff"/>
+          <circle cx="-70" cy="-48" r="7" fill="#22d3ee"/><circle cx="72" cy="-44" r="7" fill="#22d3ee"/>
+          <circle cx="-76" cy="40" r="7" fill="#fbbf24"/><circle cx="70" cy="46" r="7" fill="#fbbf24"/>
+          <circle cx="104" cy="-4" r="6" fill="#a78bfa"/><circle cx="-40" cy="-82" r="6" fill="#a78bfa"/>
+          <circle cx="-104" cy="0" r="6" fill="#f87171"/><circle cx="34" cy="80" r="6" fill="#f87171"/>
+        </g>
+        <g class="cs" fill="#dbe4ff">
+          <text x="582" y="456">27 kinds of record · 43 kinds of link</text>
+          <text x="582" y="482">• variable-length Cypher traversals</text>
+          <text x="582" y="504">• vector + full-text hybrid search</text>
+          <text x="582" y="526">• betweenness, label propagation</text>
+          <text x="582" y="548">• GRAPH.COPY: a sandbox in 0.1 s</text>
+          <text x="582" y="570">• permissions from the org graph</text>
+          <text x="582" y="592">• decisions with their evidence</text>
+          <text x="582" y="614">• chat, meetings, briefs as passages</text>
+          <text x="582" y="646" fill="#8fa7ff" class="m" font-size="11.5">104 documented Cypher queries</text>
+        </g>
+      </g>
+
+      <!-- engines -->
+      <g>
+        <rect x="870" y="170" width="200" height="72" rx="14" class="box"/><text x="888" y="201" class="ct">Impact &amp; cost</text><text x="888" y="222" class="cs">BOM roll-ups, Decimal maths</text>
+        <rect x="870" y="254" width="200" height="72" rx="14" class="box"/><text x="888" y="285" class="ct">Can we promise?</text><text x="888" y="306" class="cs">parts · people · certificates</text>
+        <rect x="870" y="338" width="200" height="72" rx="14" class="box"/><text x="888" y="369" class="ct">Company sandbox</text><text x="888" y="390" class="cs">scenarios on a graph copy</text>
+        <rect x="870" y="422" width="200" height="72" rx="14" class="box"/><text x="888" y="453" class="ct">Purchasing</text><text x="888" y="474" class="cs">orders · forecasts · ledger</text>
+        <rect x="870" y="506" width="200" height="72" rx="14" class="box"/><text x="888" y="537" class="ct">Never twice</text><text x="888" y="558" class="cs">guard · knowledge health</text>
+        <rect x="870" y="590" width="200" height="76" rx="14" class="box"/><text x="888" y="621" class="ct">Permissions</text><text x="888" y="642" class="cs">money and leave, per reader</text>
+      </g>
+
+      <!-- people use it -->
+      <g>
+        <rect x="1104" y="170" width="140" height="88" rx="16" class="box"/><text x="1120" y="203" class="ct">Web app</text><text x="1120" y="225" class="cs">Next.js 16</text><text x="1120" y="243" class="cs">React 19</text>
+        <rect x="1104" y="272" width="140" height="88" rx="16" class="box"/><text x="1120" y="305" class="ct">Chat</text><text x="1120" y="327" class="cs">channels, DMs,</text><text x="1120" y="345" class="cs">daily briefs</text>
+        <rect x="1104" y="374" width="140" height="88" rx="16" class="box"/><text x="1120" y="407" class="ct">Ask agent</text><text x="1120" y="429" class="cs">26 graph tools,</text><text x="1120" y="447" class="cs">cited answers</text>
+        <rect x="1104" y="476" width="140" height="88" rx="16" class="box"/><text x="1120" y="509" class="ct">MCP server</text><text x="1120" y="531" class="cs">16 tools for</text><text x="1120" y="549" class="cs">any AI client</text>
+        <rect x="1104" y="578" width="140" height="88" rx="16" class="box"/><text x="1120" y="611" class="ct">Docs editor</text><text x="1120" y="633" class="cs">Word layout,</text><text x="1120" y="651" class="cs">fact checks</text>
+      </g>
+    </g>
+
+    <!-- flows between stages -->
+    <g>
+      <path class="flowline" d="M244 260 C 266 260, 268 240, 286 240"/>
+      <path class="flowline" d="M244 420 C 266 420, 268 360, 286 360"/>
+      <path class="flowline" d="M244 620 C 266 620, 268 610, 286 610"/>
+      <path class="flowline" d="M514 270 C 534 270, 538 300, 556 300"/>
+      <path class="flowline" d="M514 480 C 534 480, 538 420, 556 420"/>
+      <path class="flowline" d="M514 610 C 534 610, 538 560, 556 560"/>
+      <path class="flowline" d="M824 260 C 846 260, 848 206, 866 206"/>
+      <path class="flowline" d="M824 400 C 846 400, 848 374, 866 374"/>
+      <path class="flowline" d="M824 560 C 846 560, 848 626, 866 626"/>
+      <path class="flowline" d="M1074 214 C 1088 214, 1088 214, 1100 214"/>
+      <path class="flowline" d="M1074 374 C 1088 374, 1088 418, 1100 418"/>
+      <path class="flowline" d="M1074 542 C 1088 542, 1088 520, 1100 520"/>
+    </g>
+
+    <!-- footer band -->
+    <g class="t">
+      <rect x="40" y="696" width="1204" height="64" rx="18" fill="#ffffff" fill-opacity=".04" stroke="#ffffff" stroke-opacity=".1"/>
+      <circle cx="70" cy="728" r="5" fill="#34d399" class="pulse"/>
+      <text x="88" y="733" font-size="14.5" fill="#e5e9f5" font-weight="600">Runs on Flyvi's own hardware.</text>
+      <text x="312" y="733" font-size="14.5" fill="#a3acc2">FalkorDB and the API on a workstation, models on an NVIDIA DGX Spark over Tailscale, Whisper locally. Nothing leaves the building.</text>
+    </g>
+    <rect x=".5" y=".5" width="1279" height="799" rx="27.5" fill="none" stroke="#ffffff" stroke-opacity=".12"/>
+  </g>
+</svg>

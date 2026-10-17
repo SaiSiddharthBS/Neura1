@@ -33,18 +33,20 @@ USED_BY = {
 
 
 def main() -> None:
+    sections = {"queries.py": "Change impact", "brain.py": "The wider company brain",
+                "scenarios.py": "Company events and the risk radar", "people.py": "People and organisation",
+                "search.py": "Hybrid search", "memory.py": "Conversation memory", "access.py": "Permissions",
+                "supply.py": "Supply: parts lists, lead times and alternates", "inventory.py": "Inventory and stock ledger",
+                "purchasing.py": "Purchasing", "promise.py": "Can we promise this?", "sandbox.py": "Company sandbox",
+                "knowledge_health.py": "Knowledge health", "rescue.py": "Knowledge rescue"}
     out = ["# Cypher queries Neura1 depends on", "",
-           "Generated from [`queries.py`](../api/neura1/queries.py), [`brain.py`](../api/neura1/brain.py) and "
-           "[`scenarios.py`](../api/neura1/scenarios.py), `people.py`, `search.py`, `memory.py` and `access.py` "
-           "by `uv run python -m neura1.docs`.",
-           "All queries are parameterised and run read-only (`GRAPH.RO_QUERY`). Writes happen only in the loaders",
-           "(`api/neura1/ingest/`) and in `api/neura1/actions.py`.", ""]
-    for module in ("queries.py", "brain.py", "scenarios.py", "people.py", "search.py", "memory.py", "access.py"):
+           "Generated from the modules below by `uv run python -m neura1.docs`: "
+           + ", ".join(f"[`{m}`](../api/neura1/{m})" for m in sections) + ".",
+           "All queries are parameterised. Analysis queries only read; writes happen in the loaders",
+           "(`api/neura1/ingest/`) and in the modules that record actions (tasks, purchase orders, chat, meetings).", ""]
+    for module, heading in sections.items():
         src = (REPO_ROOT / "api" / "neura1" / module).read_text()
-        out += _section(src, {"queries.py": "Change impact", "brain.py": "The wider company brain",
-                              "scenarios.py": "Company events and the risk radar", "people.py": "People and organisation",
-                              "search.py": "Hybrid search", "memory.py": "Conversation memory",
-                              "access.py": "Permissions"}[module])
+        out += _section(src, heading)
     (REPO_ROOT / "docs").mkdir(exist_ok=True)
     (REPO_ROOT / "docs" / "queries.md").write_text("\n".join(out))
     print("wrote docs/queries.md")
@@ -56,6 +58,9 @@ def _section(src: str, heading: str) -> list[str]:
     for node in ast.parse(src).body:
         if not (isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant)):
             continue
+        if not isinstance(node.targets[0], ast.Name) or not isinstance(node.value.value, str) \
+                or not re.search(r"\b(MATCH|MERGE|CALL)\b", node.value.value):
+            continue  # Cypher only: prompts and other strings are not queries
         name = node.targets[0].id
         comment = []
         i = node.lineno - 2

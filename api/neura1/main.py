@@ -1438,6 +1438,7 @@ def reset_demo():
             load()
             from neura1 import guard, meetings
             guard.forget()
+            meetings.forget_jobs()
             for f in meetings.folder().glob("MTG-*"):
                 f.unlink(missing_ok=True)
             for f in (settings.data_dir / "documents").glob("DOC-*"):

@@ -1,59 +1,109 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 440" width="1200" height="440" role="img" aria-labelledby="t d">
-  <title id="t">Neura1: know what a change breaks before it breaks</title>
-  <desc id="d">A supplier price change on NB54360 traced to 3 parts per PDU-28 unit, 3 of 3 builds at risk, a 37,400 rupee cost increase, and a previously rejected substitute recalled as DEC-117.</desc>
-  <style>
-    :root { --bg1:#eef3f6; --bg2:#e6eef2; --ink:#0d1b22; --muted:#4b5d66; --glass:rgba(255,255,255,.52); --edge:rgba(255,255,255,.85); --shadow:rgba(16,40,52,.12); --b1:#5ad1e6; --b2:#7c9cff; --b3:#3fd6a6; --red:#d63b2f; }
-    @media (prefers-color-scheme: dark) {
-      :root { --bg1:#071016; --bg2:#0b1820; --ink:#eaf6fb; --muted:#9fb6c1; --glass:rgba(255,255,255,.07); --edge:rgba(255,255,255,.22); --shadow:rgba(0,0,0,.45); --b1:#1fb6d4; --b2:#4f5fe0; --b3:#13a37b; --red:#ff7a6e; }
-    }
-    .bg { fill:url(#bg); }
-    .blob { filter:url(#blur); opacity:.75; transform-box:fill-box; transform-origin:center; }
-    .b1 { fill:var(--b1); animation:drift1 18s ease-in-out infinite alternate; }
-    .b2 { fill:var(--b2); animation:drift2 22s ease-in-out infinite alternate; }
-    .b3 { fill:var(--b3); animation:drift3 26s ease-in-out infinite alternate; }
-    @keyframes drift1 { to { transform:translate(140px,40px) scale(1.15); } }
-    @keyframes drift2 { to { transform:translate(-160px,-30px) scale(.9); } }
-    @keyframes drift3 { to { transform:translate(90px,-60px) scale(1.1); } }
-    .glass { fill:var(--glass); stroke:var(--edge); stroke-width:1.2; filter:url(#shadow); }
-    .sheen { fill:url(#sheen); }
-    .eyebrow { font:600 13px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif; letter-spacing:.14em; fill:var(--muted); }
-    .h1 { font:700 46px -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Helvetica,Arial,sans-serif; letter-spacing:-.02em; fill:var(--ink); }
-    .lede { font:400 19px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif; fill:var(--muted); }
-    .num { font:700 34px -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Helvetica,Arial,sans-serif; letter-spacing:-.02em; fill:var(--ink); }
-    .numred { fill:var(--red); }
-    .lab { font:500 13.5px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif; fill:var(--muted); }
-    .mono { font:500 13px ui-monospace,"SF Mono",Menlo,Consolas,monospace; fill:var(--muted); }
-    .card { animation:rise .9s cubic-bezier(.2,.8,.2,1) both; }
-    .c2 { animation-delay:.12s } .c3 { animation-delay:.24s } .c4 { animation-delay:.36s }
-    @keyframes rise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
-    @media (prefers-reduced-motion: reduce) { .b1,.b2,.b3,.card { animation:none; } }
-  </style>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 440" width="1280" height="440" role="img" aria-label="Neura1: one graph of a company's people, products, customers, decisions and documents. It remembers, plans ahead and acts.">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--bg1)"/><stop offset="1" style="stop-color:var(--bg2)"/></linearGradient>
-    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient>
-    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="70"/></filter>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="140%"><feDropShadow dx="0" dy="10" stdDeviation="16" style="flood-color:var(--shadow)"/></filter>
-    <clipPath id="frame"><rect width="1200" height="440" rx="28"/></clipPath>
+    <clipPath id="card"><rect width="1280" height="440" rx="28"/></clipPath>
+    <radialGradient id="glowA" cx="78%" cy="45%" r="45%"><stop offset="0" stop-color="#3b6cff" stop-opacity=".55"/><stop offset="1" stop-color="#3b6cff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB" cx="18%" cy="110%" r="55%"><stop offset="0" stop-color="#8b5cf6" stop-opacity=".45"/><stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowC" cx="100%" cy="0%" r="40%"><stop offset="0" stop-color="#22d3ee" stop-opacity=".28"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+    <linearGradient id="title" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#dbe4ff"/><stop offset="1" stop-color="#9db4ff"/></linearGradient>
+    <linearGradient id="edge" x1="0" x2="1"><stop offset="0" stop-color="#7aa2ff" stop-opacity=".1"/><stop offset=".5" stop-color="#7aa2ff" stop-opacity=".55"/><stop offset="1" stop-color="#b48cff" stop-opacity=".15"/></linearGradient>
+    <radialGradient id="core" cx="40%" cy="35%" r="65%"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#8fb0ff"/><stop offset="1" stop-color="#3b6cff"/></radialGradient>
+    <radialGradient id="halo" r="50%"><stop offset="0" stop-color="#5b8cff" stop-opacity=".55"/><stop offset="1" stop-color="#5b8cff" stop-opacity="0"/></radialGradient>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#ffffff" fill-opacity=".06"/></pattern>
+    <linearGradient id="fade" x1="0" x2="1"><stop offset="0" stop-color="#05060b"/><stop offset=".42" stop-color="#05060b" stop-opacity=".9"/><stop offset=".62" stop-color="#05060b" stop-opacity="0"/></linearGradient>
+    <style>
+      .t { font-family: Inter, "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+      .m { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+      .breathe { animation: breathe 5s ease-in-out infinite; transform-origin: 960px 214px; }
+      @keyframes breathe { 0%,100% { opacity: .75; transform: scale(1); } 50% { opacity: 1; transform: scale(1.06); } }
+      .ring { animation: spread 6s cubic-bezier(.22,.61,.36,1) infinite; transform-origin: 960px 214px; }
+      .ring.b { animation-delay: 2s; } .ring.c { animation-delay: 4s; }
+      @keyframes spread { from { transform: scale(.08); opacity: .7; } to { transform: scale(1.25); opacity: 0; } }
+      .twinkle { animation: tw 4s ease-in-out infinite; } .d1 { animation-delay: .7s; } .d2 { animation-delay: 1.6s; } .d3 { animation-delay: 2.4s; }
+      @keyframes tw { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+    </style>
   </defs>
-  <g clip-path="url(#frame)">
-    <rect class="bg" width="1200" height="440"/>
-    <circle class="blob b1" cx="230" cy="120" r="190"/>
-    <circle class="blob b2" cx="980" cy="110" r="210"/>
-    <circle class="blob b3" cx="700" cy="420" r="200"/>
+  <g clip-path="url(#card)">
+    <rect width="1280" height="440" fill="#05060b"/>
+    <rect width="1280" height="440" fill="url(#glowA)"/>
+    <rect width="1280" height="440" fill="url(#glowB)"/>
+    <rect width="1280" height="440" fill="url(#glowC)"/>
+    <rect width="1280" height="440" fill="url(#dots)"/>
 
-    <text class="eyebrow" x="64" y="78">GRAPH HACKS 2026 · TRACK 03 · COMPANY BRAIN ON FALKORDB</text>
-    <text class="h1" x="64" y="136">Know what a change breaks</text>
-    <text class="h1" x="64" y="190">before it breaks.</text>
-    <text class="lede" x="64" y="232">A supplier raises one chip from ₹250 to ₹320 and stretches lead time to 22 weeks.</text>
-    <text class="lede" x="64" y="258">Neura1 traces it through the whole company in one graph, with a source for every claim.</text>
+    <!-- the company graph: rings of records around one changed part -->
+    <g fill="none" stroke="#ffffff" stroke-opacity=".08" stroke-dasharray="2 7">
+      <ellipse cx="960" cy="214" rx="110" ry="70"/><ellipse cx="960" cy="214" rx="205" ry="130"/><ellipse cx="960" cy="214" rx="300" ry="190"/>
+    </g>
+    <g fill="none" stroke="#7aa2ff" stroke-width="1.2">
+      <ellipse class="ring" cx="960" cy="214" rx="300" ry="190" stroke-opacity=".5"/>
+      <ellipse class="ring b" cx="960" cy="214" rx="300" ry="190" stroke-opacity=".5"/>
+      <ellipse class="ring c" cx="960" cy="214" rx="300" ry="190" stroke-opacity=".5"/>
+    </g>
+    <g fill="none" stroke="url(#edge)" stroke-width="1.3" stroke-linecap="round">
+      <path id="e1" d="M960 214 Q 1010 160 1062 150"/>
+      <path id="e2" d="M960 214 Q 900 150 858 152"/>
+      <path id="e3" d="M960 214 Q 925 270 880 282"/>
+      <path id="e4" d="M960 214 Q 1020 268 1066 276"/>
+      <path id="e5" d="M1062 150 Q 1120 104 1158 92"/>
+      <path id="e6" d="M1062 150 Q 1140 160 1186 190"/>
+      <path id="e7" d="M858 152 Q 800 108 760 96"/>
+      <path id="e8" d="M880 282 Q 820 330 780 344"/>
+      <path id="e9" d="M1066 276 Q 1130 320 1170 340"/>
+      <path id="e10" d="M1066 276 Q 1040 340 1010 372"/>
+      <path id="e11" d="M858 152 Q 880 90 920 60"/>
+      <path id="e12" d="M1158 92 Q 1215 120 1238 160"/>
+    </g>
+    <!-- pulses travelling outward along the connections -->
+    <g fill="#bcd0ff">
+      <circle r="2.6"><animateMotion dur="2.6s" repeatCount="indefinite" begin="0s"><mpath href="#e1"/></animateMotion></circle>
+      <circle r="2.6"><animateMotion dur="2.9s" repeatCount="indefinite" begin=".6s"><mpath href="#e2"/></animateMotion></circle>
+      <circle r="2.6"><animateMotion dur="2.7s" repeatCount="indefinite" begin="1.1s"><mpath href="#e3"/></animateMotion></circle>
+      <circle r="2.6"><animateMotion dur="3.1s" repeatCount="indefinite" begin=".3s"><mpath href="#e4"/></animateMotion></circle>
+      <circle r="2.2" fill="#d6c4ff"><animateMotion dur="2.4s" repeatCount="indefinite" begin="1.3s"><mpath href="#e5"/></animateMotion></circle>
+      <circle r="2.2" fill="#d6c4ff"><animateMotion dur="2.8s" repeatCount="indefinite" begin="2s"><mpath href="#e7"/></animateMotion></circle>
+      <circle r="2.2" fill="#a5f3fc"><animateMotion dur="2.6s" repeatCount="indefinite" begin="1.7s"><mpath href="#e9"/></animateMotion></circle>
+      <circle r="2.2" fill="#a5f3fc"><animateMotion dur="3s" repeatCount="indefinite" begin=".9s"><mpath href="#e8"/></animateMotion></circle>
+    </g>
+    <!-- records -->
+    <g>
+      <circle cx="960" cy="214" r="62" fill="url(#halo)" class="breathe"/>
+      <circle cx="960" cy="214" r="17" fill="url(#core)" stroke="#05060b" stroke-width="3"/>
+      <g class="twinkle"><circle cx="1062" cy="150" r="7" fill="#22d3ee"/><circle cx="858" cy="152" r="7" fill="#22d3ee"/></g>
+      <g class="twinkle d1"><circle cx="880" cy="282" r="7" fill="#fbbf24"/><circle cx="1066" cy="276" r="7" fill="#fbbf24"/></g>
+      <g class="twinkle d2"><circle cx="1158" cy="92" r="6" fill="#a78bfa"/><circle cx="1186" cy="190" r="6" fill="#a78bfa"/><circle cx="760" cy="96" r="6" fill="#a78bfa"/></g>
+      <g class="twinkle d3"><circle cx="780" cy="344" r="6" fill="#f87171"/><circle cx="1170" cy="340" r="6" fill="#f87171"/><circle cx="1010" cy="372" r="6" fill="#f87171"/></g>
+      <circle cx="920" cy="60" r="5" fill="#e5e7eb" fill-opacity=".8"/><circle cx="1238" cy="160" r="5" fill="#e5e7eb" fill-opacity=".8"/>
+    </g>
+    <g class="m" font-size="11.5" fill="#c7d2fe" fill-opacity=".85">
+      <text x="960" y="250" text-anchor="middle" font-size="13" fill="#ffffff" fill-opacity=".95">NB54360</text>
+      <text x="1074" y="138">PSM-28 Rev 2</text>
+      <text x="796" y="140" text-anchor="end">PDU-28 Rev C</text>
+      <text x="1078" y="292">BO-0412</text>
+      <text x="868" y="306" text-anchor="end">BO-0415</text>
+      <text x="1168" y="80">SO-881</text>
+      <text x="1196" y="208">DEC-117</text>
+      <text x="1182" y="362" text-anchor="middle">Nilgiri Aero</text>
+      <text x="1010" y="394" text-anchor="middle">Raghavendra</text>
+    </g>
 
-    <g class="card c1"><rect class="glass" x="64" y="296" width="250" height="104" rx="22"/><rect class="sheen" x="64" y="296" width="250" height="104" rx="22"/>
-      <text class="num" x="88" y="346">3 per unit</text><text class="lab" x="88" y="374">per PDU-28 Rev C unit</text></g>
-    <g class="card c2"><rect class="glass" x="330" y="296" width="250" height="104" rx="22"/><rect class="sheen" x="330" y="296" width="250" height="104" rx="22"/>
-      <text class="num" x="354" y="346">3 of 3</text><text class="lab" x="354" y="374">planned builds at risk</text></g>
-    <g class="card c3"><rect class="glass" x="596" y="296" width="250" height="104" rx="22"/><rect class="sheen" x="596" y="296" width="250" height="104" rx="22"/>
-      <text class="num" x="620" y="346">₹37,400</text><text class="mono" x="620" y="374">420 × (320 − 250) + 8,000</text></g>
-    <g class="card c4"><rect class="glass" x="862" y="296" width="274" height="104" rx="22"/><rect class="sheen" x="862" y="296" width="274" height="104" rx="22"/>
-      <text class="num numred" x="886" y="346">DEC-117</text><text class="lab" x="886" y="374">rejected part, recalled from Slack</text></g>
+    <!-- words, over a soft fade so they always read cleanly -->
+    <rect width="1280" height="440" fill="url(#fade)"/>
+    <g class="t">
+      <text x="72" y="96" font-size="13" letter-spacing="3.2" fill="#9db4ff" font-weight="600">GRAPH HACKS 2026 · COMPANY BRAIN</text>
+      <text x="68" y="196" font-size="104" font-weight="800" letter-spacing="-4" fill="url(#title)">Neura1</text>
+      <text x="72" y="250" font-size="23" fill="#e5e9f5" font-weight="500">One graph of a company's people, products,</text>
+      <text x="72" y="282" font-size="23" fill="#e5e9f5" font-weight="500">customers, decisions and documents.</text>
+      <text x="72" y="322" font-size="23" fill="#9aa4bd">It remembers, plans ahead, and acts.</text>
+    </g>
+    <g class="t" font-size="13" font-weight="600">
+      <rect x="72" y="358" width="104" height="32" rx="16" fill="#ffffff" fill-opacity=".06" stroke="#ffffff" stroke-opacity=".14"/>
+      <text x="124" y="379" text-anchor="middle" fill="#e5e9f5">FalkorDB</text>
+      <rect x="186" y="358" width="164" height="32" rx="16" fill="#76b900" fill-opacity=".14" stroke="#76b900" stroke-opacity=".55"/>
+      <text x="268" y="379" text-anchor="middle" fill="#c8f08f">NVIDIA DGX Spark</text>
+      <rect x="360" y="358" width="122" height="32" rx="16" fill="#ffffff" fill-opacity=".06" stroke="#ffffff" stroke-opacity=".14"/>
+      <text x="421" y="379" text-anchor="middle" fill="#e5e9f5">Open models</text>
+      <rect x="492" y="358" width="170" height="32" rx="16" fill="#ffffff" fill-opacity=".06" stroke="#ffffff" stroke-opacity=".14"/>
+      <text x="577" y="379" text-anchor="middle" fill="#e5e9f5">Self-hosted · ₹0 cloud</text>
+    </g>
+    <rect x=".5" y=".5" width="1279" height="439" rx="27.5" fill="none" stroke="#ffffff" stroke-opacity=".12"/>
   </g>
 </svg>

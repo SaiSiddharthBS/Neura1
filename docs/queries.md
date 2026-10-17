@@ -1,8 +1,8 @@
 # Cypher queries Neura1 depends on
 
-Generated from [`queries.py`](../api/neura1/queries.py), [`brain.py`](../api/neura1/brain.py) and [`scenarios.py`](../api/neura1/scenarios.py), `people.py`, `search.py`, `memory.py` and `access.py` by `uv run python -m neura1.docs`.
-All queries are parameterised and run read-only (`GRAPH.RO_QUERY`). Writes happen only in the loaders
-(`api/neura1/ingest/`) and in `api/neura1/actions.py`.
+Generated from the modules below by `uv run python -m neura1.docs`: [`queries.py`](../api/neura1/queries.py), [`brain.py`](../api/neura1/brain.py), [`scenarios.py`](../api/neura1/scenarios.py), [`people.py`](../api/neura1/people.py), [`search.py`](../api/neura1/search.py), [`memory.py`](../api/neura1/memory.py), [`access.py`](../api/neura1/access.py), [`supply.py`](../api/neura1/supply.py), [`inventory.py`](../api/neura1/inventory.py), [`purchasing.py`](../api/neura1/purchasing.py), [`promise.py`](../api/neura1/promise.py), [`sandbox.py`](../api/neura1/sandbox.py), [`knowledge_health.py`](../api/neura1/knowledge_health.py), [`rescue.py`](../api/neura1/rescue.py).
+All queries are parameterised. Analysis queries only read; writes happen in the loaders
+(`api/neura1/ingest/`) and in the modules that record actions (tasks, purchase orders, chat, meetings).
 
 # Change impact
 
@@ -595,7 +595,7 @@ MATCH (b:Build)-[:BUILDS]->(:Revision) WHERE NOT (:Person)-[:OWNS]->(b)
 RETURN b.id AS record, 'Build' AS label, NULL AS chunk, 'no planner recorded' AS reason
 UNION ALL
 MATCH (c:Customer) WHERE NOT (:Person)-[:OWNS]->(c)
-RETURN c.id AS record, 'Customer' AS label, NULL AS chunk, 'no account manager recorded' AS reason
+RETURN c.id AS record, 'Customer' AS label, NULL AS chunk, 'no account owner recorded' AS reason
 ```
 
 ## `ACTION_ITEMS`
@@ -828,16 +828,16 @@ MATCH (prod)-[:HAS_REV]->(r:Revision)<-[:COVERS]-(pr:Project)<-[:LEADS]-(lead:Pe
 RETURN DISTINCT prod.id AS product, pr.id AS project, pr.name AS project_name, lead.name AS lead
 ```
 
-## `TOP_OF_CHAIN`
+## `BD_DIRECTOR`
 
+Customer escalations from a top account are briefed to the Director - Business Development.
 
-
-**Parameters:** `$id`  
+**Parameters:** none  
 **Used by:** —
 
 ```cypher
-MATCH (p:Person {id:$id})-[:REPORTS_TO*1..4]->(top:Person) WHERE NOT (top)-[:REPORTS_TO]->()
-RETURN top.name AS name LIMIT 1
+MATCH (p:Person)-[r:HOLDS_ROLE]->(:Organization) WHERE r.role CONTAINS 'Business Development'
+RETURN p.name AS name LIMIT 1
 ```
 
 ## `CUSTOMERS`
@@ -858,16 +858,16 @@ ORDER BY value DESC
 
 ## `CHOKEPOINTS`
 
+FalkorDB estimates betweenness from sampled start nodes. A fixed seed makes one run repeatable; averaging several seeded runs (see risk_radar) makes the ranking stable and closer to the exact value.
 
-
-**Parameters:** `$labels`, `$rels`  
+**Parameters:** `$labels`, `$rels`, `$seed`, `$size`  
 **Used by:** —
 
 ```cypher
-CALL algo.betweenness({nodeLabels:$labels, relationshipTypes:$rels}) YIELD node, score
+CALL algo.betweenness({nodeLabels:$labels, relationshipTypes:$rels, samplingSize:$size, samplingSeed:$seed})
+YIELD node, score
 WHERE score > 0
 RETURN node.id AS id, labels(node)[0] AS label, coalesce(node.name, node.id) AS name, score
-ORDER BY score DESC LIMIT 8
 ```
 
 ## `COMMUNITIES`
@@ -881,8 +881,7 @@ ORDER BY score DESC LIMIT 8
 CALL algo.labelPropagation({nodeLabels:['Person', 'Project', 'Item', 'Customer'],
                             relationshipTypes:['OWNS', 'WORKS_ON', 'LEADS', 'COVERS']})
 YIELD node, communityId
-OPTIONAL MATCH (node)-[:MEMBER_OF]->(t:Team)
-RETURN communityId AS community, collect(node.id) AS members, collect(DISTINCT t.name) AS teams,
+RETURN communityId AS community, collect(node.id) AS members,
        collect(CASE WHEN node:Person THEN node.name END) AS people
 ```
 
@@ -1196,7 +1195,7 @@ Past turns about a record or matching words, across everyone's conversations (sh
 
 ```cypher
 MATCH (t:Turn)-[:ABOUT]->(x) WHERE x.id = $text OR toLower(coalesce(x.name, '')) = toLower($text)
-MATCH (c:Conversation)-[:HAS_TURN]->(t)
+MATCH (c:Conversation)-[:HAS_TURN]->(t) WHERE NOT coalesce(c.private, false)
 OPTIONAL MATCH (p:Person)-[:STARTED]->(c)
 RETURN t.question AS question, t.answer AS answer, t.at AS at, p.name AS asked_by
 ORDER BY at DESC LIMIT 5
@@ -1218,4 +1217,401 @@ OPTIONAL MATCH (r:Person)-[:REPORTS_TO*1..6]->(p)
 OPTIONAL MATCH (p)-[:BACKS_UP]->(covered:Person)
 RETURN p.id AS id, p.name AS name, p.role AS role, t.id AS team, t.name AS team_name,
        collect(DISTINCT r.id) AS reports, collect(DISTINCT covered.id) AS covers
+```
+
+# Supply: parts lists, lead times and alternates
+
+## `REV_TEXT`
+
+
+
+**Parameters:** `$t`  
+**Used by:** —
+
+```cypher
+MATCH (i:Item)-[:HAS_REV]->(r:Revision) WHERE toUpper(r.id) = toUpper($t)
+RETURN r.id AS id, r.status AS status, i.id AS item
+UNION
+MATCH (i:Item {kind:'product'})-[:HAS_REV]->(r:Revision)
+WHERE toUpper(i.id) = toUpper($t) OR toUpper(i.id + ' REV ' + r.rev) = toUpper($t)
+RETURN r.id AS id, r.status AS status, i.id AS item
+```
+
+## `EXPLODE`
+
+
+
+**Parameters:** `$rev`  
+**Used by:** —
+
+```cypher
+MATCH p = (top:Revision {id:$rev})-[:CONTAINS*1..8]->(part:Item) WHERE part.kind = 'part'
+WITH part, reduce(q = 1, r IN relationships(p) | q * r.qty) AS qty
+RETURN part.id AS id, part.name AS name, sum(qty) AS per_unit,
+       coalesce(part.on_hand, -1) AS on_hand, coalesce(part.allocated, 0) AS allocated
+ORDER BY id
+```
+
+## `VALID_QUOTES`
+
+
+
+**Parameters:** `$id`, `$today`  
+**Used by:** —
+
+```cypher
+MATCH (s:Supplier)-[:QUOTED]->(q:Quote)-[:FOR]->(:Item {id:$id})
+WHERE (q.valid_from IS NULL OR q.valid_from <= $today) AND (q.valid_until IS NULL OR q.valid_until >= $today)
+RETURN q.id AS id, s.name AS supplier, q.unit_price AS price, q.moq AS moq, q.lead_weeks AS lead_weeks,
+       q.valid_until AS valid_until
+ORDER BY lead_weeks
+```
+
+## `DEMAND`
+
+What the open builds will take of a part, by build.
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (b:Build)-[:BUILDS]->(r:Revision)
+WHERE coalesce(b.status, 'planned') <> 'done'
+MATCH p = (r)-[:CONTAINS*1..8]->(:Item {id:$id})
+WITH b, r, reduce(q = 1, x IN relationships(p) | q * x.qty) AS qty
+WITH b, r, sum(qty) AS per_unit
+RETURN b.id AS build, r.id AS revision, b.planned_date AS planned_date, b.qty AS units, per_unit, per_unit * b.qty AS need
+ORDER BY planned_date
+```
+
+## `ORDER_HISTORY`
+
+How long recent orders for a part actually took, from order to goods received.
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (g:Receipt)-[:AGAINST]->(po:PurchaseOrder)-[:ORDERS]->(:Item {id:$id})
+OPTIONAL MATCH (po)-[:FROM_SUPPLIER]->(s:Supplier)
+RETURN po.id AS id, po.ordered_on AS ordered_on, min(g.received_on) AS received_on, s.name AS supplier
+ORDER BY ordered_on DESC LIMIT 3
+```
+
+## `ALTERNATES`
+
+
+
+**Parameters:** `$id`  
+**Used by:** Alternate banners
+
+```cypher
+MATCH (a:Item)-[r:ALTERNATE_OF]->(:Item {id:$id})
+OPTIONAL MATCH (d:Decision)-[:ABOUT]->(a) WHERE coalesce(d.status, 'active') = 'active'
+RETURN a.id AS id, r.note AS note, collect(DISTINCT {id: d.id, outcome: d.outcome, reason: d.reason}) AS decisions
+```
+
+# Inventory and stock ledger
+
+## `ITEMS`
+
+
+
+**Parameters:** none  
+**Used by:** —
+
+```cypher
+MATCH (i:Item {kind:'part'})
+OPTIONAL MATCH (po:PurchaseOrder)-[:ORDERS]->(i)
+OPTIONAL MATCH (po)-[:FROM_SUPPLIER]->(s:Supplier)
+WITH i, po, s ORDER BY po.ordered_on DESC
+WITH i, collect({id: po.id, ordered_on: po.ordered_on, expected_on: po.expected_on, status: po.status, qty: po.qty,
+                 unit_price: po.unit_price, supplier: s.name}) AS pos
+RETURN i.id AS id, i.name AS name, i.mpn AS mpn, i.manufacturer AS manufacturer, i.category AS category,
+       i.uom AS uom, i.hsn AS hsn, i.location AS location, i.reorder_level AS reorder_level,
+       i.on_hand AS on_hand, i.allocated AS allocated, i.lifecycle AS lifecycle, pos
+ORDER BY category, id
+```
+
+## `LEDGER`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (m:StockMove)-[:MOVES]->(:Item {id:$id})
+RETURN m.id AS id, m.date AS date, m.qty AS qty, m.kind AS kind, m.ref AS ref, m.location AS location, m.note AS note
+ORDER BY date, id
+```
+
+## `ORDERS`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (po:PurchaseOrder)-[:ORDERS]->(:Item {id:$id})
+OPTIONAL MATCH (po)-[:FROM_SUPPLIER]->(s:Supplier)
+OPTIONAL MATCH (po)-[:PRICED_BY]->(q:Quote)
+OPTIONAL MATCH (g:Receipt)-[:AGAINST]->(po)
+RETURN po.id AS id, po.qty AS qty, po.unit_price AS unit_price, po.currency AS currency, po.ordered_on AS ordered_on,
+       po.expected_on AS expected_on, po.status AS status, s.id AS supplier_id, s.name AS supplier, q.id AS quote,
+       collect(CASE WHEN g IS NULL THEN NULL ELSE {id: g.id, qty: g.qty, received_on: g.received_on, lot: g.lot,
+               rejected: g.rejected, note: g.note, location: g.location} END) AS receipts
+ORDER BY ordered_on DESC
+```
+
+## `QUOTES`
+
+
+
+**Parameters:** `$id`  
+**Used by:** Procurement tab, cost baseline
+
+```cypher
+MATCH (s:Supplier)-[:QUOTED]->(q:Quote)-[:FOR]->(:Item {id:$id})
+RETURN q.id AS id, s.name AS supplier, q.unit_price AS unit_price, q.moq AS moq, q.lead_weeks AS lead_weeks,
+       q.valid_from AS valid_from, q.valid_until AS valid_until
+ORDER BY valid_from
+```
+
+## `CONTEXT`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (i:Item {id:$id})
+OPTIONAL MATCH (o:Person)-[:OWNS]->(i)
+OPTIONAL MATCH (d:Decision)-[:ABOUT]->(i) WHERE coalesce(d.status, 'active') = 'active'
+OPTIONAL MATCH (a:Action)-[:CONCERNS]->(i) WHERE coalesce(a.status, 'open') <> 'done'
+OPTIONAL MATCH (dep:Item)-[:DEPENDS_ON]->(i)
+RETURN o.id AS owner_id, o.name AS owner,
+       collect(DISTINCT {id: d.id, outcome: d.outcome, summary: d.summary, decided_at: d.decided_at}) AS decisions,
+       collect(DISTINCT {id: a.id, title: a.title, status: a.status}) AS tasks,
+       collect(DISTINCT {id: dep.id, name: dep.name, kind: dep.kind}) AS dependents
+```
+
+## `WHERE_USED`
+
+
+
+**Parameters:** `$id`  
+**Used by:** Impact workspace (graph, Engineering tab), cost scenario
+
+```cypher
+MATCH (prod:Item {kind:'product'})-[:HAS_REV]->(top:Revision)
+MATCH p = (top)-[:CONTAINS*1..8]->(:Item {id:$id})
+WITH top, prod, reduce(q = 1, r IN relationships(p) | q * r.qty) AS qty
+RETURN top.id AS revision, prod.name AS product, top.status AS status, sum(qty) AS per_unit
+ORDER BY revision
+```
+
+# Purchasing
+
+## `LAST_PAID`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (po:PurchaseOrder)-[:ORDERS]->(:Item {id:$id}) MATCH (po)-[:FROM_SUPPLIER]->(s:Supplier)
+RETURN s.id AS supplier_id, s.name AS supplier, po.unit_price AS unit_price, po.ordered_on AS ordered_on
+ORDER BY ordered_on DESC LIMIT 1
+```
+
+## `QUOTES`
+
+
+
+**Parameters:** `$id`, `$today`  
+**Used by:** Procurement tab, cost baseline
+
+```cypher
+MATCH (s:Supplier)-[:QUOTED]->(q:Quote)-[:FOR]->(:Item {id:$id})
+WHERE (q.valid_from IS NULL OR q.valid_from <= $today) AND (q.valid_until IS NULL OR q.valid_until >= $today)
+RETURN q.id AS id, s.id AS supplier_id, s.name AS supplier, q.unit_price AS unit_price, q.currency AS currency,
+       q.moq AS moq, q.lead_weeks AS lead_weeks, q.valid_until AS valid_until
+```
+
+# Can we promise this?
+
+## `PEOPLE`
+
+
+
+**Parameters:** `$rev`  
+**Used by:** People directory
+
+```cypher
+MATCH p = (top:Revision {id:$rev})-[:CONTAINS*0..8]->(x)
+WITH DISTINCT x
+OPTIONAL MATCH (i:Item)-[:HAS_REV]->(x)
+WITH coalesce(i, x) AS thing
+MATCH (o:Person)-[:OWNS]->(thing)
+RETURN DISTINCT o.id AS id, o.name AS name, thing.id AS owns, labels(thing)[0] AS label
+UNION
+MATCH (top:Revision {id:$rev})-[:CONTAINS*1..8]->(part:Item)<-[:DEPENDS_ON]-(d:Item)<-[:OWNS]-(o:Person)
+RETURN DISTINCT o.id AS id, o.name AS name, d.id AS owns, d.kind AS label
+UNION
+MATCH (prod:Item)-[:HAS_REV]->(:Revision {id:$rev}), (prod)-[:HAS_REV]->(:Revision)<-[:BUILDS]-(b:Build)<-[:OWNS]-(o:Person)
+RETURN DISTINCT o.id AS id, o.name AS name, 'builds of ' + prod.id AS owns, 'Build' AS label
+```
+
+## `AWAY`
+
+
+
+**Parameters:** `$from`, `$id`, `$to`  
+**Used by:** —
+
+```cypher
+MATCH (p:Person {id:$id})-[:HAS_ABSENCE]->(a:Absence) WHERE a.end_date >= $from AND a.start_date <= $to
+OPTIONAL MATCH (b:Person)-[:BACKS_UP]->(p)
+RETURN a.start_date AS start, a.end_date AS end, b.name AS backup ORDER BY start LIMIT 1
+```
+
+## `CERTS`
+
+
+
+**Parameters:** `$rev`  
+**Used by:** —
+
+```cypher
+MATCH (c:Certification)-[:CERTIFIES]->(:Revision {id:$rev})
+RETURN c.id AS id, c.name AS name, c.status AS status, c.valid_until AS valid_until
+```
+
+# Company sandbox
+
+## `ORDERS`
+
+
+
+**Parameters:** none  
+**Used by:** —
+
+```cypher
+MATCH (c:Customer)-[:PLACED]->(o:Order)
+OPTIONAL MATCH (am:Person)-[:OWNS]->(c)
+RETURN o.id AS id, c.name AS customer, am.id AS owner_id, am.name AS owner, o.qty AS qty, o.due_date AS due,
+       coalesce(o.unit_price, 0) * coalesce(o.qty, 0) AS value, coalesce(o.penalty_cap_pct, 0) AS penalty_cap
+```
+
+## `AWAY`
+
+
+
+**Parameters:** `$from`, `$to`  
+**Used by:** —
+
+```cypher
+MATCH (p:Person)-[:HAS_ABSENCE]->(a:Absence) WHERE a.end_date >= $from AND a.start_date <= $to
+OPTIONAL MATCH (b:Person)-[:BACKS_UP]->(p)
+RETURN p.id AS id, p.name AS name, a.start_date AS start, a.end_date AS end, a.kind AS kind, b.name AS backup
+```
+
+## `BUILDS_OF_ORDER`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (o:Order {id:$id})-[:FULFILLED_BY]->(b:Build)-[:BUILDS]->(r:Revision)
+OPTIONAL MATCH (planner:Person)-[:OWNS]->(b)
+RETURN b.id AS build, b.qty AS qty, b.planned_date AS planned_date, r.id AS revision, planner.id AS planner_id,
+       planner.name AS planner
+```
+
+## `QUOTED_PARTS`
+
+
+
+**Parameters:** `$today`  
+**Used by:** —
+
+```cypher
+MATCH (q:Quote)-[:FOR]->(i:Item)
+WHERE (q.valid_from IS NULL OR q.valid_from <= $today) AND (q.valid_until IS NULL OR q.valid_until >= $today)
+RETURN DISTINCT i.id AS id
+```
+
+# Knowledge health
+
+## `LIVING`
+
+
+
+**Parameters:** none  
+**Used by:** —
+
+```cypher
+MATCH (s:Source) WHERE s.kind IN ['doc', 'document']
+RETURN s.id AS id, s.title AS title, s.kind AS kind, s.ref AS ref
+```
+
+## `CHANGED_AFTER`
+
+
+
+**Parameters:** `$id`, `$since`  
+**Used by:** —
+
+```cypher
+MATCH (i:Item {id:$id})
+OPTIONAL MATCH (d:Decision)-[:ABOUT]->(i) WHERE d.decided_at > $since
+RETURN collect(DISTINCT {id: d.id, at: d.decided_at, summary: d.summary}) AS decisions
+```
+
+## `AWAY_SOON`
+
+
+
+**Parameters:** `$today`, `$until`  
+**Used by:** —
+
+```cypher
+MATCH (p:Person)-[:HAS_ABSENCE]->(a:Absence) WHERE a.end_date >= $today AND a.start_date <= $until
+OPTIONAL MATCH (b:Person)-[:BACKS_UP]->(p)
+RETURN p.id AS id, p.name AS name, a.start_date AS start, a.end_date AS end, b.name AS backup
+```
+
+# Knowledge rescue
+
+## `DEPENDS`
+
+
+
+**Parameters:** `$id`  
+**Used by:** —
+
+```cypher
+MATCH (:Person {id:$id})-[:OWNS]->(x:Item)-[d:DEPENDS_ON]->(p:Item)
+RETURN x.id AS id, x.name AS name, p.id AS on, d.note AS note
+```
+
+## `CAPTURED`
+
+
+
+**Parameters:** `$src`  
+**Used by:** —
+
+```cypher
+MATCH (c:Chunk)-[:PART_OF]->(:Source {id:$src})
+OPTIONAL MATCH (c)-[:MENTIONS]->(x)
+RETURN c.id AS id, c.question AS question, c.question_id AS question_id, c.text AS text, c.ts AS ts,
+       collect(DISTINCT x.id) AS about
+ORDER BY ts
 ```

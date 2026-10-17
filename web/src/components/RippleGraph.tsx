@@ -267,11 +267,14 @@ export default function RippleGraph() {
                                        initial={{ opacity: 0.8, scale: 1 }} animate={{ opacity: 0, scale: 1.9 }} transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut" }} />
                       )}
                     </motion.g>
-                    <text y={center ? 34 : 20} textAnchor="middle" className="pointer-events-none select-none font-mono ripple-dim"
-                          style={{ fill: center || isActive ? "var(--ink)" : "var(--muted)", fontSize: center ? 15 : 10.5, fontWeight: isActive ? 600 : 400,
-                                   paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 3 }}>
+                    {/* The label arrives with its record, ring by ring. */}
+                    <motion.text y={center ? 34 : 20} textAnchor="middle" className="pointer-events-none select-none font-mono ripple-dim"
+                                 initial={{ opacity: 0, y: center ? 38 : 24 }} animate={{ opacity: 1, y: center ? 34 : 20 }}
+                                 transition={{ delay: delay(l) + 0.12, duration: 0.45, ease: EASE }}
+                                 style={{ fill: center || isActive ? "var(--ink)" : "var(--muted)", fontSize: center ? 15 : 10.5, fontWeight: isActive ? 600 : 400,
+                                          paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 3 }}>
                       {n.label.length > 16 && !isActive ? n.label.slice(0, 15) + "…" : n.label}
-                    </text>
+                    </motion.text>
                   </g>
                 </g>
               );

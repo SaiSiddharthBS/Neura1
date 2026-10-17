@@ -391,10 +391,18 @@ def list_meetings(graph: Graph) -> list[dict]:
     known = {o["id"] for o in out}
     with _jobs_lock:
         for j in _jobs.values():
-            if j["id"] not in known:
+            # Recordings still being processed, or that failed. A finished job without its meeting in the graph
+            # (for example after a reset) is not shown.
+            if j["id"] not in known and j.get("stage") != "done":
                 out.insert(0, {"id": j["id"], "status": j["stage"], "title": j["title"], "at": j["started_at"],
                                "seconds": j.get("seconds"), "decisions": 0, "actions": 0, "error": j.get("error")})
     return out
+
+
+def forget_jobs() -> None:
+    """After a reset: the graph no longer holds these meetings."""
+    with _jobs_lock:
+        _jobs.clear()
 
 
 def audio_path(meeting_id: str) -> Path | None:
