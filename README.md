@@ -87,7 +87,7 @@ Neura1 answers in one view:
   </tr>
   <tr>
     <td><img src="docs/demo/docs-fact-check.png" alt="Fact check"><br><sub><b>Neura1 Docs, check facts</b>: a draft proposes the rejected NB54361-L, an expired quote, an unapproved part and an obsolete revision. Each is caught by rules over the graph, with the Slack and Jira proof.</sub></td>
-    <td><img src="docs/demo/docs-ai-edit.png" alt="AI edit"><br><sub><b>Edit with AI</b>: the local model rewrites the selected sentence; the change arrives as a tracked change by "Neura1 AI" to accept or reject.</sub></td>
+    <td><img src="docs/demo/docs-ai-edit.png" alt="AI edit"><br><sub><b>Edit with AI</b>: the DGX model rewrites the selected sentence in 15 s as a tracked change by "Neura1 AI", and notes from the graph that PSM-28 Rev 1 is obsolete.</sub></td>
   </tr>
   <tr>
     <td><img src="docs/demo/docs-change-notice.png" alt="Change notice"><br><sub><b>Change notice from the graph</b>: affected products, builds, orders, cost, rejected alternates and required reviews, written by code into a real Word document.</sub></td>
