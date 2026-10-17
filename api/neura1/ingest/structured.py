@@ -72,6 +72,9 @@ INDEXES = [
     "CREATE INDEX FOR (n:Organization) ON (n.id)",
     "CREATE INDEX FOR (n:Skill) ON (n.name)",
     "CREATE INDEX FOR (n:Action) ON (n.id)",
+    "CREATE INDEX FOR (n:PurchaseOrder) ON (n.id)",
+    "CREATE INDEX FOR (n:Receipt) ON (n.id)",
+    "CREATE INDEX FOR (n:StockMove) ON (n.id)",
 ]
 
 # (csv file, cypher). Each row is passed as $r; $src is the export's source id.
@@ -121,6 +124,30 @@ LOADERS: list[tuple[str, str]] = [
     ("stock.csv", """
         MATCH (i:Item {id:$r.item_id})
         SET i.on_hand=toInteger($r.on_hand), i.allocated=toInteger($r.allocated), i.stock_source=$src"""),
+    ("item_details.csv", """
+        MATCH (i:Item {id:$r.item_id})
+        SET i.category=$r.category, i.uom=$r.uom, i.hsn=$r.hsn, i.reorder_level=toInteger($r.reorder_level),
+            i.location=$r.location"""),
+    # Purchasing and stores: every order placed, every delivery received, and every movement of stock.
+    ("purchase_orders.csv", """
+        MERGE (po:PurchaseOrder {id:$r.id})
+        SET po.qty=toInteger($r.qty), po.unit_price=$r.unit_price, po.currency=$r.currency, po.ordered_on=$r.ordered_on,
+            po.expected_on=$r.expected_on, po.status=$r.status, po.source=$src, po.authority=$auth
+        WITH po MATCH (s:Supplier {id:$r.supplier_id}), (i:Item {id:$r.item_id})
+        MERGE (po)-[:FROM_SUPPLIER]->(s) MERGE (po)-[:ORDERS]->(i)
+        WITH po OPTIONAL MATCH (q:Quote {id:$r.quote_id})
+        FOREACH (_ IN CASE WHEN q IS NULL THEN [] ELSE [1] END | MERGE (po)-[:PRICED_BY]->(q))"""),
+    ("receipts.csv", """
+        MERGE (g:Receipt {id:$r.id})
+        SET g.qty=toInteger($r.qty), g.received_on=$r.received_on, g.location=$r.location, g.lot=$r.lot,
+            g.rejected=toInteger(coalesce($r.rejected, '0')), g.note=$r.note, g.source=$src, g.authority=$auth
+        WITH g MATCH (po:PurchaseOrder {id:$r.po_id}), (i:Item {id:$r.item_id})
+        MERGE (g)-[:AGAINST]->(po) MERGE (g)-[:RECEIVES]->(i)"""),
+    ("stock_moves.csv", """
+        MERGE (m:StockMove {id:$r.id})
+        SET m.date=$r.date, m.qty=toInteger($r.qty), m.kind=$r.kind, m.ref=$r.ref, m.location=$r.location,
+            m.note=$r.note, m.source=$src, m.authority=$auth
+        WITH m MATCH (i:Item {id:$r.item_id}) MERGE (m)-[:MOVES]->(i)"""),
     ("customers.csv", "MERGE (c:Customer {id:$r.id}) SET c.name=$r.name, c.source=$src, c.authority=$auth"),
     ("builds.csv", """
         MERGE (b:Build {id:$r.id})
@@ -241,7 +268,8 @@ def existing_ids(graph: Graph) -> dict:
     labels = {"teams": "Team", "people": "Person", "items": "Item", "revisions": "Revision",
               "suppliers": "Supplier", "quotes": "Quote", "customers": "Customer", "builds": "Build",
               "orders": "Order", "shipments": "Shipment", "projects": "Project",
-              "certifications": "Certification", "organizations": "Organization", "tasks": "Action"}
+              "certifications": "Certification", "organizations": "Organization", "tasks": "Action",
+              "purchase_orders": "PurchaseOrder", "receipts": "Receipt", "stock_moves": "StockMove"}
     out: dict = {k: {r["id"] for r in rows(graph, f"MATCH (n:{label}) RETURN n.id AS id")}
                  for k, label in labels.items()}
     out["_mpn"] = {r["mpn"].upper(): r["id"] for r in rows(

@@ -88,21 +88,24 @@ def check(graph: Graph, product: str, qty: int, due: date, viewer: Viewer, today
     for p in supply.explode(graph, rev["id"]):
         need = int(p["per_unit"]) * qty
         recorded = p["on_hand"] >= 0
-        free = max(p["on_hand"] - p["allocated"], 0) if recorded else 0
+        on_shelf = max(p["on_hand"] - p["allocated"], 0) if recorded else 0
+        planned = supply.planned_need(graph, p["id"])
+        free = max(on_shelf - planned, 0)  # the planned builds take free stock first
         per = int(p["per_unit"])
         max_now = (free // per) if max_now is None else min(max_now, free // per)
         short = max(need - free, 0)
         notice = notes.get(p["id"])
         lead = supply.lead_time(graph, p["id"], today, notice)
-        base = {"need": need, "free": free, "short": short, "lead": lead, "notice": notice}
+        base = {"need": need, "free": free, "short": short, "lead": lead, "notice": notice, "planned": planned}
+        after = f" after the planned builds take {planned}" if planned else ""
         if not short:
-            add("part", p["id"], "ok", f"{need} needed, {free} free in stock.", **base)
+            add("part", p["id"], "ok", f"{need} needed; {free} free in stock{after}.", **base)
             continue
         if lead["quote_weeks"] is not None:  # what a stock-and-quote check would assume
             erp_dates.append(supply.weeks(today, int(lead["quote_weeks"]) + build_weeks))
         if lead["weeks"] is None:
             add("part", p["id"], "unknown",
-                f"Short {short} of {need}{'' if recorded else ' (no stock on record)'}, and no lead time is on record.",
+                f"Short {short} of {need}{after}{'' if recorded else ' (no stock on record)'}, and no lead time is on record.",
                 **base)
             fixes.append(f"Get a lead time for {p['id']} ({short} needed) from purchase.")
             continue
@@ -111,9 +114,11 @@ def check(graph: Graph, product: str, qty: int, due: date, viewer: Viewer, today
         ready_dates.append((ready, p["id"]))
         basis = (f"the {notice['received']} supplier notice says {lead['weeks']} weeks"
                  + (f" (the quote said {lead['quote_weeks']})" if lead["quote_weeks"] not in (None, lead["weeks"]) else "")
-                 if lead["basis"] == "notice" else f"quote {lead['source']}: {lead['weeks']} weeks")
+                 if lead["basis"] == "notice" else
+                 f"recent orders took up to {lead['weeks']} weeks ({lead['source']}, no current quote)"
+                 if lead["basis"] == "history" else f"quote {lead['source']}: {lead['weeks']} weeks")
         status = "blocker" if ready > due else ("risk" if (due - ready).days < 7 else "ok")
-        add("part", p["id"], status, f"Short {short} of {need}; {basis}, so parts arrive {arrive.isoformat()} and "
+        add("part", p["id"], status, f"Short {short} of {need}{after}; {basis}, so parts arrive {arrive.isoformat()} and "
                                      f"units are ready about {ready.isoformat()}.", **base, ready=ready.isoformat())
         if status == "blocker":
             alts = supply.alternates(graph, p["id"], today)
@@ -199,7 +204,8 @@ def check(graph: Graph, product: str, qty: int, due: date, viewer: Viewer, today
                                          "or certifications."},
         "purchase_value": cost, "leave_included": viewer.unrestricted or viewer.leader,
         "assumptions": [f"{build_weeks} weeks from the last part arriving to shipping (assembly, test, dispatch)",
-                        "Allocated stock stays with the builds it is allocated to",
+                        "Allocated stock is reserved for other demand; planned builds take free stock first",
+                        "Without a quote or notice, new supply takes as long as the slowest of the last three orders",
                         "A supplier notice replaces the lead time of an older quote for the same part",
                         "Leave is checked between today and the due date"],
     }

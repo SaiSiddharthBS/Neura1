@@ -9,7 +9,7 @@ import { motion } from "motion/react";
 import { Toaster } from "sonner";
 import {
   Bell, Brain, Building2, ChevronRight, FileText, FolderKanban, History, Inbox, KanbanSquare, LayoutDashboard, Menu, MessageCircle,
-  Compass, FlaskConical, Handshake, LifeBuoy, Network, Radar, Search, Sparkles, Sun, Target, Upload, Users, Waypoints,
+  Compass, FlaskConical, Handshake, LifeBuoy, Network, Package, Radar, Search, Sparkles, Sun, Target, Upload, Users, Waypoints,
 } from "lucide-react";
 import CommandPalette from "@/components/CommandPalette";
 import ModelStatus from "@/components/ModelStatus";
@@ -45,6 +45,7 @@ const NAV: { section: string; items: Item[]; collapsible?: boolean }[] = [
     { href: "/org", label: "Organisation", icon: Network },
     { href: "/projects", label: "Projects", icon: FolderKanban },
     { href: "/customers", label: "Customers", icon: Building2 },
+    { href: "/inventory", label: "Inventory", icon: Package },
   ]},
   { section: "More", collapsible: true, items: [
     { href: "/history", label: "Plans", icon: History },

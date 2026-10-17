@@ -1,0 +1,10 @@
+item_id,category,uom,hsn,reorder_level,location
+NB54360,Power ICs,ea,8542,150,Stores A2-07
+NB54361-L,Power ICs,ea,8542,0,
+MX-3360,Power ICs,ea,8542,0,
+VX7-MCU,Microcontrollers,ea,8542,120,Stores A1-03
+KP8081,Interface ICs,ea,8542,80,Stores A1-05
+CT-1051,Interface ICs,ea,8542,40,Stores A1-06
+MC-3812,Connectors,ea,8536,200,Stores C2-01
+IND-4R7,Passives,ea,8504,300,Stores B3-12
+CAP-22U,Passives,ea,8532,1500,Stores B3-04

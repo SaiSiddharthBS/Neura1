@@ -968,6 +968,25 @@ def guard_check(body: GuardIn, g=Depends(graph), v: access.Viewer = Depends(curr
     return {"flags": guard.check(g, body.text, v)}
 
 
+# ---------- inventory ----------
+
+@app.get("/api/inventory")
+def inventory_list(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import inventory
+    out = inventory.items(g)
+    return out if v.sees_money else access.redact_money(out)
+
+
+@app.get("/api/inventory/{item_id}")
+def inventory_item(item_id: str, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import inventory
+    out = inventory.item(g, item_id)
+    if out.get("status") != "ok":
+        raise HTTPException(404, f"No part called {item_id}")
+    out["money_visible"] = v.sees_money
+    return out if v.sees_money else access.redact_money(out)
+
+
 # ---------- can we promise this? ----------
 
 class PromiseIn(BaseModel):

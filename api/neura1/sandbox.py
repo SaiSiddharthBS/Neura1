@@ -250,7 +250,8 @@ def _assess(fork: Graph, shocks: list[dict], today: date) -> dict:
                 continue
             for p in supply.explode(fork, b["revision"]):
                 extra = int(p["per_unit"]) * delta
-                free = max(p["on_hand"] - p["allocated"], 0) if p["on_hand"] >= 0 else 0
+                on_shelf = max(p["on_hand"] - p["allocated"], 0) if p["on_hand"] >= 0 else 0
+                free = max(on_shelf - (supply.planned_need(fork, p["id"]) - extra), 0)  # after the builds already planned
                 if extra <= free:
                     continue
                 lead = supply.lead_time(fork, p["id"], today, notes.get(p["id"]))

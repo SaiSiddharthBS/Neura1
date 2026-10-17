@@ -102,6 +102,11 @@ TOOLS = [
     ("organisation", "How Flyvi is organised: the directors, the leadership team under them, and everyone else "
                      "(employees). Given a person's name, also their tier, title and backup.",
      {"name": {"type": ["string", "null"]}}),
+    ("inventory", "Stores and purchasing for a part: stock on hand, allocated and free, reorder level and location; "
+                  "every purchase order (supplier, quantity, price paid, ordered, expected and received dates, lead "
+                  "time, on time or late, rejections); price history (paid, quoted, supplier notices); the stock "
+                  "ledger; what planned builds need. Pass a part id, or nothing for every part's stock status.",
+     {"item_id": {"type": ["string", "null"]}}),
     ("can_we_promise", "Whether Flyvi can deliver a quantity of a product by a date: parts and free stock, the newest "
                        "lead times (supplier notices beat quotes), people and knowledge, certifications. Returns the "
                        "verdict, the earliest realistic date, the limiting part and what would change the answer. "
@@ -257,6 +262,32 @@ def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
                        collect(DISTINCT r.name) AS direct_reports, collect(DISTINCT b.name) AS backed_up_by""",
                 {"t": args["name"]})
         return out
+    if name == "inventory":
+        from neura1 import inventory
+        if args.get("item_id"):
+            r = inventory.item(graph, str(args["item_id"]))
+            trace.steps.append({"name": "inventory_item", "cypher": "(inventory: stock, orders, receipts, ledger)",
+                                "params": args, "rows": len(r.get("orders", [])), "ms": 0})
+            if r.get("status") != "ok":
+                return r
+            return {k: r[k] for k in ("item", "stock", "last_order", "last_received", "price_history", "suppliers",
+                                      "demand", "planned_need", "insights")} | {
+                "orders": [{k: o[k] for k in ("id", "supplier", "qty", "unit_price", "ordered_on", "expected_on",
+                                              "received_on", "status", "lead_days", "on_time", "rejected_qty")}
+                           for o in r["orders"]],
+                "recent_ledger": r["ledger"][-6:]}
+        return [{k: x[k] for k in ("id", "name", "category", "on_hand", "allocated", "free", "planned_need", "available",
+                                   "reorder_level", "status", "on_order", "next_delivery", "last_price")} | {
+                    "last_order": (x["last_order"] or {}).get("id"), "last_ordered_on": (x["last_order"] or {}).get("ordered_on"),
+                    "last_supplier": (x["last_order"] or {}).get("supplier"),
+                    "status_meaning": {"short": "planned builds need more than free stock plus what is on order",
+                                       "below_reorder": "left after planned builds, plus on order, is under the reorder level",
+                                       "ok": "covered", "no_record": "not stocked"}.get(x["status"]),
+                    "reorder_check": None if x["free"] is None else
+                    f"free {x['free']} (on hand {x['on_hand']} minus {x['allocated']} allocated) - planned builds "
+                    f"{x['planned_need']} = {x['available']} available, + {x['on_order']} on order, vs reorder level "
+                    f"{x['reorder_level']}"}
+                for x in inventory.items(graph)]
     if name == "can_we_promise":
         from datetime import date as _date
         from neura1 import promise

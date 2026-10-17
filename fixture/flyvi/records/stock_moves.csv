@@ -1,0 +1,52 @@
+id,item_id,date,qty,kind,ref,location,note
+SM-0001,CAP-22U,2025-01-01,1600,opening,,Stores B3-04,"Opening balance, migrated from the previous inventory system"
+SM-0002,CT-1051,2025-01-01,130,opening,,Stores A1-06,"Opening balance, migrated from the previous inventory system"
+SM-0003,IND-4R7,2025-01-01,300,opening,,Stores B3-12,"Opening balance, migrated from the previous inventory system"
+SM-0004,KP8081,2025-01-01,60,opening,,Stores A1-05,"Opening balance, migrated from the previous inventory system"
+SM-0005,MC-3812,2025-01-01,240,opening,,Stores C2-01,"Opening balance, migrated from the previous inventory system"
+SM-0006,NB54360,2025-01-01,120,opening,,Stores A2-07,"Opening balance, migrated from the previous inventory system"
+SM-0007,VX7-MCU,2025-01-01,105,opening,,Stores A1-03,"Opening balance, migrated from the previous inventory system"
+SM-0008,NB54360,2025-03-24,500,receipt,GRN-25-0142,Stores A2-07,Received against PO-2025-0031
+SM-0009,VX7-MCU,2025-05-20,395,receipt,GRN-25-0261,Stores A1-03,Received against PO-2025-0057 (5 rejected)
+SM-0010,KP8081,2025-05-26,300,receipt,GRN-25-0287,Stores A1-05,Received against PO-2025-0063
+SM-0011,MC-3812,2025-05-26,600,receipt,GRN-25-0288,Stores C2-01,Received against PO-2025-0064
+SM-0012,CAP-22U,2025-06-02,4000,receipt,GRN-25-0323,Stores B3-04,Received against PO-2025-0072
+SM-0013,IND-4R7,2025-06-02,1000,receipt,GRN-25-0322,Stores B3-12,Received against PO-2025-0071
+SM-0014,CAP-22U,2025-07-08,-880,issue,BO-0371,Stores B3-04,Issued to BO-0371 (110 × PDU-28-C)
+SM-0015,IND-4R7,2025-07-08,-220,issue,BO-0371,Stores B3-12,Issued to BO-0371 (110 × PDU-28-C)
+SM-0016,KP8081,2025-07-08,-110,issue,BO-0371,Stores A1-05,Issued to BO-0371 (110 × PDU-28-C)
+SM-0017,MC-3812,2025-07-08,-220,issue,BO-0371,Stores C2-01,Issued to BO-0371 (110 × PDU-28-C)
+SM-0018,NB54360,2025-07-08,-330,issue,BO-0371,Stores A2-07,Issued to BO-0371 (110 × PDU-28-C)
+SM-0019,VX7-MCU,2025-07-08,-110,issue,BO-0371,Stores A1-03,Issued to BO-0371 (110 × PDU-28-C)
+SM-0020,NB54360,2025-10-13,400,receipt,GRN-25-0611,Stores A2-07,Received against PO-2025-0118
+SM-0021,CAP-22U,2025-11-17,-1040,issue,BO-0384,Stores B3-04,Issued to BO-0384 (130 × PDU-28-C)
+SM-0022,IND-4R7,2025-11-17,-260,issue,BO-0384,Stores B3-12,Issued to BO-0384 (130 × PDU-28-C)
+SM-0023,KP8081,2025-11-17,-130,issue,BO-0384,Stores A1-05,Issued to BO-0384 (130 × PDU-28-C)
+SM-0024,MC-3812,2025-11-17,-260,issue,BO-0384,Stores C2-01,Issued to BO-0384 (130 × PDU-28-C)
+SM-0025,NB54360,2025-11-17,-390,issue,BO-0384,Stores A2-07,Issued to BO-0384 (130 × PDU-28-C)
+SM-0026,VX7-MCU,2025-11-17,-130,issue,BO-0384,Stores A1-03,Issued to BO-0384 (130 × PDU-28-C)
+SM-0027,CAP-22U,2026-01-19,-240,issue,BO-0389,Stores B3-04,Issued to BO-0389 (60 × BCU-24-A)
+SM-0028,CT-1051,2026-01-19,-60,issue,BO-0389,Stores A1-06,Issued to BO-0389 (60 × BCU-24-A)
+SM-0029,IND-4R7,2026-01-19,-60,issue,BO-0389,Stores B3-12,Issued to BO-0389 (60 × BCU-24-A)
+SM-0030,NB54360,2026-01-19,-60,issue,BO-0389,Stores A2-07,Issued to BO-0389 (60 × BCU-24-A)
+SM-0031,VX7-MCU,2026-01-19,-60,issue,BO-0389,Stores A1-03,Issued to BO-0389 (60 × BCU-24-A)
+SM-0032,VX7-MCU,2026-03-23,300,receipt,GRN-26-0127,Stores A1-03,Received against PO-2026-0021
+SM-0033,KP8081,2026-03-30,250,receipt,GRN-26-0139,Stores A1-05,Received against PO-2026-0029
+SM-0034,MC-3812,2026-03-30,600,receipt,GRN-26-0140,Stores C2-01,Received against PO-2026-0030
+SM-0035,CAP-22U,2026-04-06,2000,receipt,GRN-26-0162,Stores B3-04,Received against PO-2026-0053
+SM-0036,IND-4R7,2026-04-06,500,receipt,GRN-26-0161,Stores B3-12,Received against PO-2026-0052
+SM-0037,NB54360,2026-04-16,300,receipt,GRN-26-0188,Stores A2-07,Received against PO-2026-0044
+SM-0038,CAP-22U,2026-05-11,-800,issue,BO-0396,Stores B3-04,Issued to BO-0396 (100 × PDU-28-C)
+SM-0039,IND-4R7,2026-05-11,-200,issue,BO-0396,Stores B3-12,Issued to BO-0396 (100 × PDU-28-C)
+SM-0040,KP8081,2026-05-11,-100,issue,BO-0396,Stores A1-05,Issued to BO-0396 (100 × PDU-28-C)
+SM-0041,MC-3812,2026-05-11,-200,issue,BO-0396,Stores C2-01,Issued to BO-0396 (100 × PDU-28-C)
+SM-0042,NB54360,2026-05-11,-300,issue,BO-0396,Stores A2-07,Issued to BO-0396 (100 × PDU-28-C)
+SM-0043,VX7-MCU,2026-05-11,-100,issue,BO-0396,Stores A1-03,Issued to BO-0396 (100 × PDU-28-C)
+SM-0044,NB54360,2026-06-30,-20,adjustment,CC-2026-06,Stores A2-07,Cycle count: 20 scrapped after ESD damage
+SM-0045,NB54360,2026-08-25,200,receipt,GRN-26-0402,Stores A2-07,Received against PO-2026-0097
+SM-0046,CAP-22U,2026-09-14,-640,issue,BO-0405,Stores B3-04,Issued to BO-0405 (80 × PDU-28-C)
+SM-0047,IND-4R7,2026-09-14,-160,issue,BO-0405,Stores B3-12,Issued to BO-0405 (80 × PDU-28-C)
+SM-0048,KP8081,2026-09-14,-80,issue,BO-0405,Stores A1-05,Issued to BO-0405 (80 × PDU-28-C)
+SM-0049,MC-3812,2026-09-14,-160,issue,BO-0405,Stores C2-01,Issued to BO-0405 (80 × PDU-28-C)
+SM-0050,NB54360,2026-09-14,-240,issue,BO-0405,Stores A2-07,Issued to BO-0405 (80 × PDU-28-C)
+SM-0051,VX7-MCU,2026-09-14,-80,issue,BO-0405,Stores A1-03,Issued to BO-0405 (80 × PDU-28-C)

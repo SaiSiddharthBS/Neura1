@@ -36,6 +36,25 @@ RETURN q.id AS id, s.name AS supplier, q.unit_price AS price, q.moq AS moq, q.le
 ORDER BY lead_weeks
 """
 
+# What the open builds will take of a part, by build.
+DEMAND = """
+MATCH (b:Build)-[:BUILDS]->(r:Revision)
+WHERE coalesce(b.status, 'planned') <> 'done'
+MATCH p = (r)-[:CONTAINS*1..8]->(:Item {id:$id})
+WITH b, r, reduce(q = 1, x IN relationships(p) | q * x.qty) AS qty
+WITH b, r, sum(qty) AS per_unit
+RETURN b.id AS build, r.id AS revision, b.planned_date AS planned_date, b.qty AS units, per_unit, per_unit * b.qty AS need
+ORDER BY planned_date
+"""
+
+# How long recent orders for a part actually took, from order to goods received.
+ORDER_HISTORY = """
+MATCH (g:Receipt)-[:AGAINST]->(po:PurchaseOrder)-[:ORDERS]->(:Item {id:$id})
+OPTIONAL MATCH (po)-[:FROM_SUPPLIER]->(s:Supplier)
+RETURN po.id AS id, po.ordered_on AS ordered_on, min(g.received_on) AS received_on, s.name AS supplier
+ORDER BY ordered_on DESC LIMIT 3
+"""
+
 ALTERNATES = """
 MATCH (a:Item)-[r:ALTERNATE_OF]->(:Item {id:$id})
 OPTIONAL MATCH (d:Decision)-[:ABOUT]->(a) WHERE coalesce(d.status, 'active') = 'active'
@@ -87,7 +106,17 @@ def lead_time(graph: Graph, item: str, today: date, notice: dict | None) -> dict
     if quote and quote["lead_weeks"] is not None:
         return {"weeks": int(quote["lead_weeks"]), "basis": "quote", "source": quote["id"], "quote": quote,
                 "quote_weeks": quote["lead_weeks"]}
+    past = [h for h in rows(graph, ORDER_HISTORY, {"id": item}) if h["received_on"] and h["ordered_on"]]
+    if past:  # no quote or notice: how long the last orders actually took
+        days = [(date.fromisoformat(h["received_on"]) - date.fromisoformat(h["ordered_on"])).days for h in past]
+        return {"weeks": -(-max(days) // 7), "basis": "history", "source": past[0]["id"], "quote": None,
+                "quote_weeks": None, "supplier": past[0]["supplier"]}
     return {"weeks": None, "basis": "unknown", "source": None, "quote": None, "quote_weeks": None}
+
+
+def planned_need(graph: Graph, item: str) -> int:
+    """Parts the open builds will use. Free stock goes to them first, before any new order."""
+    return int(sum(d["need"] or 0 for d in rows(graph, DEMAND, {"id": item})))
 
 
 def alternates(graph: Graph, item: str, today: date) -> list[dict]:

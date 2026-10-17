@@ -9,7 +9,7 @@ from falkordb import Graph
 
 from neura1.graph import rows
 
-HIDDEN = ["Chunk", "Message", "Turn", "Event", "Alias", "Channel", "Conversation"]
+HIDDEN = ["Chunk", "Message", "Turn", "Event", "Alias", "Channel", "Conversation", "StockMove"]
 
 NEIGHBORHOOD = """
 MATCH (x {id:$id})-[r]-(n)

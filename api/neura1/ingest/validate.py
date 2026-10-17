@@ -22,6 +22,7 @@ class Spec:
     key: str | None = "id"
     ints: tuple[str, ...] = ()
     positive: tuple[str, ...] = ()
+    signed: tuple[str, ...] = ()   # integer columns that may be negative (stock leaving the stores)
     dates: tuple[str, ...] = ()
     enums: dict = field(default_factory=dict)
     refs: dict = field(default_factory=dict)  # column -> record type it must reference
@@ -71,6 +72,25 @@ SPECS: dict[str, Spec] = {s.name: s for s in [
          example=("Q-101", "S-DECCAN", "NB54360", "250", "INR", "100", "6", "2026-07-01", "2026-12-31")),
     Spec("stock", "Stock", ("item_id", "on_hand", "allocated"), ("item_id", "on_hand"), key="item_id",
          ints=("on_hand", "allocated"), refs={"item_id": "items"}, example=("NB54360", "180", "120")),
+    Spec("item_details", "Item details (category, unit, HSN, reorder level, location)",
+         ("item_id", "category", "uom", "hsn", "reorder_level", "location"), ("item_id",), key="item_id",
+         ints=("reorder_level",), refs={"item_id": "items"},
+         example=("NB54360", "Power ICs", "ea", "8542", "150", "Stores A2-07")),
+    Spec("purchase_orders", "Purchase orders", ("id", "supplier_id", "item_id", "qty", "unit_price", "currency",
+                                               "ordered_on", "expected_on", "status", "quote_id"),
+         ("id", "supplier_id", "item_id", "qty", "unit_price", "ordered_on"), ints=("qty",), positive=("qty",),
+         dates=("ordered_on", "expected_on"), enums={"status": {"open", "partially_received", "received", "cancelled"}},
+         refs={"supplier_id": "suppliers", "item_id": "items", "quote_id": "quotes"},
+         example=("PO-2026-0097", "S-DECCAN", "NB54360", "200", "250", "INR", "2026-07-14", "2026-08-25", "received", "Q-101")),
+    Spec("receipts", "Goods received", ("id", "po_id", "item_id", "qty", "received_on", "location", "lot", "rejected", "note"),
+         ("id", "po_id", "item_id", "qty", "received_on"), ints=("qty", "rejected"), positive=("qty",),
+         dates=("received_on",), refs={"po_id": "purchase_orders", "item_id": "items"},
+         example=("GRN-26-0402", "PO-2026-0097", "NB54360", "200", "2026-08-25", "Stores A2-07", "L260825-NB5", "0", "")),
+    Spec("stock_moves", "Stock movements (a ledger: receipts, issues, adjustments)",
+         ("id", "item_id", "date", "qty", "kind", "ref", "location", "note"), ("id", "item_id", "date", "qty", "kind"),
+         ints=("qty",), signed=("qty",), dates=("date",),
+         enums={"kind": {"opening", "receipt", "issue", "adjustment", "return", "transfer"}}, refs={"item_id": "items"},
+         example=("SM-0042", "NB54360", "2026-09-14", "-240", "issue", "BO-0405", "Stores A2-07", "Issued to BO-0405")),
     Spec("customers", "Customers", ("id", "name"), ("id", "name"), example=("C-NILGIRI", "Nilgiri Aero Systems")),
     Spec("builds", "Planned builds", ("id", "rev_id", "qty", "planned_date", "status"), ("id", "rev_id", "qty", "planned_date"),
          ints=("qty",), positive=("qty",), dates=("planned_date",), refs={"rev_id": "revisions"},
@@ -118,11 +138,12 @@ SPECS: dict[str, Spec] = {s.name: s for s in [
 ]}
 
 NOUN = {"organizations": "organization", "certifications": "certification", "projects": "project", "teams": "team", "people": "person", "items": "item", "revisions": "revision", "suppliers": "supplier",
-        "quotes": "quote", "customers": "customer", "builds": "build", "orders": "order", "shipments": "shipment"}
+        "quotes": "quote", "customers": "customer", "builds": "build", "orders": "order", "shipments": "shipment",
+        "purchase_orders": "purchase order", "receipts": "goods receipt", "stock_moves": "stock movement"}
 
 # Load order respects references.
 ORDER = ["organizations", "teams", "people", "items", "revisions", "bom", "alternates", "dependencies", "suppliers", "quotes",
-         "stock", "customers", "builds", "orders", "shipments", "projects", "project_members", "project_scope",
+         "stock", "item_details", "purchase_orders", "receipts", "stock_moves", "customers", "builds", "orders", "shipments", "projects", "project_members", "project_scope",
          "backups", "aliases", "org_roles", "skills", "reports_to", "absences", "certifications", "tasks", "ownership"]
 
 
@@ -286,7 +307,7 @@ def validate(files: dict[str, str], existing: dict[str, set[str]] | None = None,
                 if r[c]:
                     try:
                         v = int(r[c])
-                        if v < 0 or (c in spec.positive and v == 0):
+                        if (v < 0 and c not in spec.signed) or (c in spec.positive and v == 0):
                             err(c, f"must be {'positive' if c in spec.positive else 'zero or more'}, got {r[c]}")
                     except ValueError:
                         err(c, f"must be a whole number, got {r[c]!r}")
