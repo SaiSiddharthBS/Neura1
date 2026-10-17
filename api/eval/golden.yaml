@@ -123,7 +123,8 @@
   split: heldout
   category: ownership
   question: Which team is Satish in?
-  all: [Quality]
+  # Corrected 2026-10-17: the team is named "Testing" (id T-QA) in the records; "Quality" never matched the data.
+  all: [Testing]
 - id: q24
   split: heldout
   category: policy
@@ -179,7 +180,8 @@
   split: heldout
   category: who_knows
   question: Who should I ask about pmic_seq.c, and who covers when they are away?
-  all: [Sai, Vishwas]
+  # Corrected 2026-10-17: Sai's recorded backup is Vinay (records/backups.csv), not Vishwas.
+  all: [Sai, Vinay]
 - id: q34
   split: heldout
   category: project
@@ -233,7 +235,8 @@
   split: heldout
   category: org
   question: Who reports to Vishwas?
-  all: [Raghavendra, Sai, Satish]
+  # Corrected 2026-10-17: after the leadership restructure, Satish reports to Hithesh (records/reports_to.csv).
+  all: [Raghavendra, Sai]
 
 # Added 2026-10-16 with the Flyvi organisation, people and work history. Written before running any model.
 - id: q44

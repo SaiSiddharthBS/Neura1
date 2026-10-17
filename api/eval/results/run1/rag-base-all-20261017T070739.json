@@ -1,0 +1,968 @@
+{
+  "system": "rag",
+  "model": "ornith-1.5-35b-a3b",
+  "state": "base",
+  "split": "all",
+  "passed": 29,
+  "total": 46,
+  "results": [
+    {
+      "id": "q01",
+      "category": "where_used",
+      "split": "dev",
+      "pass": false,
+      "missing": [
+        "PDU-28-C",
+        "BCU-24-A"
+      ],
+      "seconds": 33.07,
+      "question": "Which released product revisions use NB54360, and how many does each unit contain?",
+      "answer": "Not recorded. The provided documents mention that NB54360 passes the TR-112 thermal test (TR-112, page 4) and is used as the reference for the NB54361-L pin-compatibility discussion (Slack #hw-power, 2025-03-04), but none of the records state which released product revisions use NB54360 or how many each unit contains.",
+      "retrieved": [
+        "chats/slack_fw-team_2026-09.json#m2",
+        "docs/TR-112_thermal_test_report.md#p14",
+        "chats/slack_hw-power_2025-03.json#m1",
+        "docs/onboarding_hardware.md#p2",
+        "records/items.csv#0",
+        "records/items.csv#1",
+        "records/organizations.csv#0",
+        "docs/HB-HR-02_leave_handover.md#p2"
+      ]
+    },
+    {
+      "id": "q02",
+      "category": "where_used",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 6.89,
+      "question": "How many NB54360 regulators are in one PDU-28 Rev C controller?",
+      "answer": "Not recorded. The provided documents mention NB54360 as a single-sourced regulator (PDU-48 kickoff, Leadership weekly 2026-10-12) and discuss a cost-down candidate NB54361-L for PSM-28 Rev 2 (HW-311), but none state how many NB54360 regulators are in one PDU-28 Rev C controller.",
+      "retrieved": [
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "tickets/SUP-1057.json#description",
+        "tickets/HW-311.json#description",
+        "docs/TR-112_thermal_test_report.md#p7",
+        "docs/TR-112_thermal_test_report.md#p17",
+        "tickets/SUP-1042.json#comment-1"
+      ]
+    },
+    {
+      "id": "q03",
+      "category": "revision_applicability",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 23.9,
+      "question": "Is PDU-28 Rev D affected by the NB54360 change?",
+      "answer": "Based on the records, PDU-28 Rev D is **not formally affected** by the NB54360 change, because:\n\n- **PDU-28 Rev D is still a draft, not a released revision** — [PDU-48 kickoff] calls it \"the stepping stone and stays a draft until the power stage settles,\" and [Operations review 2026-09-28] confirms \"PDU-28 Rev D is still a draft. Nothing ships on it this quarter.\"\n- Per **HB-ENG-04 §1**, the engineering change review process applies to \"a component change on a *released* revision.\" Since Rev D is not released, the NB54360 change does not trigger that process against Rev D.\n\nHowever, the NB54360 second-source evaluation is directly relevant to the **power stage redesign** that Rev D represents:\n- Raghavendra is reviewing **MX-3360 as a second source for the 3.3 V rail** to avoid single-sourcing on NB54360 again [PDU-48 kickoff].\n- Supplier alternates go to Ambika [Onboarding], and MX-3360 is documented as a distributor cross-reference only, \"not an engineering approval\" [alternates record].\n\nSo: the NB54360 change does not require a formal change review on Rev D (it's a draft), but the MX-3360 second-source decision will be made as part of the PDU-48 power stage work that Rev D is the stepping stone for.",
+      "retrieved": [
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "records/projects.csv#2",
+        "records/alternates.csv#1",
+        "docs/onboarding_hardware.md#p2",
+        "chats/slack_fw-team_2026-09.json#m1"
+      ]
+    },
+    {
+      "id": "q04",
+      "category": "revision_applicability",
+      "split": "dev",
+      "pass": true,
+      "missing": [],
+      "seconds": 17.59,
+      "question": "Does the obsolete PDU-28 Rev B still count toward NB54360 demand?",
+      "answer": "Not recorded. The documents only establish that PDU-28 Rev B is obsolete (id=PDU-28-B, status=obsolete) and that current Nilgiri demand is tracked via the Rev C build BO-0412 (100 x PDU-28 Rev C, 2026-11-03). No record addresses whether obsolete Rev B counts toward NB54360 demand.",
+      "retrieved": [
+        "docs/TR-112_thermal_test_report.md#p14",
+        "records/revisions.csv#0",
+        "records/revisions.csv#4",
+        "docs/ops_review_2026-09-28.md#p2",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "chats/slack_fw-team_2026-09.json#m2",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "chats/slack_fw-team_2026-09.json#m1"
+      ]
+    },
+    {
+      "id": "q05",
+      "category": "exposure",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 20.01,
+      "question": "Which planned builds use PDU-28 Rev C?",
+      "answer": "BO-0412 and BO-0421 use PDU-28 Rev C.\n\n- **BO-0412** — rev_id=PDU-28-C, qty=100, planned 2026-11-03, status=planned\n- **BO-0421** — rev_id=PDU-28-C, qty=40, planned 2026-11-24, status=planned\n\n(BO-0415 uses BCU-24-A, not PDU-28-C.)",
+      "retrieved": [
+        "chats/slack_fw-team_2026-09.json#m2",
+        "chats/slack_hw-power_2025-03.json#m1",
+        "docs/onboarding_hardware.md#p2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "records/builds.csv#0",
+        "records/builds.csv#1",
+        "records/builds.csv#2",
+        "records/tasks.csv#22"
+      ]
+    },
+    {
+      "id": "q06",
+      "category": "cost",
+      "split": "heldout",
+      "pass": false,
+      "missing": [
+        "480"
+      ],
+      "seconds": 26.74,
+      "question": "How many NB54360 parts do all planned builds need in total?",
+      "answer": "Not recorded.\n\nThe only planned build on record is **BO-0412** (rev PDU-28-C, qty=100, planned 2026-11-03). However, no record states how many NB54360 parts are used per PDU-28 unit (no BOM or parts-per-unit data is provided), so the total cannot be calculated.",
+      "retrieved": [
+        "docs/onboarding_hardware.md#p2",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "chats/slack_fw-team_2026-09.json#m3",
+        "inbox/notice_NB54360_2026-10-14.md#p3",
+        "tickets/SUP-1042.json#comment-2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "records/builds.csv#0"
+      ]
+    },
+    {
+      "id": "q07",
+      "category": "cost",
+      "split": "dev",
+      "pass": false,
+      "missing": [
+        "420"
+      ],
+      "seconds": 33.94,
+      "question": "After using free stock, how many NB54360 do we need to buy for the planned builds?",
+      "answer": "Free stock can be computed, but the total requirement cannot be, because per-build consumption of NB54360 is not recorded.\n\n- **Free stock:** stock record NB54360 → on_hand=180, allocated=120 → **60 free** (stock record).\n- **Planned builds:** BO-0412 (100 × PDU-28 Rev C) and BO-0415 (60 × BCU-24-A) (builds records).\n\nHowever, no record specifies how many NB54360 each build consumes (no BOM/usage data). So the total needed — and thus the buy quantity after using free stock — is **not recorded**.\n\nIf you can provide the NB54360-per-unit figure for PDU-28 and BCU-24, I can finish the calculation.",
+      "retrieved": [
+        "docs/onboarding_hardware.md#p2",
+        "records/stock.csv#0",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "tickets/SUP-1057.json#comment-2",
+        "records/builds.csv#0",
+        "records/builds.csv#1"
+      ]
+    },
+    {
+      "id": "q08",
+      "category": "cost",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 15.76,
+      "question": "Which quote is the current price baseline for NB54360, and what is the unit price?",
+      "answer": "The current price baseline for NB54360 is **Q-101** at **₹250** (valid 2026-07-01 to 2026-12-31). This is confirmed by the operations review, which states \"Current quote Q-101 at ₹250 is valid to year end.\" (quotes: Q-101; ops review 2026-09-28)",
+      "retrieved": [
+        "chats/slack_fw-team_2026-09.json#m2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "inbox/notice_NB54360_2026-10-14.md#p3",
+        "chats/slack_hw-power_2025-03.json#m5",
+        "docs/TR-112_thermal_test_report.md#p4",
+        "records/quotes.csv#0",
+        "records/quotes.csv#1",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2"
+      ]
+    },
+    {
+      "id": "q09",
+      "category": "cost",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 11.46,
+      "question": "Why shouldn't quote Q-099 be used for NB54360 costing?",
+      "answer": "Q-099 is expired and superseded. Its validity ended 2026-06-30 (id=Q-099), and the current valid quote for NB54360 is Q-101 at ₹250, valid to year end (Operations review 2026-09-28).",
+      "retrieved": [
+        "records/quotes.csv#0",
+        "docs/TR-112_thermal_test_report.md#p17",
+        "docs/onboarding_hardware.md#p2",
+        "inbox/leave_raghavendra_2026-10-09.md#p2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "chats/slack_hw-power_2025-03.json#m5",
+        "records/tasks.csv#23",
+        "chats/slack_fw-team_2026-09.json#m2"
+      ]
+    },
+    {
+      "id": "q10",
+      "category": "decision",
+      "split": "dev",
+      "pass": true,
+      "missing": [],
+      "seconds": 18.16,
+      "question": "Can we switch from NB54360 to the cheaper NB54361-L?",
+      "answer": "No. The switch was rejected.\n\n- **DEC-117** (Vishwas, 2025-03-12): NB54361-L is **rejected** as a substitute for NB54360 on PSM-28 Rev 2 because it **fails thermal derating at 70°C ambient in sealed avionics enclosures** (per TR-112). Keep NB54360. Revisit only with a part that passes the same soak.\n- **HW-311** (Raghavendra, 2025-03-04): the -L variant has a **lower junction temperature rating**; PDU-28 runs in sealed enclosures with no forced air, so it was put through the 70°C soak and did not pass.\n\nAmbika's cost-down proposal (₹190 vs ₹250) was considered but not approved. The only path forward is a qualifying second source such as MX-3360, which must pass TP-PSM-07 (including the 70°C cold-start soak) before it can replace NB54360.",
+      "retrieved": [
+        "chats/slack_hw-power_2025-03.json#m4",
+        "tickets/SUP-1057.json#comment-2",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "chats/slack_hw-power_2025-03.json#m1",
+        "docs/ops_review_2026-09-28.md#p2",
+        "docs/onboarding_hardware.md#p2",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "chats/slack_hw-power_2025-03.json#m2"
+      ]
+    },
+    {
+      "id": "q11",
+      "category": "decision",
+      "split": "heldout",
+      "pass": false,
+      "missing": [
+        "Vishwas",
+        "2025-03-12"
+      ],
+      "seconds": 34.56,
+      "question": "Who decided against using NB54361-L, and when?",
+      "answer": "The rationale for not using NB54361-L is documented in **TR-112** (2025-03-10), which is the report explaining \"why we do not use NB54361-L\" (per the Read-first list). However, the records do not name the specific person who made the decision.",
+      "retrieved": [
+        "docs/onboarding_hardware.md#p2",
+        "chats/slack_hw-power_2025-03.json#m1",
+        "docs/TR-112_thermal_test_report.md#p4",
+        "inbox/notice_NB54360_2026-10-14.md#p4",
+        "tickets/HW-311.json#description",
+        "records/alternates.csv#0",
+        "records/items.csv#4",
+        "records/ownership.csv#6"
+      ]
+    },
+    {
+      "id": "q12",
+      "category": "decision",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 7.24,
+      "question": "Which test showed NB54361-L failing, and at what ambient temperature?",
+      "answer": "The **TR-112** thermal derating test showed NB54361-L failing — it went into **thermal shutdown at 68C ambient** under full load in the sealed enclosure (TR-112, page 4). It held regulation only up to 65C ambient.",
+      "retrieved": [
+        "chats/slack_fw-team_2026-09.json#m2",
+        "chats/slack_hw-power_2025-03.json#m2",
+        "docs/TR-112_thermal_test_report.md#p10",
+        "docs/TR-112_thermal_test_report.md#p13",
+        "docs/TP-PSM-07_test_procedure.md#p5",
+        "chats/slack_hw-power_2025-03.json#m3",
+        "chats/slack_hw-power_2025-03.json#m4",
+        "tickets/HW-311.json#comment-1"
+      ]
+    },
+    {
+      "id": "q13",
+      "category": "decision",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 16.37,
+      "question": "Is MX-3360 approved as a replacement for NB54360?",
+      "answer": "No. MX-3360 is not approved as a replacement.\n\n- [alternates record] lists MX-3360 only as a distributor cross-reference (\"Suggested by distributor as functional equivalent; not an engineering approval\").\n- [HB-ENG-04] §2 states a substitute is never approved on cross-reference/pin compatibility alone—it needs qualification evidence under the governing test procedure.\n- [HW-311] confirms NB54360 remains the only approved regulator for PSM-28 Rev 2.\n\nMX-3360 is only being considered as a potential second source (Raghavendra, PDU-48 kickoff; Ambika), pending TP-PSM-07 qualification.",
+      "retrieved": [
+        "tickets/HW-311.json#comment-2",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "records/absences.csv#0",
+        "inbox/leave_raghavendra_2026-10-09.md#p1",
+        "records/alternates.csv#1",
+        "chats/slack_fw-team_2026-09.json#m1"
+      ]
+    },
+    {
+      "id": "q14",
+      "category": "ownership",
+      "split": "dev",
+      "pass": false,
+      "missing": [
+        "Sai"
+      ],
+      "seconds": 60.31,
+      "question": "Who owns the firmware that depends on NB54360?",
+      "answer": "Not recorded. The company records do not explicitly state who owns the firmware that depends on NB54360.\n\nRelevant context that does not resolve ownership:\n- HB-ENG-04 §3 requires a firmware review by \"the owner of any module that depends on the part,\" but does not name that owner.\n- Raghavendra runs power-stage reviews (move to Vishwas during his November leave) — [Leadership weekly, 2026-10-12].\n- Nagarjun is in the firmware team (#fw-team) — [Slack #fw-team, 2026-09-08].\n\nNone of these records assign firmware ownership for the NB54360-dependent module.",
+      "retrieved": [
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "chats/slack_hw-power_2025-03.json#m4",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "tickets/SUP-1057.json#comment-2",
+        "chats/slack_fw-team_2026-09.json#m1",
+        "chats/slack_hw-power_2025-03.json#m1",
+        "tickets/SUP-1057.json#description"
+      ]
+    },
+    {
+      "id": "q15",
+      "category": "dependency",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 9.46,
+      "question": "Which firmware module depends on NB54360, and why?",
+      "answer": "The **FW-PMIC-SEQ** module (pmic_seq.c power sequencing module) depends on NB54360.\n\n**Why:** Its power-good delay is set to 6 ms, tuned to the NB54360's 4 ms soft-start time. If the regulator on PSM-28 changes without re-tuning, the VX7 MCU can brown out during cold start. (FW-233)",
+      "retrieved": [
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "chats/slack_fw-team_2026-09.json#m2",
+        "docs/onboarding_hardware.md#p2",
+        "tickets/FW-233.json#description",
+        "records/items.csv#12",
+        "records/items.csv#2",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "chats/slack_hw-power_2025-03.json#m1"
+      ]
+    },
+    {
+      "id": "q16",
+      "category": "ownership",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 9.54,
+      "question": "Who owns the PSM-28 power stage module?",
+      "answer": "Raghavendra owns the PSM-28 power stage module. The onboarding document states \"Power stage and PSM-28 questions go to Raghavendra\" (with Vishwas covering when he is away), and the PDU-48 kickoff records \"Decision owner for the power stage: Raghavendra.\"",
+      "retrieved": [
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "records/items.csv#2",
+        "tickets/FW-233.json#description",
+        "records/items.csv#12",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "docs/onboarding_hardware.md#p2",
+        "records/items.csv#13"
+      ]
+    },
+    {
+      "id": "q17",
+      "category": "exposure",
+      "split": "dev",
+      "pass": false,
+      "missing": [
+        "SO-887"
+      ],
+      "seconds": 263.32,
+      "question": "Which customer orders are exposed to the NB54360 change?",
+      "answer": "**SO-881 (Nilgiri, build BO-0412) is exposed to the NB54360 change.**\n\nWhy:\n- The NB54360 is the single-sourced regulator in the power stage (PSM-28); a second source (MX-3360 from Sahyadri) is being qualified, and the supplier has raised price to ₹320 and lead time to 22 weeks effective 2026-11-01, with a last-time-buy of 2027-03-31 (Ambika 2026-10-12; PDU-48 kickoff; supplier notice 2026-10-14).\n- BO-0412 is \"the first build that matters for Nilgiri\" (Sharath 2026-10-12), and Nilgiri Phase 2 delivery is the top Q3 priority (Leadership weekly 2026-10-12). As the power-stage build, it depends on the NB54360.\n- SO-881 is due 2026-11-20 with a late-delivery penalty (clause 9.2, 0.5%/week, capped at 5%), so a supply disruption or re-tuning of pmic_seq.c directly threatens it (Sai 2026-07-15).\n\n**SO-884 (Konkan, build BO-0415) is not clearly exposed to the NB54360 change.** Its documented issue is the BCU-24 CAN telemetry drop after cold start (SUP-1057), a separate firmware concern, and no record links BO-0415/BCU-24 to the NB54360 or the power-stage change.\n\nNote: if BO-0415 is later found to use the NB54360 power stage, it would also become exposed, but that link is not recorded.",
+      "retrieved": [
+        "chats/slack_fw-team_2026-09.json#m2",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "tickets/SUP-1057.json#description",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "inbox/notice_NB54360_2026-10-14.md#p3",
+        "records/orders.csv#0",
+        "records/orders.csv#1"
+      ]
+    },
+    {
+      "id": "q18",
+      "category": "exposure",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 4.41,
+      "question": "Which exposed customer order has a late-delivery penalty, and for which customer?",
+      "answer": "**SO-881** has a late-delivery penalty, for customer **Nilgiri Aero Systems** (customer_id=C-NILGIRI).\n\n- Penalty: 0.5% of order value per week, capped at 5% (Clause 9.2) — [SO-881 excerpt]\n- Order record confirms: id=SO-881, customer_id=C-NILGIRI, due_date=2026-11-20, penalty_pct_per_week=0.5, penalty_cap_pct=5 — [orders record]\n- Confirmed as exposed via BO-0412 feeding SO-881 — [Operations review, 2026-09-28]",
+      "retrieved": [
+        "docs/ops_review_2026-09-28.md#p2",
+        "chats/slack_fw-team_2026-09.json#m2",
+        "docs/contract_SO-881_nilgiri_excerpt.md#p3",
+        "records/orders.csv#0",
+        "inbox/notice_NB54360_2026-10-14.md#p2",
+        "chats/slack_hw-power_2025-03.json#m2",
+        "inbox/notice_NB54360_2026-10-14.md#p3",
+        "docs/contract_SO-881_nilgiri_excerpt.md#p2"
+      ]
+    },
+    {
+      "id": "q19",
+      "category": "ownership",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 1.69,
+      "question": "Who is the account manager for Nilgiri Aero Systems?",
+      "answer": "The account manager for Nilgiri Aero Systems is **Keerthana** (per SO-881 excerpt).",
+      "retrieved": [
+        "docs/contract_SO-881_nilgiri_excerpt.md#p1",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "docs/contract_SO-881_nilgiri_excerpt.md#p2",
+        "docs/contract_SO-881_nilgiri_excerpt.md#p3",
+        "records/projects.csv#0",
+        "records/customers.csv#0",
+        "docs/contract_SO-881_nilgiri_excerpt.md#p0"
+      ]
+    },
+    {
+      "id": "q20",
+      "category": "exposure",
+      "split": "heldout",
+      "pass": false,
+      "missing": [
+        "220",
+        "one of ['PDU-28-B', 'Rev B']"
+      ],
+      "seconds": 12.03,
+      "question": "How many units already in the field contain NB54360, and on which revision?",
+      "answer": "Not recorded. The provided data mentions the NB54360 soft-start only in the context of firmware tuning (Slack #fw-team, 2026-09-08), but no record states how many field units contain the NB54360 or ties that part to a specific revision's field count.",
+      "retrieved": [
+        "chats/slack_fw-team_2026-09.json#m2",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "records/certifications.csv#0",
+        "records/certifications.csv#1",
+        "records/certifications.csv#2",
+        "tickets/SUP-1057.json#description",
+        "records/tasks.csv#7",
+        "records/project_members.csv#17"
+      ]
+    },
+    {
+      "id": "q21",
+      "category": "cost",
+      "split": "dev",
+      "pass": true,
+      "missing": [],
+      "seconds": 4.05,
+      "question": "What does a TP-PSM-07 requalification cost?",
+      "answer": "A full TP-PSM-07 requalification costs **₹8,000 per candidate part** (covering chamber time and technician hours) and takes 3 working days of lab time. (TP-PSM-07)",
+      "retrieved": [
+        "docs/TP-PSM-07_test_procedure.md#p7",
+        "records/projects.csv#2",
+        "docs/TR-112_thermal_test_report.md#p14",
+        "records/dependencies.csv#1",
+        "records/items.csv#13",
+        "records/ownership.csv#4",
+        "records/project_scope.csv#14",
+        "chats/slack_fw-team_2026-09.json#m4"
+      ]
+    },
+    {
+      "id": "q22",
+      "category": "ownership",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 12.64,
+      "question": "Who plans the PDU-28 builds?",
+      "answer": "Sharath (P-SHARATH) plans the PDU-28 builds. Task WRK-123 (\"Production schedule for November builds,\" target_id=BO-0412, a PDU-28-C build) is assigned to P-SHARATH, and the operations review records Sharath planning BO-0412 and BO-0421 (both PDU-28-C).",
+      "retrieved": [
+        "docs/ops_review_2026-09-28.md#p2",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "records/builds.csv#0",
+        "records/builds.csv#1",
+        "records/builds.csv#2",
+        "records/tasks.csv#22",
+        "chats/slack_fw-team_2026-09.json#m1",
+        "chats/slack_hw-power_2025-03.json#m2"
+      ]
+    },
+    {
+      "id": "q23",
+      "category": "ownership",
+      "split": "heldout",
+      "pass": false,
+      "missing": [
+        "Quality"
+      ],
+      "seconds": 1.76,
+      "question": "Which team is Satish in?",
+      "answer": "Satish is in team **T-QA** (people record id=P-SATISH, team_id=T-QA).",
+      "retrieved": [
+        "chats/slack_fw-team_2026-09.json#m2",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "records/people.csv#19",
+        "chats/slack_fw-team_2026-09.json#m4",
+        "docs/TP-PSM-07_test_procedure.md#p1",
+        "chats/slack_hw-power_2025-03.json#m3",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "tickets/SUP-1057.json#comment-2"
+      ]
+    },
+    {
+      "id": "q24",
+      "category": "policy",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.01,
+      "question": "Who has to approve a component change on a released product revision?",
+      "answer": "The **Chief Technology Officer** must approve a component change on a released revision (HB-ENG-04, item 1).",
+      "retrieved": [
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "docs/HB-ENG-04_change_policy.md#p0",
+        "docs/HB-ENG-04_change_policy.md#p1",
+        "inbox/notice_NB54360_2026-10-14.md#p2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "records/items.csv#0",
+        "records/items.csv#1",
+        "records/organizations.csv#0"
+      ]
+    },
+    {
+      "id": "q25",
+      "category": "notice",
+      "split": "dev",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.87,
+      "question": "What lead time does the latest notice give for NB54360?",
+      "answer": "The latest supplier notice (2026-10-14) gives a standard lead time of **22 weeks** for NB54360, up from the previous 6 weeks. [Supplier notice: price and lead-time change; 2026-10-14]",
+      "retrieved": [
+        "docs/TR-112_thermal_test_report.md#p14",
+        "inbox/notice_NB54360_2026-10-14.md#p2",
+        "inbox/notice_NB54360_2026-10-14.md#p3",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "inbox/escalation_konkan_2026-10-15.md#p2",
+        "docs/TP-PSM-07_test_procedure.md#p7",
+        "inbox/leave_raghavendra_2026-10-09.md#p2",
+        "inbox/leave_raghavendra_2026-10-09.md#p0"
+      ]
+    },
+    {
+      "id": "q26",
+      "category": "cost",
+      "split": "heldout",
+      "pass": false,
+      "missing": [
+        "one of ['37400']"
+      ],
+      "seconds": 62.57,
+      "question": "If NB54360 goes to ₹320 per unit, what is the estimated cost increase for planned builds including requalification?",
+      "answer": "**Price increase:** ₹70/unit (₹320 − ₹250) — Supplier notice 2026-10-14.\n\n**Build impact:**\n- **BO-0412** (100 × PDU-28 Rev C, planned 2026-11-03, after the 2026-11-01 effective date): 100 × ₹70 = **₹7,000** — Operations review 2026-09-28.\n- **BO-0421** (2026-11-24): quantity not recorded, so it cannot be estimated.\n\n**Requalification:** Not applicable to this scenario. The ₹8,000/candidate cost under TP-PSM-07 covers qualification of **candidate substitute parts** (e.g., the power-stage candidates), not a price change on the same part. Per HB-ENG-04, requalification is triggered by component changes/substitutes, not by a price/lead-time change on NB54360.\n\n**Bottom line:** The estimated increase is **₹7,000 for BO-0412 only**; requalification adds nothing here, and BO-0421's quantity is not on record.",
+      "retrieved": [
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "inbox/notice_NB54360_2026-10-14.md#p3",
+        "tickets/SUP-1057.json#comment-2",
+        "docs/TP-PSM-07_test_procedure.md#p7",
+        "docs/onboarding_hardware.md#p2",
+        "records/projects.csv#2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "docs/HB-ENG-04_change_policy.md#p2"
+      ]
+    },
+    {
+      "id": "q27",
+      "category": "abstain",
+      "split": "heldout",
+      "pass": false,
+      "missing": [
+        "forbidden ₹"
+      ],
+      "seconds": 4.91,
+      "question": "What is the unit price of the CT-1051 CAN transceiver?",
+      "answer": "The unit price of the CT-1051 is not recorded. The items record (CT-1051) lists no price, and while the supplier notice (2026-10-14) mentions a new unit price of ₹320, it does not specify which part it applies to.",
+      "retrieved": [
+        "tickets/SUP-1057.json#comment-1",
+        "records/items.csv#9",
+        "tickets/SUP-1057.json#comment-2",
+        "records/tasks.csv#6",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "inbox/notice_NB54360_2026-10-14.md#p3",
+        "records/bom.csv#15",
+        "records/orders.csv#0"
+      ]
+    },
+    {
+      "id": "q28",
+      "category": "abstain",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 5.94,
+      "question": "Who owns the VX7-MCU part?",
+      "answer": "Not recorded. The provided records include the part details (id=VX7-MCU, name=VX7 32-bit microcontroller, mpn=VX7-M480, manufacturer=Vexa Micro) and BOM references, but none identify an owner for the part.",
+      "retrieved": [
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "records/items.csv#6",
+        "records/bom.csv#1",
+        "records/bom.csv#5",
+        "records/bom.csv#10",
+        "records/bom.csv#14",
+        "chats/slack_hw-power_2025-03.json#m4",
+        "docs/HB-ENG-04_change_policy.md#p2"
+      ]
+    },
+    {
+      "id": "q29",
+      "category": "supply",
+      "split": "heldout",
+      "pass": false,
+      "missing": [
+        "Deccan Components"
+      ],
+      "seconds": 6.11,
+      "question": "Which supplier currently quotes NB54360?",
+      "answer": "Supplier **S-DECCAN** currently quotes NB54360, via quote **Q-101** (valid 2026-07-01 to 2026-12-31, 250 INR/unit). The earlier quote Q-099 expired 2026-06-30.",
+      "retrieved": [
+        "chats/slack_fw-team_2026-09.json#m2",
+        "records/quotes.csv#0",
+        "records/quotes.csv#1",
+        "records/quotes.csv#2",
+        "docs/onboarding_hardware.md#p2",
+        "inbox/notice_NB54360_2026-10-14.md#p2",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "inbox/notice_NB54360_2026-10-14.md#p0"
+      ]
+    },
+    {
+      "id": "q30",
+      "category": "where_used",
+      "split": "heldout",
+      "pass": false,
+      "missing": [
+        "one of ['PSM-28-2', 'Rev 2', 'revision 2']"
+      ],
+      "seconds": 5.63,
+      "question": "Which revision of the PSM-28 module is built into BCU-24 Rev A?",
+      "answer": "Not recorded. The certifications record for BCU-24 Rev A (id=CERT-BCU24A-JSS) references PSM-28 as the retest trigger item but does not specify which PSM-28 revision is built into it.",
+      "retrieved": [
+        "chats/slack_fw-team_2026-09.json#m2",
+        "chats/slack_hw-power_2025-03.json#m3",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "chats/slack_fw-team_2026-09.json#m3",
+        "tickets/FW-233.json#description",
+        "records/certifications.csv#2",
+        "records/certifications.csv#0",
+        "records/certifications.csv#1"
+      ]
+    },
+    {
+      "id": "q33",
+      "category": "who_knows",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 8.13,
+      "question": "Who should I ask about pmic_seq.c, and who covers when they are away?",
+      "answer": "Ask **Sai** about pmic_seq.c (firmware, including pmic_seq.c, goes to Sai — [Onboarding: hardware and firmware at Flyvi]; also confirmed by task WRK-106 assignee P-SAI and the PDU-48 kickoff notes).\n\nThere is **no recorded backup/cover for Sai** when they are away. The onboarding note only specifies a cover for Raghavendra (Vishwas covers him) — [Onboarding: hardware and firmware at Flyvi]. Sai's leave handover is not documented in the records.",
+      "retrieved": [
+        "docs/onboarding_hardware.md#p2",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "tickets/SUP-1057.json#description",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "records/aliases.csv#0",
+        "records/items.csv#12",
+        "records/tasks.csv#5"
+      ]
+    },
+    {
+      "id": "q34",
+      "category": "project",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 3.6,
+      "question": "Who leads the PDU-48 project and what is its target date?",
+      "answer": "The PDU-48 project is led by **P-VISHWAS (Vishwas)**, with a target date of **2027-06-30**.\n\nSource: `projects record: id=PRJ-PDU48, lead_id=P-VISHWAS, target_date=2027-06-30`",
+      "retrieved": [
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "records/projects.csv#1",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "records/projects.csv#4",
+        "chats/slack_fw-team_2026-09.json#m1",
+        "chats/slack_fw-team_2026-09.json#m3"
+      ]
+    },
+    {
+      "id": "q35",
+      "category": "history",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 7.01,
+      "question": "What caused the brownouts at Nilgiri and how were they fixed?",
+      "answer": "**Cause:** Firmware 2.2 waited only 4 ms for \"power-good,\" but the regulator soft-start needs up to 4 ms plus margin, so the units browned out on cold restart. (SUP-1042)\n\n**Fix:** Corrected in `pmic_seq.c` (FW-233), and firmware 2.3.1 was rolled out to all 220 Nilgiri Rev B units with no brownouts since. The cold-start test was folded into the Firmware 2.4 release to keep it covered. (Slack #fw-team, 2026-09-12)",
+      "retrieved": [
+        "chats/slack_fw-team_2026-09.json#m3",
+        "tickets/SUP-1042.json#comment-1",
+        "docs/TR-112_thermal_test_report.md#p10",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "tickets/SUP-1057.json#description",
+        "docs/ops_review_2026-09-28.md#p2",
+        "chats/slack_fw-team_2026-09.json#m1"
+      ]
+    },
+    {
+      "id": "q36",
+      "category": "people",
+      "split": "dev",
+      "pass": false,
+      "missing": [
+        "one of ['cost-down', 'cost down', 'PRJ-COSTDOWN']"
+      ],
+      "seconds": 16.03,
+      "question": "Which projects is Raghavendra working on?",
+      "answer": "Based on the provided records, there is no project record assigning Raghavendra to work on any project.\n\nThe only project on file is **PRJ-NILGIRI** (Nilgiri airborne PDU delivery), whose lead is **P-PRAVEEN** (PRJ-NILGIRI), not Raghavendra.\n\nWhile Raghavendra is actively involved in power-stage work (PDU-48 kickoff, PSM-28/NB54360 decisions) and is the go-to for power-stage/PSM-28 questions (Onboarding), none of these are recorded as project assignments. So it is **not recorded** which projects Raghavendra is working on.",
+      "retrieved": [
+        "chats/slack_fw-team_2026-09.json#m2",
+        "docs/TP-PSM-07_test_procedure.md#p7",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "chats/slack_hw-power_2025-03.json#m3",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "docs/onboarding_hardware.md#p2",
+        "records/projects.csv#0"
+      ]
+    },
+    {
+      "id": "q37",
+      "category": "currency",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 7.78,
+      "question": "Which supplier quotes expire before the end of 2026?",
+      "answer": "Only **Q-099** expires before the end of 2026 (valid_until=2026-06-30).\n\n- Q-101 and Q-102 both expire on 2026-12-31, i.e., on the last day of the year, not before it.\n\nSource: quotes records Q-099, Q-101, Q-102.",
+      "retrieved": [
+        "chats/slack_fw-team_2026-09.json#m2",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "records/quotes.csv#0",
+        "records/quotes.csv#1",
+        "records/quotes.csv#2",
+        "docs/onboarding_hardware.md#p2",
+        "records/absences.csv#0",
+        "records/absences.csv#1"
+      ]
+    },
+    {
+      "id": "q38",
+      "category": "project",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 10.7,
+      "question": "Which customer order is part of the Nilgiri Phase 2 project?",
+      "answer": "The Nilgiri Phase 2 project is tied to **SO-881** from Nilgiri Aero Systems (80 × PDU-28 Rev C, committed delivery 2026-11-20). This is the PDU-28 build referenced in the leadership weekly (\"Nilgiri Phase 2 delivery first\") and the first build BO-0412 (Sharath).",
+      "retrieved": [
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "chats/slack_fw-team_2026-09.json#m2",
+        "docs/contract_SO-881_nilgiri_excerpt.md#p3",
+        "docs/contract_SO-881_nilgiri_excerpt.md#p2",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "inbox/escalation_konkan_2026-10-15.md#p3",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "docs/contract_SO-881_nilgiri_excerpt.md#p0"
+      ]
+    },
+    {
+      "id": "q39",
+      "category": "absence",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 19.79,
+      "question": "Who should take over Raghavendra's work while on leave in November?",
+      "answer": "Based on the records, no general named backup for Raghavendra is recorded. The only concrete handover indicated is:\n\n- **Vishwas** will take over **power-stage reviews** if they cannot happen before the leave. Per the leadership weekly (2026-10-12), Vishwas stated: \"Power-stage reviews need to happen before the leave starts or move to me.\"\n- Vishwas is also the **final approval owner** for the power stage (PDU-48 kickoff) and the **approver** of Raghavendra's leave notice (2026-10-09).\n\nPer HB-HR-02, all of Raghavendra's open tasks, owned items, and the project he leads should have interim owners named, but the records do not name a backup for his broader work or the project lead role. Only the power-stage review handover to Vishwas is documented.",
+      "retrieved": [
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "records/tasks.csv#22",
+        "inbox/leave_raghavendra_2026-10-09.md#p2",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "inbox/leave_raghavendra_2026-10-09.md#p0",
+        "inbox/leave_raghavendra_2026-10-09.md#p1",
+        "chats/slack_hw-power_2025-03.json#m3"
+      ]
+    },
+    {
+      "id": "q40",
+      "category": "escalation",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 5.63,
+      "question": "What is Konkan Naval unhappy about, and which order is at stake?",
+      "answer": "Konkan Naval is unhappy about **BCU-24 CAN telemetry drops after cold start** (SUP-1057). The order at stake is **SO-884** — 60 units due 2026-11-25, whose acceptance is being held until a fix is confirmed.",
+      "retrieved": [
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "chats/slack_fw-team_2026-09.json#m2",
+        "inbox/escalation_konkan_2026-10-15.md#p3",
+        "tickets/SUP-1057.json#comment-2",
+        "inbox/notice_NB54360_2026-10-14.md#p3",
+        "docs/contract_SO-881_nilgiri_excerpt.md#p3",
+        "inbox/escalation_konkan_2026-10-15.md#p0",
+        "inbox/escalation_konkan_2026-10-15.md#p1"
+      ]
+    },
+    {
+      "id": "q41",
+      "category": "risk",
+      "split": "heldout",
+      "pass": false,
+      "missing": [
+        "one of ['6960000', '69.6', '69.60']"
+      ],
+      "seconds": 8.11,
+      "question": "Which part in released products has only one supplier, and how much open order value depends on it?",
+      "answer": "**Part:** NB54360 — \"effectively single-sourced through Deccan Components\" (Ambika, 2026-09-28).\n\n**Open order value:** Not recorded. The records show the NB54360 feeds PDU-28 builds (BO-0412, 100× PDU-28 Rev C) that supply SO-881 for Nilgiri, but SO-881's order value is not stated (only its late-delivery penalty clause is recorded).",
+      "retrieved": [
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "chats/slack_fw-team_2026-09.json#m2",
+        "docs/contract_SO-881_nilgiri_excerpt.md#p3",
+        "docs/ops_review_2026-09-28.md#p2",
+        "chats/slack_hw-power_2025-03.json#m2",
+        "chats/slack_hw-power_2025-03.json#m4",
+        "docs/HB-ENG-04_change_policy.md#p0"
+      ]
+    },
+    {
+      "id": "q42",
+      "category": "risk",
+      "split": "dev",
+      "pass": true,
+      "missing": [],
+      "seconds": 18.02,
+      "question": "Which customer is the largest by open order value?",
+      "answer": "**Nilgiri Aero Systems** is described as our largest aerospace account (Operations review, 2026-09-28, Keerthana).\n\nNote: The records do not record explicit open-order values per customer. The only size ranking available is \"largest aerospace account\" for Nilgiri, with Konkan Naval noted as the second-largest account this year (Leadership weekly, 2026-10-12).",
+      "retrieved": [
+        "docs/contract_SO-881_nilgiri_excerpt.md#p3",
+        "docs/ops_review_2026-09-28.md#p2",
+        "chats/slack_fw-team_2026-09.json#m2",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "docs/contract_SO-881_nilgiri_excerpt.md#p2",
+        "inbox/notice_NB54360_2026-10-14.md#p3",
+        "docs/leadership_weekly_2026-10-12.md#p2"
+      ]
+    },
+    {
+      "id": "q43",
+      "category": "org",
+      "split": "heldout",
+      "pass": false,
+      "missing": [
+        "Sai",
+        "Satish"
+      ],
+      "seconds": 17.8,
+      "question": "Who reports to Vishwas?",
+      "answer": "Not recorded. The provided documents do not contain an org chart or explicit reporting lines. The only people record is:\n\n- `P-VISHWAS` (Vishwas, Employee, team T-HW)\n\nWhile the records show Vishwas covering Raghavendra's duties, approving Raghavendra's leave, and holding final approval on the PDU-48 power stage, none of these establish a formal reporting relationship. No one is documented as reporting to Vishwas.",
+      "retrieved": [
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "docs/onboarding_hardware.md#p2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "records/absences.csv#0",
+        "records/people.csv#7",
+        "chats/slack_hw-power_2025-03.json#m4",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p1",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2"
+      ]
+    },
+    {
+      "id": "q44",
+      "category": "org",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 4.57,
+      "question": "Who is Flyvi's Managing Director, and who is the Director of Finance?",
+      "answer": "Jayaram is Flyvi's Founder & Managing Director, and Sathish is the Director - Finance.\n\n- org_roles: person_id=P-JAYARAM, role=Founder & Managing Director\n- org_roles: person_id=P-SATHISH, role=Director - Finance\n- people: id=P-JAYARAM, name=Jayaram\n- people: id=P-SATHISH, name=Sathish",
+      "retrieved": [
+        "records/org_roles.csv#0",
+        "records/org_roles.csv#3",
+        "records/people.csv#0",
+        "records/people.csv#3",
+        "docs/onboarding_hardware.md#p2",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2"
+      ]
+    },
+    {
+      "id": "q45",
+      "category": "who_knows",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 4.03,
+      "question": "Who at Flyvi knows CAN bus?",
+      "answer": "Based on the skills records, three people have the CAN bus skill:\n\n- P-SAI (id: skills record)\n- P-VINAY (id: skills record)\n- P-NAGARJUN (id: skills record)\n\nNo names are recorded for these person_ids in the provided data.",
+      "retrieved": [
+        "records/items.csv#9",
+        "records/skills.csv#9",
+        "records/skills.csv#10",
+        "records/skills.csv#35",
+        "docs/onboarding_hardware.md#p0",
+        "docs/onboarding_hardware.md#p1",
+        "docs/onboarding_hardware.md#p2",
+        "inbox/escalation_konkan_2026-10-15.md#p1"
+      ]
+    },
+    {
+      "id": "q46",
+      "category": "people",
+      "split": "heldout",
+      "pass": false,
+      "missing": [
+        "one of ['configuration tool', 'channel settings']"
+      ],
+      "seconds": 3.51,
+      "question": "What is Pratham currently working on?",
+      "answer": "Not recorded. The only record for Pratham (id=P-PRATHAM) is the people record showing role=Employee on team T-FW, with no task or assignment details.",
+      "retrieved": [
+        "records/people.csv#13",
+        "docs/TP-PSM-07_test_procedure.md#p7",
+        "chats/slack_fw-team_2026-09.json#m1",
+        "chats/slack_fw-team_2026-09.json#m3",
+        "chats/slack_hw-power_2025-03.json#m1",
+        "chats/slack_hw-power_2025-03.json#m3",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2"
+      ]
+    },
+    {
+      "id": "q47",
+      "category": "people",
+      "split": "dev",
+      "pass": false,
+      "missing": [
+        "one of ['pilot assembly', 'PDU-28 Rev C units']"
+      ],
+      "seconds": 3.63,
+      "question": "What has Dileep finished recently?",
+      "answer": "Not recorded. The only record mentioning Dileep is the people record (id=P-DILEEP, role=Employee, team_id=T-OPS), which contains no information about recent completed work.",
+      "retrieved": [
+        "records/people.csv#24",
+        "chats/slack_hw-power_2025-03.json#m2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "inbox/notice_NB54360_2026-10-14.md#p2",
+        "records/absences.csv#0",
+        "records/absences.csv#1",
+        "records/absences.csv#2",
+        "records/aliases.csv#0"
+      ]
+    },
+    {
+      "id": "q48",
+      "category": "absence",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 5.31,
+      "question": "Is Raghavendra away in November, and who covers while away?",
+      "answer": "Yes. Raghavendra is on leave for most of November (Leadership weekly, 2026-10-12). Vishwas covers his power-stage/PSM-28 questions while he's away (Onboarding: hardware and firmware at Flyvi).",
+      "retrieved": [
+        "docs/onboarding_hardware.md#p2",
+        "records/tasks.csv#22",
+        "chats/slack_hw-power_2025-03.json#m3",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "chats/slack_hw-power_2025-03.json#m2",
+        "tickets/SUP-1057.json#comment-2"
+      ]
+    }
+  ]
+}

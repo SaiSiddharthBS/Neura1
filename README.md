@@ -78,6 +78,10 @@ Neura1 answers in one view:
     <td width="50%"><img src="docs/demo/my-day.png" alt="My day"><br><sub><b>My day</b>: each person's open work, decisions waiting for them, signals touching what they own, and who in their team is away.</sub></td>
   </tr>
   <tr>
+    <td><img src="docs/demo/capability-map.png" alt="Capability map"><br><sub><b>Capability map</b>: what Flyvi is good at, from recorded work. Areas, people with finished work vs active now, and where Flyvi is thin (power sequencing: one person). As leadership sees it.</sub></td>
+    <td><img src="docs/demo/capability-map-restricted.png" alt="Capability map for an engineer"><br><sub><b>Private by design</b>: an engineer sees the same map with counts only. A person's expertise is visible to them, their chain, HR and leadership. No scores or rankings exist.</sub></td>
+  </tr>
+  <tr>
     <td><img src="docs/demo/chat.png" alt="Neura1 Chat"><br><sub><b>Neura1 Chat</b>: the team talks inside the brain. Messages link to the parts and people they mention, slash commands answer from the graph, and approved plans post themselves.</sub></td>
     <td><img src="docs/demo/graph-explorer.png" alt="Graph explorer"><br><sub><b>Graph explorer</b>: NB54360's live neighbourhood in FalkorDB, click to expand, with its full history beside it.</sub></td>
   </tr>
@@ -524,7 +528,7 @@ The agent uses a JSON plan-act loop, so it works even on servers whose native to
 | Automated tests | **63 passing**: BOM roll-ups, revision applicability, cost edge cases, import validation, CAD BOMs, extraction verification, idempotent approvals, the HTTP flow end to end, and 503 when the graph is down |
 | Local model on real fixture documents | DEC-117 found in **Slack and Jira** ✓ · notice read correctly ✓ · MX-3360 bench result ✓ · TR-131 bench note **missed** ✗ · [full table](docs/DEMO.md#what-the-local-model-got-right-and-wrong) |
 | Mistakes caught and fixed | The agent once called MX-3360 "approved", which led to the approval wording in tool output and the rule-based check. That check then flagged the incumbent part by mistake, and was narrowed to alternates only. A small model passed two part numbers in one lookup, so the lookup now splits them. |
-| Frozen evaluation | 48 ground-truth questions in [`api/eval/golden.yaml`](api/eval/golden.yaml), written before any model ran: graph agent vs search-only vs whole-corpus, same model. **Results pending GPU time; failures will be published, not hidden.** |
+| Frozen evaluation | 48 ground-truth questions in [`api/eval/golden.yaml`](api/eval/golden.yaml), written before any model ran: graph agent vs search-only vs whole-corpus, same model (ornith-1.5-35b-a3b on a DGX Spark). First run: graph 33/46, search 29/46, whole corpus 41/46; rescored after correcting three stale answers: 36, 28, 43. At this demo's size (about 10k tokens) pasting everything works; the graph wins on scale, exact cost computation, permissions and evidence. Full results and every failure: [docs/EVAL.md](docs/EVAL.md). |
 
 <br>
 

@@ -207,6 +207,12 @@ def main() -> None:
             page.goto(base)
             page.evaluate(f"() => {{ localStorage.setItem('neura1-passcode', '{args.passcode}'); }}")
 
+        # 7c4 Capability map, as leadership sees it (names) and as an engineer sees it (counts only)
+        page.goto(f"{base}/capabilities")
+        page.wait_for_selector("text=Where Flyvi is thin")
+        page.wait_for_timeout(2000)
+        shot("capability-map")
+
         # 7d People and organisation, seen as an R&D engineer and then as a software engineer
         page.evaluate("() => localStorage.setItem('neura1-viewer', 'P-VISHWAS')")
         for name, url, wait in (("my-day", "/me", "Your work"),
@@ -217,6 +223,10 @@ def main() -> None:
             page.wait_for_timeout(2500)
             shot(name)
         page.evaluate("() => localStorage.setItem('neura1-viewer', 'P-ANIRUDH')")
+        page.goto(f"{base}/capabilities")
+        page.wait_for_selector("text=Where Flyvi is thin")
+        page.wait_for_timeout(2000)
+        shot("capability-map-restricted")
         page.goto(base + "/people?id=P-RAGHAVENDRA")
         page.wait_for_selector("text=Working on now")
         page.wait_for_timeout(1500)

@@ -1,0 +1,480 @@
+{
+  "system": "context",
+  "model": "ornith-1.5-35b-a3b",
+  "state": "base",
+  "split": "all",
+  "passed": 41,
+  "total": 46,
+  "results": [
+    {
+      "id": "q01",
+      "category": "where_used",
+      "split": "dev",
+      "pass": true,
+      "missing": [],
+      "seconds": 71.2,
+      "question": "Which released product revisions use NB54360, and how many does each unit contain?",
+      "answer": "Based on the BOM and revisions records:\n\n**Released revisions using NB54360 (direct BOM):**\n- **PDU-28-C** (product, released): **1×** NB54360, refdes U12\n- **PSM-28-2** (assembly, released): **1×** NB54360, refdes U3\n\n**Not included:**\n- PSM-28-1 also lists 1× NB54360, but it is **obsolete**, not released.\n- BCU-24-A is released but does **not** use NB54360 (it uses PSM-28, VX7-MCU, CT-1051).\n\nNote: PSM-28-2 is an *assembly* (kind=assembly), while PDU-28 and BCU-24 are *products*. If you mean only product-level revisions, then only **PDU-28-C** qualifies, at 1× NB54360 per unit.\n\nSources: bom records (PDU-28-C/PSM-28-1/PSM-28-2 → NB54360), revisions records (status), items records (kind)."
+    },
+    {
+      "id": "q02",
+      "category": "where_used",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 7.65,
+      "question": "How many NB54360 regulators are in one PDU-28 Rev C controller?",
+      "answer": "One. The BOM for PDU-28-C lists NB54360 at qty=1 (refdes U12).\n\n- `bom record: parent_rev=PDU-28-C, child_item=NB54360, qty=1, uom=ea, refdes=U12`"
+    },
+    {
+      "id": "q03",
+      "category": "revision_applicability",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 77.97,
+      "question": "Is PDU-28 Rev D affected by the NB54360 change?",
+      "answer": "Yes, but only indirectly and with no immediate impact.\n\n- PDU-28 Rev D's BOM includes PSM-28 Rev 2, whose BOM includes NB54360:\n  - `bom record: parent_rev=PDU-28-D, child_item=PSM-28, child_rev=PSM-28-2`\n  - `bom record: parent_rev=PSM-28-2, child_item=NB54360, qty=1`\n- So the NB54360 price/lead-time change (supplier notice 2026-10-14) would affect Rev D's eventual material cost.\n\nHowever, there is no immediate delivery/commitment impact:\n- PDU-28 Rev D is a **draft**, not released: `revisions record: id=PDU-28-D, ..., status=draft`\n- It belongs to PRJ-PDU48 (status=design), and nothing ships on it this quarter (Operations review 2026-09-28; PDU-48 kickoff 2026-07-15).\n\nSo Rev D is technically affected by the part change, but as a draft with no active builds or committed orders, it is not impacted operationally right now."
+    },
+    {
+      "id": "q04",
+      "category": "revision_applicability",
+      "split": "dev",
+      "pass": true,
+      "missing": [],
+      "seconds": 49.47,
+      "question": "Does the obsolete PDU-28 Rev B still count toward NB54360 demand?",
+      "answer": "Not recorded. There is no demand-planning, MRP, or allocation record that states whether obsolete revisions count toward component demand.\n\nWhat the records do show:\n- PDU-28-B is obsolete (revisions record: PDU-28-B, status=obsolete).\n- Its 220 units were already shipped to Nilgiri (shipments record: SH-2024-07, qty=220, shipped_on=2024-07-18) — no outstanding Rev B order exists.\n- NB54360 stock is recorded as on_hand=180, allocated=120 (stock record), with no allocation tied to Rev B.\n- All active builds are for PDU-28-C and BCU-24-A (builds records: BO-0412, BO-0415, BO-0421).\n\nSo there is no record of Rev B generating live NB54360 demand, but the specific policy/calculation is not recorded."
+    },
+    {
+      "id": "q05",
+      "category": "exposure",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 7.34,
+      "question": "Which planned builds use PDU-28 Rev C?",
+      "answer": "Planned builds using PDU-28 Rev C:\n- **BO-0412** (qty=100, planned 2026-11-03)\n- **BO-0421** (qty=40, planned 2026-11-24)\n\n(ids: builds record BO-0412, BO-0421)"
+    },
+    {
+      "id": "q06",
+      "category": "cost",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 61.54,
+      "question": "How many NB54360 parts do all planned builds need in total?",
+      "answer": "**480 NB54360 parts** total across the three planned builds.\n\n**Planned builds** (`builds`):\n- BO-0412 → PDU-28-C, qty=100\n- BO-0415 → BCU-24-A, qty=60\n- BO-0421 → PDU-28-C, qty=40\n\n**NB54360 usage per revision:**\n- PDU-28-C: 1 direct (refdes U12) + 2× PSM-28-2, each PSM-28-2 uses 1 NB54360 (refdes U3) → **3 per unit**\n- BCU-24-A: 1× PSM-28-2 (which uses 1 NB54360), no direct part → **1 per unit**\n\n**Totals:**\n- BO-0412: 100 × 3 = 300\n- BO-0415: 60 × 1 = 60\n- BO-0421: 40 × 3 = 120\n\n**Total = 480**"
+    },
+    {
+      "id": "q07",
+      "category": "cost",
+      "split": "dev",
+      "pass": false,
+      "missing": [
+        "420"
+      ],
+      "seconds": 46.17,
+      "question": "After using free stock, how many NB54360 do we need to buy for the planned builds?",
+      "answer": "**80 NB54360 units need to be bought.**\n\n**Planned builds using NB54360** (BOM: PDU-28-C → NB54360, qty=1 each, refdes U12):\n- BO-0412 (PDU-28-C): 100 units → 100 × NB54360\n- BO-0421 (PDU-28-C): 40 units → 40 × NB54360\n- BO-0415 (BCU-24-A): 0 — its BOM (PSM-28-2, VX7-MCU, CT-1051) uses no NB54360\n\nTotal required = **140**.\n\n**Free stock** (stock: NB54360 on_hand=180, allocated=120): 180 − 120 = **60** available.\n\n**To buy** = 140 − 60 = **80**."
+    },
+    {
+      "id": "q08",
+      "category": "cost",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 16.19,
+      "question": "Which quote is the current price baseline for NB54360, and what is the unit price?",
+      "answer": "The current price baseline for NB54360 is quote **Q-101** (Deccan Components), at a unit price of **₹250**, valid from 2026-07-01 to 2026-12-31.\n\n- `quotes record: id=Q-101, supplier_id=S-DECCAN, item_id=NB54360, unit_price=250, valid_from=2026-07-01, valid_until=2026-12-31`\n- Confirmed in Operations review (2026-09-28): \"Current quote Q-101 at ₹250 is valid to year end.\"\n\nNote: A supplier notice (2026-10-14) announces a new price of ₹320 effective 2026-11-01 for orders not yet confirmed, but Q-101 remains the current baseline."
+    },
+    {
+      "id": "q09",
+      "category": "cost",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 11.79,
+      "question": "Why shouldn't quote Q-099 be used for NB54360 costing?",
+      "answer": "Q-099 is expired. Its validity window is 2026-01-01 to 2026-06-30 (quotes record Q-099), so it is no longer a valid quote. Per HB-ENG-04 rule 5, pricing must come from a valid quote; the current valid NB54360 quote is Q-101 (₹250, valid to 2026-12-31)."
+    },
+    {
+      "id": "q10",
+      "category": "decision",
+      "split": "dev",
+      "pass": true,
+      "missing": [],
+      "seconds": 21.6,
+      "question": "Can we switch from NB54360 to the cheaper NB54361-L?",
+      "answer": "No. NB54361-L was evaluated and rejected as a substitute for NB54360 on PSM-28.\n\n**Why it was rejected:**\n- TR-112 (thermal derating test per TP-PSM-07, sealed 70C enclosure, full load): NB54361-L hit thermal shutdown at 68C ambient, while NB54360 held regulation to 70C with 11C junction margin. [TR-112 page 4]\n- Vishwas logged the decision DEC-117: \"we reject NB54361-L as a substitute for NB54360 on PSM-28 Rev 2 because it fails thermal derating at 70C ambient in sealed avionics enclosures. Keep NB54360. Revisit only with a part that passes the same soak.\" [Slack #hw-power, 2025-03-12]\n- HW-311 was closed as Won't Do. [HW-311]\n\n**Policy basis:** HB-ENG-04 requires that a substitute is never approved on cross-reference/pin compatibility alone — it needs qualification evidence under the governing test procedure, plus a firmware review (power-good timing depends on the regulator soft-start per FW-233) and a quality requalification. NB54361-L fails the required TP-PSM-07 soak, so it cannot be approved. [HB-ENG-04; FW-233]\n\n**Note:** NB54361-L is pin-compatible with NB54360, and the 2026-10-14 supplier notice (NB54360 now ₹320, 22-week lead time) has Northbridge listing NB54361-L as a pin-compatible alternative. But pin compatibility alone does not override the thermal rejection. [alternates; supplier notice 2026-10-14]\n\nTo proceed, a replacement part would need to pass TP-PSM-07 (TR-112-style soak), then go through the HB-ENG-04 change review (CTO approval, firmware review, quality requalification)."
+    },
+    {
+      "id": "q11",
+      "category": "decision",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 8.16,
+      "question": "Who decided against using NB54361-L, and when?",
+      "answer": "Vishwas decided against using NB54361-L on 2025-03-12, logging the rejection as DEC-117 (Slack #hw-power; Vishwas, 2025-03-12T11:20:00+05:30), closing HW-311 as \"Won't Do\" the same day. The decision was based on TR-112, which showed NB54361-L failed thermal derating at 70C ambient in sealed avionics enclosures."
+    },
+    {
+      "id": "q12",
+      "category": "decision",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 6.33,
+      "question": "Which test showed NB54361-L failing, and at what ambient temperature?",
+      "answer": "TR-112 (the thermal derating test under the TP-PSM-07 procedure) showed NB54361-L failing. It entered thermal shutdown at **68C ambient**, with 65C being the max ambient at which it held regulation.\n\n- TR-112 results: NB54361-L → 65C max ambient, \"Thermal shutdown at 68C ambient\"\n- DEC-117 decision: rejected NB54361-L because it \"fails thermal derating at 70C ambient in sealed avionics enclosures.\""
+    },
+    {
+      "id": "q13",
+      "category": "decision",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 21.61,
+      "question": "Is MX-3360 approved as a replacement for NB54360?",
+      "answer": "No. There is no approval record for MX-3360 as a replacement for NB54360.\n\n- The only \"alternate\" record for it is a distributor cross-reference that explicitly states it is **not an engineering approval** (alternates record: item_id=NB54360, alt_item_id=MX-3360, basis=distributor_crossref).\n- MX-3360 appears only in the **draft** PDU-28 Rev D BOM (bom record: parent_rev=PDU-28-D, child_item=MX-3360), and Rev D is status=draft (revisions record: id=PDU-28-D). It is also scoped only as a candidate in PRJ-PDU48 and PRJ-COSTDOWN.\n- No qualification test (TP-PSM-07) result exists for MX-3360, and no CTO approval is recorded. The only recorded regulator qualification, TR-112, covered NB54360 vs NB54361-L (which was rejected).\n\nPer HB-ENG-04, a substitute needs qualification evidence under the governing test procedure plus CTO approval, neither of which is on record for MX-3360."
+    },
+    {
+      "id": "q14",
+      "category": "ownership",
+      "split": "dev",
+      "pass": true,
+      "missing": [],
+      "seconds": 6.75,
+      "question": "Who owns the firmware that depends on NB54360?",
+      "answer": "Sai owns the firmware.\n\n- Dependencies record: from_item=FW-PMIC-SEQ, to_item=NB54360 (FW-PMIC-SEQ depends on NB54360)\n- Ownership record: person_id=P-SAI, target_id=FW-PMIC-SEQ\n- People record: id=P-SAI, name=Sai, team_id=T-FW"
+    },
+    {
+      "id": "q15",
+      "category": "dependency",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 10.63,
+      "question": "Which firmware module depends on NB54360, and why?",
+      "answer": "The firmware module **FW-PMIC-SEQ** (pmic_seq.c) depends on **NB54360**.\n\n- **Why:** Its power-good sequencing waits 6 ms, tuned to the NB54360's 4 ms soft-start time. If the regulator on PSM-28 changes, the power-good delay must be re-reviewed, otherwise the VX7 MCU can brown out during cold start.\n\nCitations:\n- `dependencies record: from_item=FW-PMIC-SEQ, to_item=NB54360, note=Power-good sequencing assumes NB54360 4 ms soft-start`\n- `FW-233` document: \"The FW-PMIC-SEQ power sequencing module waits 6 ms for power-good, tuned to the NB54360 4 ms soft-start time. Any regulator change on PSM-28 needs a firmware review of the power-good delay, otherwise the VX7 MCU can brown out during cold start.\""
+    },
+    {
+      "id": "q16",
+      "category": "ownership",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 3.41,
+      "question": "Who owns the PSM-28 power stage module?",
+      "answer": "P-RAGHAVENDRA (Raghavendra) owns PSM-28.\n\nSource: `ownership record: person_id=P-RAGHAVENDRA, target_id=PSM-28`"
+    },
+    {
+      "id": "q17",
+      "category": "exposure",
+      "split": "dev",
+      "pass": true,
+      "missing": [],
+      "seconds": 75.17,
+      "question": "Which customer orders are exposed to the NB54360 change?",
+      "answer": "The NB54360 change (price ₹250→₹320, lead time 6→22 weeks, effective 2026-11-01) affects every build/order that consumes NB54360.\n\n**NB54360 is used in:**\n- PDU-28-C directly (bom: parent_rev=PDU-28-C, child_item=NB54360)\n- PSM-28-2 (bom: parent_rev=PSM-28-2, child_item=NB54360), which is itself in BCU-24-A (bom: parent_rev=BCU-24-A, child_item=PSM-28, child_rev=PSM-28-2)\n\n**Builds on those revisions:**\n- BO-0412 → PDU-28-C (builds: id=BO-0412, rev_id=PDU-28-C)\n- BO-0421 → PDU-28-C (builds: id=BO-0421, rev_id=PDU-28-C)\n- BO-0415 → BCU-24-A (builds: id=BO-0415, rev_id=BCU-24-A)\n\n**Exposed customer orders:**\n- **SO-881** — Nilgiri Aero Systems (C-NILGIRI), 80 units, due 2026-11-20, late penalty 0.5%/week capped 5% (orders: id=SO-881, build_id=BO-0412)\n- **SO-887** — Vindhya Rail Systems (C-VINDHYA), 40 units, due 2026-12-10 (orders: id=SO-887, build_id=BO-0421)\n- **SO-884** — Konkan Naval Electronics (C-KONKAN), 60 units, due 2026-11-25 (orders: id=SO-884, build_id=BO-0415) — exposed indirectly via PSM-28-2\n\nSo all three active orders (SO-881, SO-884, SO-887) are exposed to the NB54360 change."
+    },
+    {
+      "id": "q18",
+      "category": "exposure",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 5.14,
+      "question": "Which exposed customer order has a late-delivery penalty, and for which customer?",
+      "answer": "SO-881 has a late-delivery penalty, for Nilgiri Aero Systems (C-NILGIRI). The penalty is 0.5% of order value per week, capped at 5%, per contract clause 9.2."
+    },
+    {
+      "id": "q19",
+      "category": "ownership",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 6.27,
+      "question": "Who is the account manager for Nilgiri Aero Systems?",
+      "answer": "The account manager for Nilgiri Aero Systems is **Keerthana** (P-KEERTHANA).\n\n- `project_members`: P-KEERTHANA, role=account, project_id=PRJ-NILGIRI\n- `ownership`: P-KEERTHANA owns C-NILGIRI\n- `SO-881` excerpt: \"Account manager: Keerthana.\""
+    },
+    {
+      "id": "q20",
+      "category": "exposure",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 25.35,
+      "question": "How many units already in the field contain NB54360, and on which revision?",
+      "answer": "**220 units, on PDU-28 Rev B.**\n\n- Shipments record SH-2024-07 shipped 220 × PDU-28 Rev B to Nilgiri Aero Systems (C-NILGIRI) on 2024-07-18.\n- PDU-28 Rev B's BOM uses PSM-28 Rev 1 (PSM-28-1), which contains NB54360 (refdes U3).\n\nNo other field units are recorded—the other builds (BO-0412, BO-0415, BO-0421) are all planned, not shipped. This matches the SUP-1042/FW notes referencing \"all 220 Nilgiri Rev B units.\""
+    },
+    {
+      "id": "q21",
+      "category": "cost",
+      "split": "dev",
+      "pass": true,
+      "missing": [],
+      "seconds": 3.6,
+      "question": "What does a TP-PSM-07 requalification cost?",
+      "answer": "A full TP-PSM-07 requalification costs ₹8,000 per candidate part, covering chamber time and technician hours (3 working days of lab time).\n\nSource: TP-PSM-07 document, \"Effort\" section."
+    },
+    {
+      "id": "q22",
+      "category": "ownership",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 6.01,
+      "question": "Who plans the PDU-28 builds?",
+      "answer": "**Sharath (P-SHARATH)** plans the PDU-28 builds.\n\n- Task WRK-123 \"Production schedule for November builds\" is assigned to P-SHARATH (target_id=BO-0412, the Nilgiri PDU-28 Rev C build).\n- Skills record confirms P-SHARATH has the \"Production planning\" skill."
+    },
+    {
+      "id": "q23",
+      "category": "ownership",
+      "split": "heldout",
+      "pass": false,
+      "missing": [
+        "Quality"
+      ],
+      "seconds": 2.59,
+      "question": "Which team is Satish in?",
+      "answer": "Satish (P-SATISH) is in team **T-QA (Testing)** — people record: `id=P-SATISH, name=Satish, role=Employee, team_id=T-QA`."
+    },
+    {
+      "id": "q24",
+      "category": "policy",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 3.64,
+      "question": "Who has to approve a component change on a released product revision?",
+      "answer": "The Chief Technology Officer must approve it. Per HB-ENG-04 rule 1, any component change on a released revision needs an engineering change review approved by the CTO (P-HITHESH / Hithesh)."
+    },
+    {
+      "id": "q25",
+      "category": "notice",
+      "split": "dev",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.98,
+      "question": "What lead time does the latest notice give for NB54360?",
+      "answer": "The supplier notice dated 2026-10-14 (reference Northbridge Semi PCN-2026-118) gives a standard lead time of **22 weeks** for NB54360, up from the previous 6 weeks."
+    },
+    {
+      "id": "q26",
+      "category": "cost",
+      "split": "heldout",
+      "pass": false,
+      "missing": [
+        "one of ['37400']"
+      ],
+      "seconds": 67.72,
+      "question": "If NB54360 goes to ₹320 per unit, what is the estimated cost increase for planned builds including requalification?",
+      "answer": "**Estimated cost increase: ₹14,000 (parts only); requalification adds ₹0.**\n\n**Part price increase:** Supplier notice (2026-10-14) raises NB54360 from ₹250 → ₹320, i.e. **+₹70/unit**, effective 2026-11-01.\n\n**NB54360 in planned builds** (each build is status=planned; NB54360 qty=1 per unit):\n- BO-0412 (PDU-28-C, 100 units) — PDU-28-C BOM contains NB54360 (refdes U12) → 100\n- BO-0421 (PDU-28-C, 40 units) → 40\n- BO-0415 (BCU-24-A, 60 units) — BCU-24-A → PSM-28-2 → NB54360 (refdes U3) → 60\n\nTotal = **200 units × ₹70 = ₹14,000.**\n\n**Requalification: not triggered.** NB54360 is not being substituted — it stays the approved part; the notice is a price/lead-time change (PCN-2026-118), not a component change. HB-ENG-04's requalification requirement applies to part substitutions, so TP-PSM-07 requalification (₹8,000/candidate) does not apply here."
+    },
+    {
+      "id": "q27",
+      "category": "abstain",
+      "split": "heldout",
+      "pass": false,
+      "missing": [
+        "forbidden ₹"
+      ],
+      "seconds": 4.16,
+      "question": "What is the unit price of the CT-1051 CAN transceiver?",
+      "answer": "The unit price of the CT-1051 CAN transceiver is not recorded. The only quotes on file are for NB54360 (Q-101, ₹250) and NB54361-L (Q-102, ₹190) from Deccan Components; no quote exists for CT-1051."
+    },
+    {
+      "id": "q28",
+      "category": "abstain",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 10.55,
+      "question": "Who owns the VX7-MCU part?",
+      "answer": "Not recorded. There is no ownership record for the VX7-MCU part in the provided records."
+    },
+    {
+      "id": "q29",
+      "category": "supply",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 6.7,
+      "question": "Which supplier currently quotes NB54360?",
+      "answer": "Supplier **S-DECCAN (Deccan Components)** quotes NB54360, via quote **Q-101** (₹250, valid 2026-07-01 to 2026-12-31). Quote Q-099 (₹230) has expired (valid_until=2026-06-30)."
+    },
+    {
+      "id": "q30",
+      "category": "where_used",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 5.47,
+      "question": "Which revision of the PSM-28 module is built into BCU-24 Rev A?",
+      "answer": "BCU-24 Rev A (BCU-24-A) is built with PSM-28 at revision **PSM-28-2** (Rev 2), qty 1, refdes PS1.\n\nSource: `bom record: parent_rev=BCU-24-A, child_item=PSM-28, child_rev=PSM-28-2, qty=1, uom=ea, refdes=PS1`"
+    },
+    {
+      "id": "q33",
+      "category": "who_knows",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 10.82,
+      "question": "Who should I ask about pmic_seq.c, and who covers when they are away?",
+      "answer": "Ask **Sai** (P-SAI) about pmic_seq.c — per the onboarding doc, \"Firmware, including pmic_seq.c and field updates, goes to Sai.\"\n\nWhen Sai is away, the named backup is **Vinay** (P-VINAY) per the backups record (person_id=P-SAI, backup_id=P-VINAY).\n\nNote: the onboarding doc only specifies an explicit cover for Raghavendra (Vishwas covers), not for Sai — Sai's cover is the recorded backup, Vinay."
+    },
+    {
+      "id": "q34",
+      "category": "project",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 4.8,
+      "question": "Who leads the PDU-48 project and what is its target date?",
+      "answer": "The PDU-48 project (PRJ-PDU48) is led by Vishwas (P-VISHWAS), with a target date of 2027-06-30.\n\nSource: `projects record: id=PRJ-PDU48, name=PDU-48 next-generation power distribution unit, status=design, lead_id=P-VISHWAS, start_date=2026-07-15, target_date=2027-06-30`"
+    },
+    {
+      "id": "q35",
+      "category": "history",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 8.11,
+      "question": "What caused the brownouts at Nilgiri and how were they fixed?",
+      "answer": "**Cause:** The two PDU-28 Rev B units at Nilgiri browned out on cold-morning restarts because firmware 2.2 waited only 4 ms for power-good, while the NB54360 regulator's soft-start needs up to 4 ms plus margin, so the VX7 MCU dropped out before power was stable. (SUP-1042; FW-233)\n\n**Fix:** Sai updated `pmic_seq.c` (FW-PMIC-SEQ) to wait 6 ms for power-good, tuned to the NB54360 4 ms soft-start, and deployed firmware 2.3.1 to all 220 Nilgiri Rev B units. No brownouts since. The cold-start test was folded into the Firmware 2.4 release to keep it covered. (SUP-1042; FW-233; Slack #fw-team 2026-09-08/2026-09-12)"
+    },
+    {
+      "id": "q36",
+      "category": "people",
+      "split": "dev",
+      "pass": true,
+      "missing": [],
+      "seconds": 6.11,
+      "question": "Which projects is Raghavendra working on?",
+      "answer": "Raghavendra (P-RAGHAVENDRA) is a member of two projects:\n\n- **PRJ-PDU48** (PDU-48 next-generation PDU) — role: power electronics\n- **PRJ-COSTDOWN** (FY27 BOM cost-down) — role: engineering review\n\nSource: project_members records (PRJ-PDU48, PRJ-COSTDOWN). He also has tasks on PRJ-PDU48 (WRK-101 done, WRK-102 in progress)."
+    },
+    {
+      "id": "q37",
+      "category": "currency",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 5.33,
+      "question": "Which supplier quotes expire before the end of 2026?",
+      "answer": "Q-099 (S-DECCAN, NB54360) expires 2026-06-30.\n\nQ-101 and Q-102 both remain valid until 2026-12-31, so they do not expire before year-end."
+    },
+    {
+      "id": "q38",
+      "category": "project",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 6.97,
+      "question": "Which customer order is part of the Nilgiri Phase 2 project?",
+      "answer": "The Nilgiri project (PRJ-NILGIRI) scope includes customer order **SO-881** (Nilgiri Aero Systems, 80× PDU-28 Rev C, due 2026-11-20).\n\n- project_scope: project_id=PRJ-NILGIRI, target_id=SO-881\n- projects: PRJ-NILGIRI = \"Nilgiri airborne PDU delivery\""
+    },
+    {
+      "id": "q39",
+      "category": "absence",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 11.61,
+      "question": "Who should take over Raghavendra's work while on leave in November?",
+      "answer": "**Vishwas (P-VISHWAS), the Chief Technology Officer**, should take over Raghavendra's work.\n\n- **Named backup:** `backups record: person_id=P-RAGHAVENDRA, backup_id=P-VISHWAS`\n- **Policy basis:** HB-HR-02 §1 requires open tasks to be handed over to the person's named backup before leave.\n- **Coverage confirmation:** The onboarding handbook states \"Power stage and PSM-28 questions go to Raghavendra. When Raghavendra is away, Vishwas covers.\"\n- **Leadership weekly (2026-10-12):** Vishwas noted that \"power-stage reviews need to happen before the leave starts or move to me.\"\n- **Leave notice (2026-10-09):** Vishwas approved the leave and confirmed handover of open reviews/owned items must occur before 2026-11-02."
+    },
+    {
+      "id": "q40",
+      "category": "escalation",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 10.24,
+      "question": "What is Konkan Naval unhappy about, and which order is at stake?",
+      "answer": "Konkan Naval is unhappy about **BCU-24 CAN telemetry drops after cold starts** — six of their BCU-24 chargers stopped reporting CAN telemetry and only recovered after a power cycle (SUP-1057). Root cause logged: the CT-1051 CAN transceiver enters bus-off during cold-start inrush, and the firmware never requests bus-off recovery.\n\nThe order at stake is **SO-884** (60 × BCU-24, build BO-0415, due 2026-11-25), which they threatened to hold acceptance on unless a fix is confirmed before delivery.\n\nCites:\n- `customers` id=C-KONKAN; `orders` id=SO-884\n- `SUP-1057` (telemetry drops, CT-1051 bus-off)\n- `Customer escalation: BCU-24 telemetry at Konkan Naval; 2026-10-15` (acceptance hold threat)\n- `Leadership weekly, 2026-10-12` (Konkan unhappy about BCU-24 CAN telemetry drops)"
+    },
+    {
+      "id": "q41",
+      "category": "risk",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 100.57,
+      "question": "Which part in released products has only one supplier, and how much open order value depends on it?",
+      "answer": "**Part: NB54360** (Buck regulator 3.3V 3A, Northbridge Semi)\n\n**Single-sourced:** Only Deccan Components (S-DECCAN) holds a valid quote — Q-101 (₹250, valid to 2026-12-31). Q-099 has expired, and MX-3360 (the only other 3.3V candidate) has no quote and is not used in any released product.\n\n**Used in released products:**\n- PDU-28-C (direct, refdes U12) — `bom` PDU-28-C/NB54360\n- BCU-24-A (via PSM-28-2, refdes U3) — `bom` BCU-24-A/PSM-28-2 → `bom` PSM-28-2/NB54360\n\n**Open builds using NB54360:** BO-0412 (PDU-28-C), BO-0415 (BCU-24-A), BO-0421 (PDU-28-C) — all `status=planned`.\n\n**Open order value depending on it:**\n- SO-881 (Nilgiri, via BO-0412): 80 × ₹42,000 = ₹3,360,000\n- SO-884 (Konkan, via BO-0415): 60 × ₹32,000 = ₹1,920,000\n- SO-887 (Vindhya, via BO-0421): 40 × ₹42,000 = ₹1,680,000\n\n**Total ≈ ₹6,960,000**"
+    },
+    {
+      "id": "q42",
+      "category": "risk",
+      "split": "dev",
+      "pass": true,
+      "missing": [],
+      "seconds": 22.58,
+      "question": "Which customer is the largest by open order value?",
+      "answer": "**Nilgiri Aero Systems (C-NILGIRI)** is the largest by open order value.\n\nOrder values:\n- SO-881 (C-NILGIRI): 80 × ₹42,000 = **₹3,360,000**\n- SO-884 (C-KONKAN): 60 × ₹32,000 = ₹1,920,000\n- SO-887 (C-VINDHYA): 40 × ₹42,000 = ₹1,680,000\n\nSource: orders records (SO-881, SO-884, SO-887)."
+    },
+    {
+      "id": "q43",
+      "category": "org",
+      "split": "heldout",
+      "pass": false,
+      "missing": [
+        "Satish"
+      ],
+      "seconds": 15.87,
+      "question": "Who reports to Vishwas?",
+      "answer": "P-RAGHAVENDRA (Raghavendra) and P-SAI (Sai) report to Vishwas.\n\n- `reports_to record: person_id=P-RAGHAVENDRA, manager_id=P-VISHWAS`\n- `reports_to record: person_id=P-SAI, manager_id=P-VISHWAS`"
+    },
+    {
+      "id": "q44",
+      "category": "org",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 3.96,
+      "question": "Who is Flyvi's Managing Director, and who is the Director of Finance?",
+      "answer": "Flyvi's Managing Director is **Jayaram** (P-JAYARAM, Founder & Managing Director), and the Director of Finance is **Sathish** (P-SATHISH, Director - Finance).\n\nCites: org_roles (P-JAYARAM, P-SATHISH); people (P-JAYARAM, P-SATHISH)."
+    },
+    {
+      "id": "q45",
+      "category": "who_knows",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 4.71,
+      "question": "Who at Flyvi knows CAN bus?",
+      "answer": "Three people have the CAN bus skill on record:\n\n- **P-SAI** (Sai) — skills: Embedded C, Power sequencing, CAN bus\n- **P-VINAY** (Vinay) — skills: CAN bus, Embedded C\n- **P-NAGARJUN** (Nagarjun) — skills: System integration, CAN bus\n\n(ids from skills records)"
+    },
+    {
+      "id": "q46",
+      "category": "people",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 5.52,
+      "question": "What is Pratham currently working on?",
+      "answer": "Pratham (P-PRATHAM) is currently working on one open task:\n\n- **WRK-112** – \"Configuration tool: export channel settings\", project **PRJ-FW24** (Firmware 2.4 release), status=open, created 2026-10-05.\n\nNo other tasks are assigned to Pratham."
+    },
+    {
+      "id": "q47",
+      "category": "people",
+      "split": "dev",
+      "pass": true,
+      "missing": [],
+      "seconds": 6.98,
+      "question": "What has Dileep finished recently?",
+      "answer": "Dileep (P-DILEEP) has finished one task:\n\n- **WRK-122** \"Pilot assembly of 5 PDU-28 Rev C units\" — status=done, completed 2026-09-26 (project PRJ-NILGIRI, target BO-0412)."
+    },
+    {
+      "id": "q48",
+      "category": "absence",
+      "split": "heldout",
+      "pass": true,
+      "missing": [],
+      "seconds": 5.61,
+      "question": "Is Raghavendra away in November, and who covers while away?",
+      "answer": "Yes. Raghavendra is on planned leave from 2026-11-02 to 2026-11-27 (approved by Vishwas on 2026-10-09). While away, Vishwas covers his power-stage/PSM-28 questions.\n\n- absences record: P-RAGHAVENDRA, 2026-11-02 to 2026-11-27, planned leave, approved by Vishwas\n- Leave notice: Raghavendra; 2026-10-09\n- Onboarding handbook: \"When Raghavendra is away, Vishwas covers.\""
+    }
+  ]
+}

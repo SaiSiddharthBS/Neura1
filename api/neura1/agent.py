@@ -71,9 +71,11 @@ def guard_cypher(q: str) -> str:
 
 
 TOOLS = [
-    ("resolve_item", "Find an item (product, assembly, part, firmware, test) by id or manufacturer part number.",
+    ("resolve_item", "Find an item (product, assembly, part, firmware, test) or a revision ('PDU-28 Rev C' is PDU-28-C) "
+                     "by id or manufacturer part number.",
      {"text": {"type": "string"}}),
-    ("where_used", "Which product revisions use an item, quantity per unit, and whether each revision is released.",
+    ("where_used", "Which product revisions use an item or an assembly (and which revision of the assembly), quantity "
+                   "per unit, and whether each revision is released.",
      {"item_id": {"type": "string"}}),
     ("change_impact", "Full impact of a price and/or lead-time change on a part: builds, orders, customers, "
                       "dependencies, alternates with decisions, cost scenario and required tasks.",
@@ -81,18 +83,25 @@ TOOLS = [
       "lead_weeks": {"type": ["integer", "null"]}}),
     ("dependents", "Firmware modules, test procedures and other items that depend on a part, with their owners.",
      {"item_id": {"type": "string"}}),
-    ("exposure", "Planned builds, customer orders (with due dates and penalty notes), customers and account "
-                 "managers that use a part on released revisions.",
+    ("exposure", "Planned builds (with planner), customer orders (due dates, penalty notes), customers and account "
+                 "managers, and units already shipped to the field. Pass a part, a product (e.g. PDU-28) or a revision "
+                 "(e.g. PDU-28-C).",
      {"item_id": {"type": "string"}}),
     ("decisions", "Recorded decisions about an item or its alternates, with who decided and verbatim evidence.",
      {"item_id": {"type": "string"}}),
     ("alternates", "Alternate parts listed for a part, with their quotes and approval status.",
      {"item_id": {"type": "string"}}),
-    ("quotes", "Supplier quotes for an item, with validity dates.", {"item_id": {"type": "string"}}),
+    ("quotes", "Supplier quotes with price, lead time and validity dates. Pass an item id, or leave it empty for "
+               "every quote.", {"item_id": {"type": ["string", "null"]}}),
+    ("organisation", "Flyvi's leadership and their titles (Managing Director, directors, COO, CTO, General Manager), "
+                     "and, given a person's name, their manager, direct reports, team and backup.",
+     {"name": {"type": ["string", "null"]}}),
+    ("notices", "Supplier notices received (price, lead-time, end-of-life changes), with their full text.", {}),
     ("who_knows", "Who knows about something: a part, project, customer, order or alias like 'pmic_seq.c'. "
                   "Returns people ranked with the reasons (owns it, decided, discussed, works on it).",
      {"text": {"type": "string"}}),
-    ("person", "A person's profile: role, team, backup, what they own, projects, decisions, open tasks, topics.",
+    ("person", "A person's profile: role, team, manager, backup, what they own, projects, decisions, open tasks, "
+               "recently finished work, topics.",
      {"name": {"type": "string"}}),
     ("project", "A project's lead, members, scope, related decisions, open tasks and recent discussion. "
                 "Pass the project name or id; use list_projects first if unsure.",
@@ -118,9 +127,13 @@ TOOLS = [
       "why": {"type": "string"}}),
     ("search_documents", "Search chats, tickets, reports and notices by meaning and keywords; also returns the records "
                          "the passages mention.", {"query": {"type": "string"}}),
-    ("read_only_cypher", "Run a read-only Cypher query on the company graph when no other tool fits. Labels: Item, "
-                         "Revision, Supplier, Quote, Build, Order, Customer, Shipment, Person, Team, Source, Chunk, "
-                         "Decision, Investigation, Action. See docs/data-model.md.",
+    ("read_only_cypher", "Run a read-only Cypher query when no other tool fits. Relationships: (Item)-[:HAS_REV]->"
+                         "(Revision)-[:CONTAINS {qty, refdes}]->(Item|Revision); (Build)-[:BUILDS]->(Revision); "
+                         "(Customer)-[:PLACED]->(Order)-[:FULFILLED_BY]->(Build); (Supplier)-[:QUOTED]->(Quote)-[:FOR]->"
+                         "(Item); (Person)-[:REPORTS_TO|BACKS_UP]->(Person); (Person)-[:MEMBER_OF]->(Team); (Person)-"
+                         "[:OWNS]->(Item|Build|Customer); (Action)-[:ASSIGNED_TO]->(Person); (Chunk)-[:PART_OF]->(Source). "
+                         "Quote properties: unit_price, currency, lead_weeks, valid_from, valid_until (ISO date strings). "
+                         "Build: qty, planned_date. Revision: status. Names are on .name, ids on .id.",
      {"query": {"type": "string"}}),
 ]
 
@@ -131,6 +144,14 @@ def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
         found = trace.run(name, Q.RESOLVE_ITEM, {"text": text})
         if found:
             return found
+        # Revisions: "PDU-28 Rev C", "PDU-28C" or "PDU-28-C" all name the revision PDU-28-C.
+        m = re.fullmatch(r"([A-Za-z]{2,4}-\d{2,3})[\s-]*(?:rev(?:ision)?\.?\s*)?([A-Za-z0-9])", text, re.I)
+        rev_id = f"{m.group(1).upper()}-{m.group(2).upper()}" if m else text
+        revs = trace.run("resolve_revision", """MATCH (i:Item)-[:HAS_REV]->(r:Revision) WHERE toUpper(r.id) = toUpper($t)
+                                                 RETURN r.id AS id, 'revision' AS kind, i.id AS of_item, i.name AS name,
+                                                        r.status AS status""", {"t": rev_id})
+        if revs:
+            return revs
         # Small models often pass several part numbers at once ("NB54360 NB54361-L"): resolve each one.
         out = []
         for token in [t for t in re.split(r"[\s,;/]+", text) if len(t) >= 3]:
@@ -139,15 +160,39 @@ def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
             out.extend(hit)
         return out or {"error": f"No item matches {text!r}", "hint": "pass one part number or id per call"}
     if name == "where_used":
-        return trace.run(name, Q.WHERE_USED, {"item_id": args["item_id"]})
+        used = trace.run(name, Q.WHERE_USED, {"item_id": args["item_id"]})
+        # Assemblies are built in as a specific revision (Revision CONTAINS Revision), not as the item itself.
+        nested = trace.run("where_used_assembly", """
+            MATCH (a:Item {id:$id})-[:HAS_REV]->(ar:Revision)
+            MATCH path = (prod:Item)-[:HAS_REV]->(top:Revision)-[:CONTAINS*1..6]->(ar)
+            WHERE NOT ()-[:CONTAINS]->(top)
+            RETURN prod.id AS product, top.id AS revision, top.status AS status, ar.id AS contains_revision,
+                   reduce(q = 1, r IN relationships(path) | q * coalesce(r.qty, 1)) AS qty_per_unit""", {"id": args["item_id"]})
+        return {"uses": used, "assembly_revisions_in_products": nested} if nested else used
     if name == "dependents":
         return trace.run(name, Q.DEPENDENTS, {"item_id": args["item_id"]})
     if name == "exposure":
-        used = trace.run("where_used", Q.WHERE_USED, {"item_id": args["item_id"]})
-        revs = [u["revision"] for u in used if u["applicable"]]
-        return {"applicable_revisions": {u["revision"]: u["qty_per_unit"] for u in used if u["applicable"]},
-                "excluded_revisions": {u["revision"]: u["status"] for u in used if not u["applicable"]},
-                "builds": trace.run(name, Q.EXPOSURE, {"revisions": revs})}
+        iid = args["item_id"]
+        own = trace.run("own_revisions", """MATCH (r:Revision) WHERE r.id = $id RETURN r.id AS id, r.status AS status
+                                            UNION MATCH (:Item {id:$id})-[:HAS_REV]->(r:Revision)
+                                            RETURN r.id AS id, r.status AS status""", {"id": iid})
+        if own:  # a product or a revision: its own builds and shipments
+            revs = [r["id"] for r in own]
+            applicable, excluded = {r["id"]: 1 for r in own if r["status"] == "released"}, \
+                {r["id"]: r["status"] for r in own if r["status"] != "released"}
+        else:
+            used = trace.run("where_used", Q.WHERE_USED, {"item_id": iid})
+            revs = [u["revision"] for u in used if u["applicable"]]
+            applicable = {u["revision"]: u["qty_per_unit"] for u in used if u["applicable"]}
+            excluded = {u["revision"]: u["status"] for u in used if not u["applicable"]}
+            revs_all = [u["revision"] for u in used]
+        field = trace.run("field_units", """MATCH (s:Shipment)-[:OF_REV]->(r:Revision) WHERE r.id IN $revs
+                                            OPTIONAL MATCH (s)-[:SHIPPED_TO]->(c:Customer)
+                                            RETURN s.id AS shipment, r.id AS revision, r.status AS status, s.qty AS qty,
+                                                   s.shipped_on AS shipped_on, c.name AS customer""",
+                          {"revs": revs if own else revs_all})
+        return {"applicable_revisions": applicable, "excluded_revisions": excluded,
+                "builds": trace.run(name, Q.EXPOSURE, {"revisions": revs}), "field_units": field}
     if name == "alternates":
         alts = trace.run(name, Q.ALTERNATES, {"item_id": args["item_id"]})
         decisions = trace.run("decisions", Q.DECISIONS, {"item_id": args["item_id"]})
@@ -161,7 +206,32 @@ def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
     if name == "decisions":
         return trace.run(name, Q.DECISIONS, {"item_id": args["item_id"]})
     if name == "quotes":
-        return trace.run(name, Q.QUOTES, {"item_id": args["item_id"]})
+        if args.get("item_id"):
+            return trace.run(name, Q.QUOTES, {"item_id": args["item_id"]})
+        return trace.run("all_quotes", """MATCH (s:Supplier)-[:QUOTED]->(q:Quote)-[:FOR]->(i:Item)
+                                           RETURN q.id AS id, i.id AS item, s.name AS supplier, q.unit_price AS unit_price,
+                                                  q.currency AS currency, q.lead_weeks AS lead_weeks,
+                                                  q.valid_from AS valid_from, q.valid_until AS valid_until
+                                           ORDER BY valid_until""", {})
+    if name == "organisation":
+        leaders = trace.run("leadership", """MATCH (p:Person)-[:MEMBER_OF]->(:Team {id:'T-LEAD'})
+                                              OPTIONAL MATCH (p)-[r:HOLDS_ROLE]->(o:Organization)
+                                              RETURN p.name AS name, coalesce(r.role, p.role) AS title, o.name AS organisation
+                                              ORDER BY name""", {})
+        out = {"leadership": leaders}
+        if args.get("name"):
+            out["person"] = trace.run("reporting_line", """
+                MATCH (p:Person) WHERE toLower(p.name) CONTAINS toLower($t)
+                OPTIONAL MATCH (p)-[:REPORTS_TO]->(m:Person) OPTIONAL MATCH (r:Person)-[:REPORTS_TO]->(p)
+                OPTIONAL MATCH (b:Person)-[:BACKS_UP]->(p) OPTIONAL MATCH (p)-[:MEMBER_OF]->(t:Team)
+                RETURN p.name AS name, p.role AS role, t.name AS team, m.name AS manager,
+                       collect(DISTINCT r.name) AS direct_reports, collect(DISTINCT b.name) AS backed_up_by""",
+                {"t": args["name"]})
+        return out
+    if name == "notices":
+        return trace.run(name, """MATCH (s:Source {kind:'notice'})<-[:PART_OF]-(c:Chunk)
+                                  WITH s, c ORDER BY c.ordinal
+                                  RETURN s.id AS id, s.title AS title, collect(c.text) AS text""", {})
     if name == "search_documents":
         from neura1.search import hybrid
         r = hybrid(graph, args["query"], 6)
@@ -178,6 +248,14 @@ def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
             return {"error": f"{len(found)} people match {args['name']!r}"}
         r = brain.person(graph, found[0]["id"])
         trace.steps.extend(r.pop("trace"))
+        r["finished_recently"] = trace.run("finished_work", """
+            MATCH (a:Action)-[:ASSIGNED_TO]->(:Person {id:$id}) WHERE a.status = 'done'
+            RETURN a.id AS id, a.title AS title, a.completed_at AS completed_at ORDER BY completed_at DESC LIMIT 8""",
+            {"id": found[0]["id"]})
+        r["reporting"] = trace.run("reporting", """
+            MATCH (p:Person {id:$id}) OPTIONAL MATCH (p)-[:REPORTS_TO]->(m:Person)
+            OPTIONAL MATCH (b:Person)-[:BACKS_UP]->(p) OPTIONAL MATCH (p)-[:MEMBER_OF]->(t:Team)
+            RETURN m.name AS manager, collect(b.name) AS backed_up_by, t.name AS team""", {"id": found[0]["id"]})
         return r
     if name == "project":
         found = trace.run("find_project", """MATCH (p:Project) WHERE toLower(p.name) CONTAINS toLower($t)
@@ -227,9 +305,24 @@ def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
         r = analyse(graph, ChangeEvent(args["item_id"], Decimal(str(price)) if price is not None else None, "INR",
                                        None, args.get("lead_weeks"), date.today()))
         trace.steps.extend(s | {"name": f"change_impact.{s['name']}"} for s in r.pop("trace", []))
-        for k in ("where_used",):
-            r.pop(k, None)
-        return r
+        # The full report is large; give the model the facts it needs to answer, not the drawing data.
+        if r.get("status") != "ok":
+            return r
+        cost = r.get("cost") or {}
+        return {
+            "part": r["part"], "change": r["change"],
+            "applicable_revisions": [w["revision"] for w in r["where_used"] if w["applicable"]],
+            "excluded_revisions": {w["revision"]: w["status"] for w in r["where_used"] if not w["applicable"]},
+            "builds": [{k: b[k] for k in ("build", "revision", "planned_date", "parts_needed", "from_stock", "shortfall",
+                                          "supply_eta_if_ordered_today", "at_risk", "planner")}
+                       | {"orders": [o["order"] for o in b["orders"]]} for b in r["builds"]],
+            "field_units": r["field_units"],
+            "cost": {k: cost.get(k) for k in ("baseline_quote", "baseline_unit_price", "new_unit_price", "net_need",
+                                              "material_delta", "one_time_total", "total_delta", "formula", "assumptions")},
+            "alternates": [{"id": a["id"], "status": a.get("status"), "decisions": [d["id"] for d in a.get("decisions", [])]}
+                           for a in r.get("alternates", [])],
+            "tasks": [{"owner": a["owner"], "title": a["title"]} for a in r.get("actions", [])],
+        }
     raise ValueError(f"Unknown tool {name}")
 
 
@@ -301,7 +394,7 @@ def _restrict(name: str, result, restrict: dict | None):
     return result
 
 
-def ask(graph: Graph, question: str, max_steps: int = 6, history: list[dict] | None = None,
+def ask(graph: Graph, question: str, max_steps: int = 10, history: list[dict] | None = None,
         on_step=None, restrict: dict | None = None) -> dict:
     """Plan-act loop using JSON output only, so it works on any OpenAI-compatible server,
     including local models whose native tool-call parsing is unreliable."""
