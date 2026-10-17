@@ -40,6 +40,10 @@ export default function ViewerSwitch() {
   }, [open]);
 
   const current = people.find((p) => p.id === me);
+  // Changes are recorded under the person the app is acting for.
+  useEffect(() => {
+    if (current) { try { localStorage.setItem("neura1-viewer-name", current.name); } catch { /* not remembered */ } }
+  }, [current]);
   const shown = useMemo(() => {
     const t = q.trim().toLowerCase();
     const list = t ? people.filter((p) => `${p.name} ${p.role} ${p.team}`.toLowerCase().includes(t)) : people;
@@ -48,7 +52,11 @@ export default function ViewerSwitch() {
   }, [people, q]);
 
   function pick(id: string) {
-    try { localStorage.setItem("neura1-viewer", id); } catch {}
+    try {
+      localStorage.setItem("neura1-viewer", id);
+      const name = people.find((p) => p.id === id)?.name;
+      if (name) localStorage.setItem("neura1-viewer-name", name);
+    } catch {}
     location.reload();
   }
 

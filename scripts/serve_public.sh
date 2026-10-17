@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run Neura1 as a public demo from this machine: production API and web servers, a free Cloudflare quick tunnel,
-# and caffeinate so the machine does not sleep. Writes need the passcode in api/.env (NEURA1_DEMO_PASSCODE).
+# and caffeinate so the machine does not sleep. Changes are open to anyone with the link unless NEURA1_DEMO_PASSCODE is set in api/.env.
 #   scripts/serve_public.sh            start everything and print the public URL
 #   scripts/serve_public.sh stop       stop everything it started
 set -euo pipefail

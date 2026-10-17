@@ -101,7 +101,8 @@ def ai_rate_limit(request: Request):
 
 
 def require_passcode(x_demo_passcode: str | None = Header(default=None)):
-    if x_demo_passcode != settings.demo_passcode:
+    """Changes are open unless NEURA1_DEMO_PASSCODE is set; then they need it."""
+    if settings.demo_passcode and x_demo_passcode != settings.demo_passcode:
         raise HTTPException(status_code=403, detail="Writes need the demo passcode")
 
 
@@ -130,7 +131,7 @@ def health():
         from neura1 import llm as _llm
         from neura1 import auto
         return {"graph": "ok", "nodes": n, **(_llm.status() if settings.llm_model else {"model": None}),
-                "worker": auto.last_run or None}
+                "worker": auto.last_run or None, "passcode_required": bool(settings.demo_passcode)}
     except Exception as exc:
         raise GraphUnavailable(str(exc))
 

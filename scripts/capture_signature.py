@@ -24,7 +24,7 @@ def main() -> None:
         browser = p.chromium.launch(channel="chrome")
         ctx = browser.new_context(viewport={"width": 1440, "height": 1000}, color_scheme="dark")
         ctx.add_init_script(f"localStorage.setItem('neura1-viewer','P-HITHESH');"
-                            f"localStorage.setItem('neura1-passcode','{settings.demo_passcode}');"
+                            f"localStorage.setItem('neura1-passcode','{settings.demo_passcode or ''}');"
                             "localStorage.setItem('neura1-reviewer','capture');")
         page = ctx.new_page()
 

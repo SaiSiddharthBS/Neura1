@@ -55,7 +55,8 @@ class Settings(BaseSettings):
     background: bool = True
 
     # Required in the X-Demo-Passcode header for anything that writes to the graph.
-    demo_passcode: str = "change-me"
+    # Optional. Unset (the default), anyone with the link can make changes in the demo; set it to require a passcode.
+    demo_passcode: str | None = None
 
 
 settings = Settings()

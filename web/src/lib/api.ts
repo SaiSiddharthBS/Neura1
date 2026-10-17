@@ -1,3 +1,4 @@
+import { askPasscode, storedPasscode } from "@/lib/session";
 export type Path = { nodes: string[]; qty: number; refdes: string[]; blocked_by: string[] };
 export type WhereUsed = {
   product: string; revision: string; status: string; applicable: boolean;
@@ -68,13 +69,6 @@ export class ApiError extends Error {
   }
 }
 
-function passcode(): string {
-  try {
-    return localStorage.getItem("neura1-passcode") ?? "";
-  } catch {
-    return "";
-  }
-}
 
 export function viewerId(): string {
   try {
@@ -84,11 +78,15 @@ export function viewerId(): string {
   }
 }
 
-export async function api<T>(path: string, init?: RequestInit & { write?: boolean }): Promise<T> {
+export async function api<T>(path: string, init?: RequestInit & { write?: boolean }, retried = false): Promise<T> {
   const headers: Record<string, string> = { "content-type": "application/json", "x-neura1-as": viewerId() };
-  if (init?.write) headers["x-demo-passcode"] = passcode();
+  if (init?.write) headers["x-demo-passcode"] = storedPasscode();
   const res = await fetch(path, { ...init, headers: { ...headers, ...(init?.headers as Record<string, string>) } });
   const body = await res.json().catch(() => null);
+  // A deployment that still requires a passcode: ask once, then try again.
+  if (res.status === 403 && init?.write && !retried && (body as { detail?: string } | null)?.detail === "Writes need the demo passcode") {
+    if (askPasscode()) return api<T>(path, init, true);
+  }
   if (!res.ok) throw new ApiError(res.status, body);
   return body as T;
 }

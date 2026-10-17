@@ -17,8 +17,9 @@ def client(fresh_graph):
     main.app.dependency_overrides.clear()
 
 
-def test_full_flow(client):
-    pw = {"x-demo-passcode": settings.demo_passcode}
+def test_full_flow(client, monkeypatch):
+    monkeypatch.setattr(settings, "demo_passcode", "test-pass")  # this flow also checks that a set passcode is enforced
+    pw = {"x-demo-passcode": "test-pass"}
     r = client.post("/api/impact", json=BODY).json()
     assert r["cost"]["total_delta"] in (37400, "37400")
 
@@ -46,3 +47,16 @@ def test_graph_unavailable_is_503_not_a_fallback(client):
     main.app.dependency_overrides[main.graph] = down
     res = client.post("/api/impact", json=BODY)
     assert res.status_code == 503 and res.json()["error"] == "graph_unavailable"
+
+
+def test_changes_are_open_unless_a_passcode_is_set(client, monkeypatch):
+    monkeypatch.setattr(settings, "demo_passcode", None)
+    assert client.get("/api/health").json()["passcode_required"] is False
+    sai = {"x-neura1-as": "P-SAI"}
+    assert client.post("/api/chat/messages", json={"channel": "chat/general", "text": "hello"}, headers=sai).status_code == 200
+    monkeypatch.setattr(settings, "demo_passcode", "s3cret")
+    r = client.post("/api/chat/messages", json={"channel": "chat/general", "text": "hello"}, headers=sai)
+    assert r.status_code == 403 and r.json()["detail"] == "Writes need the demo passcode"
+    r = client.post("/api/chat/messages", json={"channel": "chat/general", "text": "hello again"},
+                    headers=sai | {"x-demo-passcode": "s3cret"})
+    assert r.status_code == 200

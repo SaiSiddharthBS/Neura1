@@ -541,7 +541,7 @@ git clone https://github.com/SaiSiddharthBS/Neura1.git && cd Neura1
 docker compose up -d falkordb                      # graph on :6380 · FalkorDB Browser on http://localhost:3001
 
 cd api
-cp .env.example .env                               # set NEURA1_DEMO_PASSCODE
+cp .env.example .env                               # optional: NEURA1_DEMO_PASSCODE to require a passcode
 uv sync
 uv run python -m neura1.cli load                   # load Flyvi Technologies + saved model extractions
 uv run pytest -q                                   # 63 tests

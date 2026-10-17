@@ -22,7 +22,7 @@ def client(fresh_graph, tmp_path, monkeypatch):
     main.app.dependency_overrides.clear()
 
 
-CTO = {"x-neura1-as": "P-HITHESH", "x-demo-passcode": settings.demo_passcode}
+CTO = {"x-neura1-as": "P-HITHESH", "x-demo-passcode": settings.demo_passcode or ""}
 ENGINEER = {"x-neura1-as": "P-ANIRUDH"}
 
 

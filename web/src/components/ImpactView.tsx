@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 import EvidenceDrawer from "@/components/EvidenceDrawer";
 import ImpactGraph from "@/components/ImpactGraph";
 import { api, ApiError, inr, type Alternate, type ImpactReport, type Unresolved } from "@/lib/api";
+import { credentials } from "@/lib/session";
 
 type Props = { source?: string; item?: string; price?: string; lead?: string; asOf?: string };
 type Open = { chunk: string; quote?: string } | null;
@@ -302,18 +303,7 @@ function ActionsPanel({ report: r, onDone, onOpen }: { report: ImpactReport; onD
   const inv = r.investigation;
 
   async function approve() {
-    let name = "", pass = "";
-    try {
-      name = localStorage.getItem("neura1-reviewer") ?? "";
-      pass = localStorage.getItem("neura1-passcode") ?? "";
-    } catch {}
-    name = name || prompt("Your name (recorded as approver)") || "";
-    pass = pass || prompt("Demo passcode") || "";
-    if (!name || !pass) return;
-    try {
-      localStorage.setItem("neura1-reviewer", name);
-      localStorage.setItem("neura1-passcode", pass);
-    } catch {}
+    const { name } = credentials();
     setBusy(true);
     try {
       const res = await api<{ created: string[]; already_existed: string[] }>(`/api/actions/approve?as_of=${r.change.as_of}`, {

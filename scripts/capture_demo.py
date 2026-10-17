@@ -23,7 +23,7 @@ def main() -> None:
     args = ap.parse_args()
     if args.passcode is None:
         from neura1.config import settings
-        args.passcode = settings.demo_passcode or "change-me"
+        args.passcode = settings.demo_passcode or ""
     base = args.base
     OUT.mkdir(parents=True, exist_ok=True)
     shots = []
@@ -144,7 +144,7 @@ def main() -> None:
         light = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1, color_scheme="light")
         light.add_init_script(STILL)
         light.goto(base)
-        light.evaluate(f"() => {{ localStorage.setItem('neura1-viewer', 'P-HITHESH'); }}")
+        light.evaluate("() => { localStorage.setItem('neura1-viewer', 'P-HITHESH'); }")
         light.goto(base)
         light.wait_for_selector("text=Needs attention")
         light.wait_for_timeout(2500)

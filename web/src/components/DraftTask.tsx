@@ -4,18 +4,14 @@ import { toast } from "sonner";
 import { ClipboardCheck } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { credentials } from "@/lib/session";
 
 export type Draft = { owner: string; title: string; target: string | null; why: string };
 
 export default function DraftTask({ d }: { d: Draft }) {
   const [state, setState] = useState<string | null>(null);
   async function create() {
-    let pass = "", name = "";
-    try { pass = localStorage.getItem("neura1-passcode") ?? ""; name = localStorage.getItem("neura1-reviewer") ?? ""; } catch {}
-    pass = pass || prompt("Demo passcode") || "";
-    name = name || prompt("Your name") || "";
-    if (!pass || !name) return;
-    try { localStorage.setItem("neura1-passcode", pass); localStorage.setItem("neura1-reviewer", name); } catch {}
+    const { name } = credentials();
     try {
       const r = await api<{ id: string; new: boolean; owner: string | null }>("/api/tasks", { method: "POST", write: true, body: JSON.stringify({ ...d, created_by: name }) });
       setState(r.new ? `Created ${r.id} for ${r.owner ?? "nobody (owner not found)"}` : `Already exists (${r.id})`);

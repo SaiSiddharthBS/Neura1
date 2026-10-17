@@ -48,9 +48,7 @@ export default function ImportPage() {
   }
 
   async function commit() {
-    let pass = passcode();
-    pass = pass || prompt("Demo passcode") || "";
-    if (!pass) return;
+    const pass = passcode();
     setBusy(true);
     const res = await fetch("/api/import/commit", { method: "POST", body: form(), headers: { "x-demo-passcode": pass } });
     const body = await res.json();

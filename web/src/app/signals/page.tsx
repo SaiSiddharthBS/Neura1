@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { storedPasscode } from "@/lib/session";
 
 type Notice = {
   id: string;
@@ -118,11 +119,7 @@ function OtherSignals() {
 }
 
 function getPass(): string {
-  let pass = "";
-  try { pass = localStorage.getItem("neura1-passcode") ?? ""; } catch {}
-  pass = pass || prompt("Demo passcode") || "";
-  try { if (pass) localStorage.setItem("neura1-passcode", pass); } catch {}
-  return pass;
+  return storedPasscode();
 }
 
 function AddNotice({ onAdded }: { onAdded: () => void }) {
@@ -263,10 +260,7 @@ function WhatIf() {
 function DemoUpdates() {
   const [msg, setMsg] = useState<string | null>(null);
   async function apply() {
-    let pass = "";
-    try { pass = localStorage.getItem("neura1-passcode") ?? ""; } catch {}
-    pass = pass || prompt("Demo passcode") || "";
-    if (!pass) return;
+    const pass = storedPasscode();
     try {
       const r = await fetch("/api/updates/apply", { method: "POST", headers: { "x-demo-passcode": pass } });
       if (!r.ok) throw new Error(r.status === 403 ? "Wrong passcode" : `Failed (${r.status})`);

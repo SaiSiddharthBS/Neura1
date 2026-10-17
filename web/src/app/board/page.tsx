@@ -8,6 +8,7 @@ import Link from "next/link";
 import { ArrowRight, CircleDashed, CircleCheck, CircleDot, FileText, Inbox, OctagonAlert, Zap } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
+import { credentials } from "@/lib/session";
 
 type Task = {
   id: string; title: string; kind: string; why: string; status: string | null; created_at: string;
@@ -45,12 +46,7 @@ export default function Workboard() {
   useEffect(() => { api<Board>("/api/board").then(setB); }, []);
 
   async function move(task: Task, status: string) {
-    let pass = "", name = "";
-    try { pass = localStorage.getItem("neura1-passcode") ?? ""; name = localStorage.getItem("neura1-reviewer") ?? ""; } catch {}
-    pass = pass || prompt("Demo passcode") || "";
-    name = name || prompt("Your name") || "";
-    if (!pass || !name) return;
-    try { localStorage.setItem("neura1-passcode", pass); localStorage.setItem("neura1-reviewer", name); } catch {}
+    const { name } = credentials();
     // Move the card at once; the server confirms, or the board reloads to the truth.
     type Col = keyof Board["columns"];
     const from = (task.status ?? "open") as Col;
