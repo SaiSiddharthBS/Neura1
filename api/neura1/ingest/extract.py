@@ -18,6 +18,7 @@ from pathlib import Path
 from falkordb import Graph
 
 from neura1 import queries as Q
+from neura1 import llm as _llm
 from neura1.config import settings
 from neura1.graph import rows
 from neura1.llm import chat_json
@@ -187,7 +188,7 @@ def run_model(graph: Graph, source_id: str, kind: str) -> dict:
         for d in out.get("decisions", []):
             for e in d.get("evidence", []):
                 e["chunk_id"] = resolve_chunk_ref(e.get("chunk_id", ""), passages) or e.get("chunk_id")
-    snap = {"source_id": source_id, "kind": kind, "model": settings.llm_model,
+    snap = {"source_id": source_id, "kind": kind, "model": _llm.last_model or settings.llm_model,
             "extracted_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "source_versions": sorted({p["id"].split("#")[0] for p in passages}), "output": out}
     path = snapshot_path(source_id, kind)
@@ -235,6 +236,31 @@ def normalise_currency(value: str | None) -> str | None:
     if not value:
         return None
     return CURRENCY.get(value.strip().upper(), value.strip().upper())
+
+
+PART_TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9-]{3,}")
+
+
+def resolve_part(graph: Graph, written: str | None) -> str | None:
+    """The part a notice means, as a known item id. Models sometimes write the part with its description
+    ("CT-1051 CAN transceiver"); this maps that to the one item it names, or returns None when it is ambiguous."""
+    if not written:
+        return None
+    exact = rows(graph, Q.RESOLVE_ITEM, {"text": written.strip()})
+    if len(exact) == 1:
+        return exact[0]["id"]
+    hits = {r["id"] for t in PART_TOKEN.findall(written) for r in rows(graph, Q.RESOLVE_ITEM, {"text": t})}
+    return hits.pop() if len(hits) == 1 else None
+
+
+def with_resolved_part(graph: Graph, snap: dict) -> dict:
+    """The snapshot as consumers should see it: the raw model output stays in the file; the part is mapped to its id
+    (and the model's wording kept as part_as_written)."""
+    out = dict(snap.get("output") or {})
+    pid = resolve_part(graph, out.get("part"))
+    if pid and pid != out.get("part"):
+        out["part_as_written"], out["part"] = out.get("part"), pid
+    return snap | {"output": out}
 
 
 def verify_notice(n: dict, text: str) -> list[str]:

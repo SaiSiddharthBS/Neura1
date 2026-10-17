@@ -1,6 +1,7 @@
 """Neura1 HTTP API. Run: uv run uvicorn neura1.main:app --reload --port 8000"""
 
 import json
+from contextlib import asynccontextmanager
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -11,7 +12,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel
 from redis.exceptions import ConnectionError as RedisConnectionError, TimeoutError as RedisTimeout
 
-from neura1 import access, actions, agent, brain, chat, people as people_mod, queries as Q, scenarios
+from neura1 import access, actions, agent, brain, chat, people as people_mod, scenarios
 from neura1.config import settings
 from neura1.graph import GraphUnavailable, get_graph, rows
 from neura1.impact import ChangeEvent, analyse
@@ -22,27 +23,47 @@ from neura1.ingest.validate import ORDER, SPECS, template_csv, validate
 from neura1.llm import LLMUnavailable
 from neura1.viz import impact_subgraph
 
-app = FastAPI(title="Neura1", version="0.1.0")
+@asynccontextmanager
+async def lifespan(_app):
+    """Background jobs: the mail-drop inbox and the 09:00 IST morning brief (off when NEURA1_BACKGROUND=0)."""
+    if settings.background:
+        from neura1 import brief, inbox
+        inbox.start_watcher(get_graph)
+        brief.start_scheduler(get_graph)
+    yield
+
+
+app = FastAPI(title="Neura1", version="0.1.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
 @app.middleware("http")
 async def hide_amounts_in_text(request: Request, call_next):
-    """Safety net under the per-endpoint rules: for anyone who may not see money, no rupee amount written in a
-    message, answer or note leaves the API, whichever page or query produced it."""
+    """Safety net under the per-endpoint rules, whichever page or query produced the response:
+    - for anyone who may not see money, no rupee amount written in a message, answer or note leaves the API;
+    - for anyone who may not see a person's leave, no passage of that person's leave notice leaves the API."""
     response = await call_next(request)
     who = request.headers.get("x-neura1-as")
     if not who or not request.url.path.startswith("/api/") or response.headers.get("content-type") != "application/json":
         return response
     try:
-        v = access.viewer(get_graph(), who)
+        g = get_graph()
+        v = access.viewer(g, who)
+        hidden = access.hidden_sources(g, v.sees_leave_of)
     except Exception:
         return response
-    if v.sees_money:
+    if v.sees_money and not hidden:
         return response
     body = b"".join([chunk async for chunk in response.body_iterator])
-    data = access.redact_money_text(json.loads(body))
+    data = json.loads(body)
     headers = {k: val for k, val in response.headers.items() if k.lower() != "content-length"}
+    if hidden:
+        if access.points_at_hidden(data, hidden):
+            return JSONResponse({"detail": "This leave notice is visible to the person, their management chain, "
+                                           "their backup, HR and leadership"}, status_code=403)
+        data = access.drop_hidden(data, hidden)
+    if not v.sees_money:
+        data = access.redact_money_text(data)
     return JSONResponse(data, status_code=response.status_code, headers=headers)
 
 
@@ -88,7 +109,8 @@ def guard_money(payload, v: access.Viewer):
 def health():
     try:
         n = rows(get_graph(), "MATCH (n) RETURN count(n) AS n")[0]["n"]
-        return {"graph": "ok", "nodes": n, "model": settings.llm_model or None}
+        from neura1 import llm as _llm
+        return {"graph": "ok", "nodes": n, **(_llm.status() if settings.llm_model else {"model": None})}
     except Exception as exc:
         raise GraphUnavailable(str(exc))
 
@@ -113,8 +135,9 @@ def _notice_snapshot(source_id: str) -> dict | None:
     path = extract.snapshot_path(source_id, "notice")
     if not path.exists():
         return None
-    snap = json.loads(path.read_text())
-    text = "\n".join(p["text"] for p in extract.source_passages(get_graph(), source_id))
+    g = get_graph()
+    snap = extract.with_resolved_part(g, json.loads(path.read_text()))
+    text = "\n".join(p["text"] for p in extract.source_passages(g, source_id))
     snap["problems"] = extract.verify_notice(snap["output"], text)
     return snap
 
@@ -154,21 +177,9 @@ async def add_notice(text: str | None = Form(None), file: UploadFile | None = Fi
         path.write_text(text if first.startswith("#") else f"# {first}\n\n{text}")
     else:
         raise HTTPException(400, "Paste the notice text or upload a file")
-    load_sources(g, root=settings.data_dir, files=[path])
-    source_id = str(path.relative_to(settings.data_dir))
-    model_error = None
-    try:
-        extract.run_model(g, source_id, "notice")
-    except LLMUnavailable as exc:
-        model_error = str(exc)
-    except Exception as exc:  # a model failure must not lose the notice; the user can enter the facts
-        model_error = f"Model could not read the notice: {exc}"
-    snap = _notice_snapshot(source_id)
-    part = (snap or {}).get("output", {}).get("part")
-    chat.notify(g, "supplier_change", f"A supplier notice arrived{f' about {part}' if part else ''}. "
-                + ("Its facts were read and checked." if snap else "Its facts still need entering."),
-                [{"label": "Signals", "href": "/signals"}])
-    return {"source_id": source_id, "extraction": snap, "model_error": model_error}
+    from neura1 import inbox
+    r = inbox.ingest(g, path, "notice")
+    return {"source_id": r["source_id"], "extraction": _notice_snapshot(r["source_id"]), "model_error": r["model_error"]}
 
 
 class NoticeFields(BaseModel):
@@ -435,7 +446,8 @@ def _ask(g, body: AskIn, v: access.Viewer, on_step=None) -> dict:
     if len(body.question) > 500:
         raise HTTPException(400, "Question too long")
     cid = body.conversation_id or memory.start(g, v.id, body.question)
-    restrict = None if v.unrestricted else {"money": v.sees_money, "leave_of": v.sees_leave_of}
+    restrict = None if v.unrestricted else {"money": v.sees_money, "leave_of": v.sees_leave_of,
+                                            "hidden": access.hidden_sources(g, v.sees_leave_of)}
     result = agent.ask(g, body.question, history=memory.history(g, cid), on_step=on_step, restrict=restrict)
     result |= memory.record(g, cid, body.question, result)
     return guard_money(result, v)
@@ -956,3 +968,79 @@ def capability_map(g=Depends(graph), v: access.Viewer = Depends(current_viewer))
 def person_expertise(person_id: str, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
     from neura1 import capabilities
     return capabilities.person_expertise(g, person_id, v)
+
+
+# ---------- demo reset ----------
+
+_reset = {"running": False, "last": None, "error": None}
+
+
+@app.post("/api/admin/reset", dependencies=[Depends(require_passcode)])
+def reset_demo():
+    """Rebuild the demo company from the fixture (records, documents, verified extractions, skill tags)."""
+    import threading
+
+    if _reset["running"]:
+        return {"status": "running"}
+
+    def work():
+        from datetime import datetime, timezone
+        from neura1.cli import load
+        _reset.update(running=True, error=None)
+        try:
+            load()
+            for f in (settings.data_dir / "documents").glob("DOC-*"):
+                f.unlink(missing_ok=True)
+            _reset["last"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        except Exception as exc:  # reported to whoever asked for the reset
+            _reset["error"] = str(exc)
+        finally:
+            _reset["running"] = False
+
+    threading.Thread(target=work, daemon=True).start()
+    return {"status": "started"}
+
+
+@app.get("/api/admin/reset")
+def reset_status():
+    return _reset
+
+
+# ---------- proactive: morning brief and the mail-drop inbox ----------
+
+@app.get("/api/brief")
+def brief_today(g=Depends(graph)):
+    from neura1 import brief
+    return brief.compose(g)
+
+
+@app.post("/api/brief", dependencies=[Depends(require_passcode)])
+def brief_send(g=Depends(graph)):
+    from neura1 import brief
+    return brief.post(g, force=True)
+
+
+@app.post("/api/inbox/check", dependencies=[Depends(require_passcode)])
+def inbox_check(g=Depends(graph)):
+    """Process the mail drop now (the background watcher also does this every few seconds)."""
+    from neura1 import inbox
+    return {"processed": inbox.process_drop(g), "folder": str(inbox.drop_dir())}
+
+
+@app.post("/api/inbox", dependencies=[Depends(require_passcode)])
+async def inbox_upload(file: UploadFile = File(...), g=Depends(graph)):
+    """Forward an email (.eml) or drop a notice (.pdf, .md, .txt): it is classified and handled like the mail drop."""
+    from neura1 import inbox
+    name = Path(file.filename or "message.eml").name
+    if Path(name).suffix.lower() not in (".eml", ".pdf", ".md", ".txt"):
+        raise HTTPException(415, "Forward an email (.eml) or drop a .pdf, .md or .txt notice")
+    blob = await file.read(MAX_UPLOAD + 1)
+    if len(blob) > MAX_UPLOAD:
+        raise HTTPException(413, "File larger than 5 MB")
+    # Staged outside the watched folder, so the background watcher never picks the same file up twice.
+    staged = inbox.drop_dir() / "incoming"
+    staged.mkdir(exist_ok=True)
+    path = staged / name
+    path.write_bytes(blob)
+    with inbox._lock:
+        return {"processed": inbox.process_file(g, path)}

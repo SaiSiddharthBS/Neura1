@@ -1,0 +1,194 @@
+{
+  "system": "context",
+  "model": "ornith-1.5-35b-a3b",
+  "state": "base",
+  "split": "blind",
+  "passed": 16,
+  "total": 18,
+  "results": [
+    {
+      "id": "b01",
+      "category": "exposure",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 20.61,
+      "question": "Which customer order does build BO-0421 fulfil, and for which customer?",
+      "answer": "Build BO-0421 fulfils order **SO-887** for customer **Vindhya Rail Systems** (C-VINDHYA).\n\n- builds record: id=BO-0421, rev_id=PDU-28-C, qty=40\n- orders record: id=SO-887, customer_id=C-VINDHYA, build_id=BO-0421, qty=40\n- customers record: id=C-VINDHYA, name=Vindhya Rail Systems"
+    },
+    {
+      "id": "b02",
+      "category": "project",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 4.69,
+      "question": "Which project does Pruthvi work on?",
+      "answer": "Pruthvi (P-PRUTHVI) works on two projects:\n\n- **PRJ-PDU48** (PDU-48 next-generation power distribution unit) — role: control firmware (project_members)\n- **PRJ-FW24** (Firmware 2.4 release) — role: test automation (project_members)\n\nHe is also assigned tasks WRK-109 and WRK-110 on PRJ-FW24."
+    },
+    {
+      "id": "b03",
+      "category": "people",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 5.12,
+      "question": "Who covers for Keerthana when Keerthana is away?",
+      "answer": "P-PRAVEEN (Praveen) is recorded as Keerthana's backup (backups record: person_id=P-KEERTHANA, backup_id=P-PRAVEEN)."
+    },
+    {
+      "id": "b04",
+      "category": "supply",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 4.01,
+      "question": "What is the minimum order quantity on quote Q-102, and which part is it for?",
+      "answer": "Quote Q-102 has a minimum order quantity of **250 units**, and it is for part **NB54361-L** (from supplier S-DECCAN).\n\nSource: `quotes record: id=Q-102, supplier_id=S-DECCAN, item_id=NB54361-L, unit_price=190, currency=INR, moq=250`"
+    },
+    {
+      "id": "b05",
+      "category": "project",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 3.89,
+      "question": "Who leads the AS9100D surveillance audit project?",
+      "answer": "Gurumurthy leads the AS9100D surveillance audit project (PRJ-AS9100), recorded as lead_id=P-GURUMURTHY in the projects record and as role=lead in project_members."
+    },
+    {
+      "id": "b06",
+      "category": "exposure",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 4.08,
+      "question": "When is order SO-881 due, and how many units does it cover?",
+      "answer": "Order SO-881 is due **2026-11-20** and covers **80 units** (PDU-28 Rev C) for Nilgiri Aero Systems.\n\n- orders record: id=SO-881, qty=80, due_date=2026-11-20\n- Sales order SO-881 excerpt: 80 x PDU-28 Rev C, committed delivery 2026-11-20"
+    },
+    {
+      "id": "b07",
+      "category": "ownership",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.03,
+      "question": "Which team is Gurumurthy in?",
+      "answer": "Gurumurthy (P-GURUMURTHY) is in team **T-QAD (Quality Assurance)**."
+    },
+    {
+      "id": "b08",
+      "category": "dependency",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 4.59,
+      "question": "Which certifications must be retested if the PSM-28 module changes?",
+      "answer": "All three certifications list PSM-28 as their retest trigger item, so all must be retested if PSM-28 changes:\n\n- **CERT-PDU28C-461** – PDU-28 Rev C EMI/EMC qualification (MIL-STD-461G)\n- **CERT-PDU28C-704** – PDU-28 Rev C aircraft power compatibility (MIL-STD-704F)\n- **CERT-BCU24A-JSS** – BCU-24 Rev A environmental qualification (JSS 55555)\n\nAll three have `retest_trigger_item=PSM-28` (certifications records)."
+    },
+    {
+      "id": "b09",
+      "category": "org",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.27,
+      "question": "Who is Flyvi's Chief Operating Officer?",
+      "answer": "Markande (P-MARKANDE) is Flyvi's Chief Operating Officer (org_roles; people)."
+    },
+    {
+      "id": "b10",
+      "category": "org",
+      "split": "blind",
+      "pass": false,
+      "missing": [
+        "Praveen"
+      ],
+      "seconds": 3.3,
+      "question": "Who reports directly to Markande?",
+      "answer": "P-GURUMURTHY, P-SHARATH, P-AMBIKA, and P-TEJASWINI report directly to P-MARKANDE (reports_to records)."
+    },
+    {
+      "id": "b11",
+      "category": "exposure",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 3.16,
+      "question": "When is build BO-0412 planned, and how many units does it build?",
+      "answer": "Build BO-0412 is planned for **2026-11-03** and builds **100 units** of PDU-28 Rev C.\n\nSource: `builds record: id=BO-0412, rev_id=PDU-28-C, qty=100, planned_date=2026-11-03, status=planned`"
+    },
+    {
+      "id": "b12",
+      "category": "supply",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.05,
+      "question": "How many NB54360 regulators are on hand, and how many of them are allocated?",
+      "answer": "NB54360: **180 on hand, 120 allocated** (stock record: item_id=NB54360, on_hand=180, allocated=120)."
+    },
+    {
+      "id": "b13",
+      "category": "abstain",
+      "split": "blind",
+      "pass": false,
+      "missing": [
+        "forbidden ₹"
+      ],
+      "seconds": 3.44,
+      "question": "What is the unit price of the PSM-28 power stage module?",
+      "answer": "Not recorded. The records contain pricing only for the NB54360 part (quotes Q-099 at ₹230, Q-101 at ₹250), not for the PSM-28 assembly itself."
+    },
+    {
+      "id": "b14",
+      "category": "people",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.2,
+      "question": "Which skills has Vinay stated?",
+      "answer": "Vinay (P-VINAY) has the following skills:\n\n- CAN bus\n- Embedded C\n\n(ids: skills records for P-VINAY)"
+    },
+    {
+      "id": "b15",
+      "category": "where_used",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 3.69,
+      "question": "Which product revisions use the CT-1051 CAN transceiver?",
+      "answer": "BCU-24-A uses the CT-1051 CAN transceiver (refdes U7, qty 1). No other product revision lists CT-1051 in its BOM.\n\nSource: `bom record: parent_rev=BCU-24-A, child_item=CT-1051, qty=1, uom=ea, refdes=U7`"
+    },
+    {
+      "id": "b16",
+      "category": "ownership",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 4.26,
+      "question": "Who is the account manager for Vindhya Rail Systems?",
+      "answer": "Keerthana (P-KEERTHANA) is the account manager for Vindhya Rail Systems (C-VINDHYA).\n\n- ownership record: person_id=P-KEERTHANA, target_id=C-VINDHYA\n- people record: id=P-KEERTHANA, name=Keerthana, team_id=T-SALES"
+    },
+    {
+      "id": "b17",
+      "category": "decision",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 3.5,
+      "question": "According to the records, why does BCU-24 telemetry drop after a cold start?",
+      "answer": "According to SUP-1057 (Nagarjun, 2026-10-14), the CT-1051 CAN transceiver enters bus-off during the cold-start inrush, and the firmware never requests bus-off recovery, so telemetry stays down."
+    },
+    {
+      "id": "b18",
+      "category": "org",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 3.63,
+      "question": "Who reports to Sharath?",
+      "answer": "Dileep (P-DILEEP) and Pradeep (P-PRADEEP) report to Sharath.\n\n- `reports_to record: person_id=P-DILEEP, manager_id=P-SHARATH`\n- `reports_to record: person_id=P-PRADEEP, manager_id=P-SHARATH`"
+    }
+  ]
+}

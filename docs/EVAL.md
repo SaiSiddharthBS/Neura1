@@ -39,6 +39,48 @@ The first run exposed bugs in the agent's tools, not in the graph: assemblies an
 | Search only (rescored, unchanged) | **28/46** (61%) | 23/35 | 5/11 | 9 |
 | Whole corpus in the prompt (rescored, unchanged) | **43/46** (93%) | 33/35 | 10/11 | 8 |
 
+## 4. Blind set: 18 new questions, one run, as scored
+
+Written after the tool fixes and before any system saw them; expected answers were checked against the records. Each system answered once and nothing was changed afterwards.
+
+| System | Passed | Median seconds |
+|---|---|---|
+| Neura1 graph agent | **15/18** (83%) | 6 |
+| Search only | **10/18** (56%) | 3 |
+| Whole corpus in the prompt | **16/18** (89%) | 4 |
+
+**What the blind set shows.** On questions nobody had seen, the whole-corpus prompt answered 16 of 18 and the graph
+agent 15 of 18; search alone answered 10. At this demo's size (about 10k tokens) reading everything is as good as the
+graph for lookups, and the graph agent is far ahead of search, which is what remains when a company's data no longer fits
+in a prompt. The 46/46 in section 3 is therefore a development result; the blind 15/18 is the honest number.
+
+The graph agent's three blind misses were gaps in its tools, not in the graph: the quote tool's "all quotes" view left out
+the minimum order quantity and a quote id was not accepted (b04), there was no tool for certifications and what must be
+retested (b08), and the person tool did not return stated skills (b14). All three are fixed in `api/neura1/agent.py` after
+this run. The blind result above is unchanged; a further blind set would be needed to measure the fixes.
+
+**Neura1 graph agent, blind failures (3):**
+
+- **b04** What is the minimum order quantity on quote Q-102, and which part is it for? Missing: 250. Answer: _Quote Q-102 is for part **NB54361-L** (Buck regulator 3.3V 3A, low-cost, Northbridge Semi). The quote itself (Q-102) has no minimum order quantity recorded — the only MOQ on record is 100, but that is…_
+- **b08** Which certifications must be retested if the PSM-28 module changes? Missing: one of ['CERT-PDU28C-461', 'EMI/EMC'], one of ['CERT-PDU28C-704', 'aircraft power'], one of ['CERT-BCU24A-JSS', 'environmental']. Answer: _A change to the PSM-28 module requires re-testing under two records: **1. TP-PSM-07 (power stage thermal and load qualification)** — required for any change to the regulator, inductor, or output capac…_
+- **b14** Which skills has Vinay stated? Missing: Embedded C. Answer: _Not recorded. There is nothing in the records about Vinay stating any skills. The person record for Vinay (P-VINAY) lists his role (Software team), project (Firmware 2.4 release, CAN and comms), and a…_
+
+**Search only, blind failures (8):**
+
+- **b02** Which project does Pruthvi work on? Missing: Firmware 2.4. Answer: _Not recorded. The only record for Pruthvi is the people record (id=P-PRUTHVI, team_id=T-FW), which lists a team but no project assignment. No task or other record links Pruthvi to a specific project._
+- **b03** Who covers for Keerthana when Keerthana is away? Missing: Praveen. Answer: _Not recorded. The provided documents mention Keerthana's role (Employee, team T-SALES) and her involvement in the Konkan Naval BCU-24 escalation, but there is no record of who covers for her when she …_
+- **b07** Which team is Gurumurthy in? Missing: Quality Assurance. Answer: _Gurumurthy is in team **T-QAD** (people record id=P-GURUMURTHY)._
+- **b10** Who reports directly to Markande? Missing: Sharath, Ambika, Tejaswini. Answer: _P-PRAVEEN and P-GURUMURTHY report directly to Markande. - reports_to: person_id=P-PRAVEEN, manager_id=P-MARKANDE - reports_to: person_id=P-GURUMURTHY, manager_id=P-MARKANDE_
+- **b13** What is the unit price of the PSM-28 power stage module? Missing: forbidden ₹. Answer: _Not recorded. The supplier notice (2026-10-14) states a new unit price of ₹320 (previously ₹250), but it does not identify which part or component the price applies to. There is no record linking that…_
+- **b14** Which skills has Vinay stated? Missing: Embedded C, CAN bus. Answer: _Not recorded. The provided skills records only list skills for P-RAGHAVENDRA (Power stage design, Thermal derating, DC-DC converters). No skills are recorded for P-VINAY._
+- **b15** Which product revisions use the CT-1051 CAN transceiver? Missing: one of ['BCU-24-A', 'BCU-24 Rev A', 'BCU-24 revision A']. Answer: _Based on the records, the CT-1051 CAN transceiver is associated with the **BCU-24** (SUP-1057), which logs CAN telemetry drops during cold-start inrush. However, **no specific product revision is reco…_
+- **b18** Who reports to Sharath? Missing: Dileep, Pradeep. Answer: _No one reports to Sharath. The `reports_to` records show managers P-JAYARAM, P-ANIL, and P-MARKANDE, but no record lists P-SHARATH as a manager._
+
+**Whole corpus in the prompt, blind failures (2):**
+
+- **b10** Who reports directly to Markande? Missing: Praveen. Answer: _P-GURUMURTHY, P-SHARATH, P-AMBIKA, and P-TEJASWINI report directly to P-MARKANDE (reports_to records)._
+- **b13** What is the unit price of the PSM-28 power stage module? Missing: forbidden ₹. Answer: _Not recorded. The records contain pricing only for the NB54360 part (quotes Q-099 at ₹230, Q-101 at ₹250), not for the PSM-28 assembly itself._
+
 ## By question type (latest)
 
 | Category | Neura1 graph agent | Search only | Whole corpus in the prompt |
@@ -88,8 +130,8 @@ is not needed to get the answer.
 search: 28). Read that with care. The fixes were found by studying held-out failures, so 46/46 is a development result,
 not a blind test, and 46 questions is a small set. What it does show is that the remaining gap was in the agent's tools,
 not in the graph: once the tools could reach revisions, builds, leadership titles and notices, the graph answered everything,
-and the cost questions stay exact because code does the arithmetic. A blind check needs new questions written after
-these fixes.
+and the cost questions stay exact because code does the arithmetic. Section 4 is that blind check: 18 new questions,
+where the graph agent answered 15.
 
 **Why the graph agent lost questions in the first run.** Almost all were bugs in the agent's tools rather than limits of
 the graph: assemblies and revisions did not resolve (q05, q22, q30), the cost tool sent so much data that the model timed
@@ -156,4 +198,4 @@ Failures are listed, not hidden. *Missing* is what the answer should have contai
 - **q27** (abstain, heldout) What is the unit price of the CT-1051 CAN transceiver?  
   Missing: forbidden ₹. Answer: _The unit price of the CT-1051 CAN transceiver is not recorded. The only quotes on file are for NB54360 (Q-101, ₹250) and NB54361-L (Q-102, ₹190) from Deccan Components; no quote exists for CT-1051._
 
-Raw results with every answer and tool call: `api/eval/results/run1/context-base-all-20261017T070743.json`, `api/eval/results/run1/graph-base-all-20261017T072148.json`, `api/eval/results/run1/rag-base-all-20261017T070739.json`, `api/eval/results/graph-base-all-20261017T084236.json`
+Raw results with every answer and tool call: `api/eval/results/run1/context-base-all-20261017T070743.json`, `api/eval/results/run1/graph-base-all-20261017T072148.json`, `api/eval/results/run1/rag-base-all-20261017T070739.json`, `api/eval/results/graph-base-all-20261017T084236.json`, `api/eval/results/context-base-blind-20261017T100807.json`, `api/eval/results/graph-base-blind-20261017T101406.json`, `api/eval/results/rag-base-blind-20261017T100817.json`

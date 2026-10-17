@@ -1,8 +1,9 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
+import { startTour } from "@/components/Tour";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Box, Brain, FolderKanban, Search, Sparkles, User, Users, Zap } from "lucide-react";
+import { ArrowRight, Box, Brain, Compass, FolderKanban, Search, Sparkles, User, Users, Zap } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api";
 
@@ -59,6 +60,9 @@ export default function CommandPalette() {
       else list.push({ key: `w-${h.id}`, title: `${h.id}`, hint: `${h.label} · ${h.name} · who knows`, icon: Box, go: go(`/brain?who=${encodeURIComponent(h.id)}`) });
       list.push({ key: `x-${h.id}`, title: `Explore ${h.name}`, hint: "Connections and history", icon: Box, go: go(`/explore?id=${encodeURIComponent(h.id)}`) });
     }
+    if (!text || "take the tour guided demo".includes(text.toLowerCase()))
+      list.push({ key: "tour", title: "Take the 3-minute tour", hint: "Guided story", icon: Compass,
+                  go: () => { setOpen(false); setQ(""); startTour(); } });
     for (const [title, href] of PAGES)
       if (!text || title.toLowerCase().includes(text.toLowerCase()))
         list.push({ key: href, title, hint: "Go to page", icon: ArrowRight, go: go(href) });

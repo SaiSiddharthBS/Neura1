@@ -30,3 +30,25 @@ def test_money_channels_are_closed_to_engineers(fresh_graph):
     assert c.get("/api/chat/messages?channel=chat/leadership", headers={"x-neura1-as": "P-SAI"}).status_code == 403
     assert c.get("/api/chat/messages?channel=chat/leadership", headers={"x-neura1-as": "P-JAYARAM"}).status_code == 200
     main.app.dependency_overrides.clear()
+
+
+def test_leave_notices_stay_with_people_allowed_to_see_the_leave(fresh_graph):
+    main.app.dependency_overrides[main.graph] = lambda: fresh_graph
+    import neura1.main as m
+    orig = m.get_graph
+    m.get_graph = lambda name=None: fresh_graph  # the safety net reads the same graph as the endpoints
+    try:
+        c = TestClient(main.app)
+        engineer, lead = {"x-neura1-as": "P-ANIRUDH"}, {"x-neura1-as": "P-HITHESH"}
+        q = "/api/search?q=Raghavendra%20planned%20leave"
+        hits = lambda h: [x["chunk"] for x in c.get(q, headers=h).json()["hits"]]
+        assert not any(x.startswith("inbox/leave_") for x in hits(engineer))
+        assert any(x.startswith("inbox/leave_") for x in hits(lead))
+        leave_chunk = next(x for x in hits(lead) if x.startswith("inbox/leave_"))
+        from urllib.parse import quote
+        assert c.get(f"/api/evidence?chunk_id={quote(leave_chunk, safe='')}", headers=engineer).status_code == 403
+        assert c.get(f"/api/evidence?chunk_id={quote(leave_chunk, safe='')}", headers=lead).status_code == 200
+        assert not any(s["kind"] == "leave" for s in c.get("/api/signals", headers=engineer).json())
+    finally:
+        m.get_graph = orig
+        main.app.dependency_overrides.clear()

@@ -1,3 +1,7 @@
+import os
+
+os.environ.setdefault("NEURA1_BACKGROUND", "0")  # no background jobs in tests
+
 import pytest
 
 from neura1.graph import get_graph

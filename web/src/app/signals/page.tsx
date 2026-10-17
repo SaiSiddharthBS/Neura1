@@ -1,5 +1,6 @@
 "use client";
 
+import ForwardEmail from "@/components/ForwardEmail";
 import { PageTitle } from "@/components/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -37,15 +38,16 @@ export default function Signals() {
         </p>
         <OtherSignals />
         {error && <p className="mt-4 text-sm text-danger">{error}</p>}
+        <ForwardEmail onAdded={reload} />
         <AddNotice onAdded={reload} />
         <div className="mt-4 space-y-3">
           {notices?.map((n) => (
             <div key={n.id} className="card p-4">
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <div className="text-xs uppercase tracking-wide text-muted">Supplier notice</div>
                   <div className="mt-0.5 font-medium">{n.title}</div>
-                  <div className="mt-1 font-mono text-xs text-muted">{n.id}</div>
+                  <div className="mt-1 break-all font-mono text-xs text-muted">{n.id}</div>
                 </div>
                 {n.extraction && !n.extraction.problems.length ? (
                   <Link href={`/impact?source=${encodeURIComponent(n.id)}`}
@@ -100,11 +102,11 @@ function OtherSignals() {
   return (
     <div className="mt-4 space-y-3">
       {list.map((s) => (
-        <div key={s.id} className="card flex items-start justify-between gap-4 p-4">
+        <div key={s.id} className="card flex flex-wrap items-start justify-between gap-4 p-4">
           <div>
             <div className="text-xs uppercase tracking-wide text-muted">{s.kind === "escalation" ? "Customer escalation" : "Leave notice"} · {s.date?.slice(0, 10)}</div>
             <div className="mt-0.5 font-medium">{s.title}</div>
-            <div className="mt-1 font-mono text-xs text-muted">{s.id}</div>
+            <div className="mt-1 break-all font-mono text-xs text-muted">{s.id}</div>
           </div>
           <Link href={ROUTE[s.kind](s)} className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover">
             {s.investigation ? "Open plan" : s.kind === "escalation" ? "Analyse account" : "Plan handover"}

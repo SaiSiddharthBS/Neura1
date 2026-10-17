@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { CalendarOff, CheckCircle2, CircleDot, Newspaper, Radio, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
+import BriefCard from "@/components/BriefCard";
 import { PageTitle } from "@/components/ui";
 import { api, plain } from "@/lib/api";
 
@@ -31,6 +32,7 @@ export default function MyDay() {
         <PageTitle className="mt-1">{"Your day,"} <em>{m.name}</em></PageTitle>
         <p className="mt-1.5 text-[15px] text-muted">{m.role} · {m.team}{m.manager ? ` · reports to ${m.manager}` : ""}. What changed in your areas, what is waiting for you, and who is away.</p>
       </div>
+      <BriefCard />
       <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
         <section className="card p-5">
           <div className="flex items-center justify-between font-medium"><span>Your work</span><Link href="/board" className="text-xs text-muted hover:text-ink">Workboard →</Link></div>

@@ -8,38 +8,41 @@ import Lenis from "lenis";
 import { motion } from "motion/react";
 import { Toaster } from "sonner";
 import {
-  Bell, Brain, Building2, FileText, FolderKanban, History, Inbox, KanbanSquare, LayoutDashboard, Menu, MessageCircle,
-  Network, Radar, Search, Sparkles, Sun, Target, Upload, Users, Waypoints,
+  Bell, Brain, Building2, ChevronRight, FileText, FolderKanban, History, Inbox, KanbanSquare, LayoutDashboard, Menu, MessageCircle,
+  Compass, Network, Radar, Search, Sparkles, Sun, Target, Upload, Users, Waypoints,
 } from "lucide-react";
 import CommandPalette from "@/components/CommandPalette";
 import ThemeSwitch from "@/components/ThemeSwitch";
+import Tour, { startTour } from "@/components/Tour";
 import ViewerSwitch from "@/components/ViewerSwitch";
 import { api } from "@/lib/api";
 import { useResolvedTheme } from "@/lib/theme";
 
 type Item = { href: string; label: string; icon: typeof Sun; badge?: "signals" };
-const NAV: { section: string; items: Item[] }[] = [
+const NAV: { section: string; items: Item[]; collapsible?: boolean }[] = [
   { section: "Today", items: [
     { href: "/", label: "Overview", icon: LayoutDashboard },
     { href: "/me", label: "My day", icon: Sun },
     { href: "/signals", label: "Signals", icon: Inbox, badge: "signals" },
     { href: "/board", label: "Workboard", icon: KanbanSquare },
-    { href: "/history", label: "Plans", icon: History },
     { href: "/chat", label: "Chat", icon: MessageCircle },
   ]},
   { section: "Company brain", items: [
     { href: "/brain", label: "Ask & search", icon: Brain },
     { href: "/docs", label: "Documents", icon: FileText },
     { href: "/explore", label: "Graph explorer", icon: Waypoints },
-    { href: "/people", label: "People", icon: Users },
     { href: "/capabilities", label: "Capability map", icon: Target },
+    { href: "/risk", label: "Risk radar", icon: Radar },
+  ]},
+  { section: "Company", items: [
+    { href: "/people", label: "People", icon: Users },
     { href: "/org", label: "Organisation", icon: Network },
     { href: "/projects", label: "Projects", icon: FolderKanban },
     { href: "/customers", label: "Customers", icon: Building2 },
-    { href: "/risk", label: "Risk radar", icon: Radar },
-    { href: "/changes", label: "What's new", icon: Bell },
   ]},
-  { section: "Data", items: [
+  { section: "More", collapsible: true, items: [
+    { href: "/history", label: "Plans", icon: History },
+    { href: "/changes", label: "What's new", icon: Bell },
     { href: "/import", label: "Import", icon: Upload },
   ]},
 ];
@@ -51,6 +54,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const theme = useResolvedTheme();
   const [mobile, setMobile] = useState(false);
   const [openSignals, setOpenSignals] = useState(0);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   // Momentum scrolling for the page. Anything that scrolls on its own (lists, chat, the editor, graphs) keeps native scroll.
   useEffect(() => {
@@ -110,10 +114,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <Search size={14} /> <span className="flex-1 text-left">Search or ask</span> <span className="kbd">⌘K</span>
       </button>
       <nav className="isolate mt-3 flex-1 space-y-4 overflow-y-auto px-3 pb-3">
-        {NAV.map((g) => (
+        {NAV.map((g) => {
+          const shut = g.collapsible && !moreOpen && !g.items.some((i) => active(i.href));
+          return (
           <div key={g.section}>
-            <div className="px-2 pb-1 text-[11px] font-medium text-faint">{g.section}</div>
-            <ul className="space-y-px">
+            {g.collapsible ? (
+              <button onClick={() => setMoreOpen(!moreOpen)} aria-expanded={!shut}
+                      className="flex w-full items-center gap-1 px-2 pb-1 text-[11px] font-medium text-faint hover:text-ink-soft">
+                {g.section} <ChevronRight size={11} className={`transition-transform ${shut ? "" : "rotate-90"}`} />
+              </button>
+            ) : <div className="px-2 pb-1 text-[11px] font-medium text-faint">{g.section}</div>}
+            {!shut && <ul className="space-y-px">
               {g.items.map(({ href, label, icon: Icon, badge }) => {
                 const on = active(href);
                 return (
@@ -137,9 +148,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   </li>
                 );
               })}
-            </ul>
+            </ul>}
           </div>
-        ))}
+          );
+        })}
       </nav>
       <div className="space-y-2 border-t border-line p-3">
         <ViewerSwitch />
@@ -176,6 +188,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <span className="truncate font-medium">{here?.label ?? "Neura1"}</span>
           </nav>
           <div className="ml-auto flex items-center gap-2">
+            <button onClick={startTour} className="hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] text-muted transition hover:bg-elev hover:text-ink sm:flex">
+              <Compass size={14} /> Take the tour
+            </button>
             <button onClick={openPalette}
                     className="ai-ring flex items-center gap-1.5 rounded-full bg-panel px-3 py-1.5 text-[13px] font-medium shadow-[var(--shadow)] transition hover:bg-elev">
               <Sparkles size={14} className="text-accent" /> Ask Neura1
@@ -190,6 +205,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
       <CommandPalette />
+      <Tour />
       <Toaster theme={theme} position="bottom-right" toastOptions={{ className: "!rounded-xl !border-line !bg-panel !text-ink !shadow-[var(--shadow-pop)]" }} />
     </div>
   );

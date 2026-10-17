@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import {
-  ArrowRight, ArrowUpRight, Brain, CalendarOff, FolderKanban, KanbanSquare, MessageSquareWarning, PackageSearch, Radar, Sparkles,
+  ArrowRight, ArrowUpRight, Brain, CalendarOff, Compass, FolderKanban, KanbanSquare, MessageSquareWarning, PackageSearch, Radar, Sparkles,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Pill, Section, Stagger, Ticker, riseItem, PageTitle } from "@/components/ui";
+import RippleGraph from "@/components/RippleGraph";
+import { startTour } from "@/components/Tour";
+import { PageTitle, Pill, Section, Stagger, Ticker, riseItem } from "@/components/ui";
 import { api, inr } from "@/lib/api";
 
 type Signal = { id: string; kind: "notice" | "escalation" | "leave"; title: string; date: string | null; subject: string | null; investigation: string | null };
@@ -77,7 +79,12 @@ export default function Overview() {
               : "Nothing is waiting on a decision. Everything below is up to date."}
           </p>
         </div>
+        <button onClick={startTour} className="flex items-center gap-2 rounded-full border border-line bg-elev px-4 py-2 text-[13.5px] font-medium transition hover:border-line2">
+          <Compass size={15} className="text-accent" /> Take the 3-minute tour
+        </button>
       </motion.section>
+
+      <motion.div variants={riseItem}><RippleGraph /></motion.div>
 
       <motion.form variants={riseItem} onSubmit={(e) => { e.preventDefault(); ask(q); }}
                    className="ai-ring card overflow-visible rounded-2xl p-1.5">
@@ -121,7 +128,7 @@ export default function Overview() {
         </Section>
       </motion.div>
 
-      <motion.div variants={riseItem} className="grid gap-4 lg:grid-cols-12">
+      <motion.div variants={riseItem} className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         <Section title="Work in flight" icon={KanbanSquare} action="Workboard" href="/board" className="lg:col-span-5">
           {p ? (
             <>

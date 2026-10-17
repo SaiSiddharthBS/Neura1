@@ -1,0 +1,390 @@
+{
+  "system": "rag",
+  "model": "ornith-1.5-35b-a3b",
+  "state": "base",
+  "split": "blind",
+  "passed": 10,
+  "total": 18,
+  "results": [
+    {
+      "id": "b01",
+      "category": "exposure",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 7.45,
+      "question": "Which customer order does build BO-0421 fulfil, and for which customer?",
+      "answer": "Build BO-0421 fulfils order **SO-887** for customer **C-VINDHYA** (orders record: id=SO-887, customer_id=C-VINDHYA, build_id=BO-0421, qty=40, due_date=2026-12-10, unit_price=42000).",
+      "retrieved": [
+        "chats/slack_fw-team_2026-09.json#m2",
+        "docs/TR-112_thermal_test_report.md#p14",
+        "records/orders.csv#2",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "records/orders.csv#0",
+        "records/orders.csv#1"
+      ]
+    },
+    {
+      "id": "b02",
+      "category": "project",
+      "split": "blind",
+      "pass": false,
+      "missing": [
+        "Firmware 2.4"
+      ],
+      "seconds": 11.64,
+      "question": "Which project does Pruthvi work on?",
+      "answer": "Not recorded. The only record for Pruthvi is the people record (id=P-PRUTHVI, team_id=T-FW), which lists a team but no project assignment. No task or other record links Pruthvi to a specific project.",
+      "retrieved": [
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "records/people.csv#12",
+        "chats/slack_fw-team_2026-09.json#m2",
+        "docs/TR-112_thermal_test_report.md#p14",
+        "records/tasks.csv#18",
+        "records/absences.csv#0",
+        "records/shipments.csv#0",
+        "records/stock.csv#0"
+      ]
+    },
+    {
+      "id": "b03",
+      "category": "people",
+      "split": "blind",
+      "pass": false,
+      "missing": [
+        "Praveen"
+      ],
+      "seconds": 3.14,
+      "question": "Who covers for Keerthana when Keerthana is away?",
+      "answer": "Not recorded. The provided documents mention Keerthana's role (Employee, team T-SALES) and her involvement in the Konkan Naval BCU-24 escalation, but there is no record of who covers for her when she is away.",
+      "retrieved": [
+        "docs/onboarding_hardware.md#p2",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "records/people.csv#27",
+        "docs/leadership_weekly_2026-10-12.md#p1",
+        "docs/ops_review_2026-09-28.md#p1",
+        "inbox/escalation_konkan_2026-10-15.md#p1",
+        "tickets/SUP-1057.json#title"
+      ]
+    },
+    {
+      "id": "b04",
+      "category": "supply",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 3.06,
+      "question": "What is the minimum order quantity on quote Q-102, and which part is it for?",
+      "answer": "Quote Q-102 has a minimum order quantity of **250** (moq=250), and it is for part **NB54361-L** (item_id=NB54361-L).",
+      "retrieved": [
+        "inbox/notice_NB54360_2026-10-14.md#p3",
+        "chats/slack_fw-team_2026-09.json#m2",
+        "records/quotes.csv#2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "chats/slack_hw-power_2025-03.json#m5",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "chats/slack_hw-power_2025-03.json#m4",
+        "chats/slack_fw-team_2026-09.json#m3"
+      ]
+    },
+    {
+      "id": "b05",
+      "category": "project",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.07,
+      "question": "Who leads the AS9100D surveillance audit project?",
+      "answer": "P-GURUMURTHY leads the AS9100D surveillance audit project (PRJ-AS9100, lead_id=P-GURUMURTHY).",
+      "retrieved": [
+        "records/projects.csv#4",
+        "records/tasks.csv#19",
+        "records/tasks.csv#18",
+        "records/tasks.csv#30",
+        "records/skills.csv#26",
+        "records/organizations.csv#0",
+        "chats/slack_fw-team_2026-09.json#m1",
+        "chats/slack_fw-team_2026-09.json#m2"
+      ]
+    },
+    {
+      "id": "b06",
+      "category": "exposure",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 4.74,
+      "question": "When is order SO-881 due, and how many units does it cover?",
+      "answer": "Order SO-881 is due **2026-11-20** and covers **80 units** of PDU-28 Rev C.\n\n- Orders record: `id=SO-881, ... qty=80, due_date=2026-11-20`\n- Sales order excerpt: \"80 x PDU-28 Rev C... Committed delivery: 2026-11-20.\"",
+      "retrieved": [
+        "docs/onboarding_hardware.md#p2",
+        "docs/TR-112_thermal_test_report.md#p14",
+        "docs/contract_SO-881_nilgiri_excerpt.md#p2",
+        "inbox/escalation_konkan_2026-10-15.md#p3",
+        "docs/ops_review_2026-09-28.md#p2",
+        "records/orders.csv#0",
+        "docs/contract_SO-881_nilgiri_excerpt.md#p0",
+        "docs/contract_SO-881_nilgiri_excerpt.md#p1"
+      ]
+    },
+    {
+      "id": "b07",
+      "category": "ownership",
+      "split": "blind",
+      "pass": false,
+      "missing": [
+        "Quality Assurance"
+      ],
+      "seconds": 1.3,
+      "question": "Which team is Gurumurthy in?",
+      "answer": "Gurumurthy is in team **T-QAD** (people record id=P-GURUMURTHY).",
+      "retrieved": [
+        "chats/slack_fw-team_2026-09.json#m2",
+        "records/people.csv#22",
+        "chats/slack_hw-power_2025-03.json#m3",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "tickets/SUP-1057.json#comment-2",
+        "chats/slack_fw-team_2026-09.json#m1",
+        "chats/slack_fw-team_2026-09.json#m3",
+        "chats/slack_hw-power_2025-03.json#m1"
+      ]
+    },
+    {
+      "id": "b08",
+      "category": "dependency",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 3.96,
+      "question": "Which certifications must be retested if the PSM-28 module changes?",
+      "answer": "All three certifications list PSM-28 as the retest trigger item:\n\n- **CERT-PDU28C-461** – PDU-28 Rev C EMI/EMC qualification (retest_trigger_item=PSM-28)\n- **CERT-PDU28C-704** – PDU-28 Rev C aircraft power compatibility (retest_trigger_item=PSM-28)\n- **CERT-BCU24A-JSS** – BCU-24 Rev A environmental qualification (retest_trigger_item=PSM-28)",
+      "retrieved": [
+        "inbox/leave_raghavendra_2026-10-09.md#p2",
+        "chats/slack_fw-team_2026-09.json#m2",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "tickets/SUP-1057.json#comment-2",
+        "tickets/FW-233.json#comment-1",
+        "records/certifications.csv#0",
+        "records/certifications.csv#1",
+        "records/certifications.csv#2"
+      ]
+    },
+    {
+      "id": "b09",
+      "category": "org",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.77,
+      "question": "Who is Flyvi's Chief Operating Officer?",
+      "answer": "Flyvi's Chief Operating Officer is **Markande** (person_id=P-MARKANDE, team T-LEAD).\n\nSource: org_roles record (P-MARKANDE → COO) and people record (id=P-MARKANDE, name=Markande, role=Chief Operating Officer).",
+      "retrieved": [
+        "records/org_roles.csv#4",
+        "records/people.csv#4",
+        "records/org_roles.csv#5",
+        "records/people.csv#5",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "docs/onboarding_hardware.md#p2",
+        "records/org_roles.csv#1",
+        "records/people.csv#1"
+      ]
+    },
+    {
+      "id": "b10",
+      "category": "org",
+      "split": "blind",
+      "pass": false,
+      "missing": [
+        "Sharath",
+        "Ambika",
+        "Tejaswini"
+      ],
+      "seconds": 2.36,
+      "question": "Who reports directly to Markande?",
+      "answer": "P-PRAVEEN and P-GURUMURTHY report directly to Markande.\n\n- reports_to: person_id=P-PRAVEEN, manager_id=P-MARKANDE\n- reports_to: person_id=P-GURUMURTHY, manager_id=P-MARKANDE",
+      "retrieved": [
+        "records/people.csv#4",
+        "records/reports_to.csv#0",
+        "records/reports_to.csv#1",
+        "records/reports_to.csv#2",
+        "records/reports_to.csv#3",
+        "records/reports_to.csv#4",
+        "records/reports_to.csv#5",
+        "records/reports_to.csv#6"
+      ]
+    },
+    {
+      "id": "b11",
+      "category": "exposure",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 9.03,
+      "question": "When is build BO-0412 planned, and how many units does it build?",
+      "answer": "Build BO-0412 is planned for **2026-11-03** (Operations review, 2026-09-28).\n\nRegarding unit count, there's a discrepancy:\n- The operations review lists it as **100 × PDU-28 Rev C** (Operations review, 2026-09-28).\n- However, the order it feeds, SO-881, is for **80 units** (orders record), and the Nilgiri project summary also states 80 units (PRJ-NILGIRI).\n\nSo the build is planned for 2026-11-03, with a planned quantity of 100 units, though only 80 are ordered under SO-881.",
+      "retrieved": [
+        "docs/onboarding_hardware.md#p2",
+        "docs/TR-112_thermal_test_report.md#p14",
+        "docs/ops_review_2026-09-28.md#p2",
+        "docs/HB-HR-02_leave_handover.md#p2",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "records/projects.csv#0",
+        "records/orders.csv#0",
+        "chats/slack_hw-power_2025-03.json#m1"
+      ]
+    },
+    {
+      "id": "b12",
+      "category": "supply",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 1.95,
+      "question": "How many NB54360 regulators are on hand, and how many of them are allocated?",
+      "answer": "**NB54360:** 180 on hand, 120 allocated. (stock record)",
+      "retrieved": [
+        "records/stock.csv#0",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "tickets/SUP-1057.json#description",
+        "tickets/HW-311.json#description",
+        "chats/slack_hw-power_2025-03.json#m3",
+        "tickets/FW-233.json#description",
+        "docs/HB-ENG-04_change_policy.md#p2"
+      ]
+    },
+    {
+      "id": "b13",
+      "category": "abstain",
+      "split": "blind",
+      "pass": false,
+      "missing": [
+        "forbidden ₹"
+      ],
+      "seconds": 8.42,
+      "question": "What is the unit price of the PSM-28 power stage module?",
+      "answer": "Not recorded. The supplier notice (2026-10-14) states a new unit price of ₹320 (previously ₹250), but it does not identify which part or component the price applies to. There is no record linking that price specifically to the PSM-28 Power Stage Module (id=PSM-28).",
+      "retrieved": [
+        "records/items.csv#2",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "tickets/FW-233.json#description",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "docs/onboarding_hardware.md#p2",
+        "records/items.csv#12",
+        "records/projects.csv#1",
+        "inbox/notice_NB54360_2026-10-14.md#p3"
+      ]
+    },
+    {
+      "id": "b14",
+      "category": "people",
+      "split": "blind",
+      "pass": false,
+      "missing": [
+        "Embedded C",
+        "CAN bus"
+      ],
+      "seconds": 2.88,
+      "question": "Which skills has Vinay stated?",
+      "answer": "Not recorded. The provided skills records only list skills for P-RAGHAVENDRA (Power stage design, Thermal derating, DC-DC converters). No skills are recorded for P-VINAY.",
+      "retrieved": [
+        "records/people.csv#14",
+        "chats/slack_fw-team_2026-09.json#m2",
+        "chats/slack_hw-power_2025-03.json#m2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "inbox/notice_NB54360_2026-10-14.md#p2",
+        "records/skills.csv#0",
+        "records/skills.csv#1",
+        "records/skills.csv#2"
+      ]
+    },
+    {
+      "id": "b15",
+      "category": "where_used",
+      "split": "blind",
+      "pass": false,
+      "missing": [
+        "one of ['BCU-24-A', 'BCU-24 Rev A', 'BCU-24 revision A']"
+      ],
+      "seconds": 13.04,
+      "question": "Which product revisions use the CT-1051 CAN transceiver?",
+      "answer": "Based on the records, the CT-1051 CAN transceiver is associated with the **BCU-24** (SUP-1057), which logs CAN telemetry drops during cold-start inrush.\n\nHowever, **no specific product revision is recorded** for the BCU-24 in connection with the CT-1051. The only revision mentioned in the data is \"Rev B,\" but that refers to firmware/PMIC context (FW-233, NB54360 soft-start) in Slack #fw-team, not to the CAN transceiver's product revision.\n\nSo: product = BCU-24 (SUP-1057); revision = not recorded.",
+      "retrieved": [
+        "chats/slack_fw-team_2026-09.json#m2",
+        "tickets/SUP-1057.json#comment-1",
+        "records/items.csv#9",
+        "chats/slack_hw-power_2025-03.json#m1",
+        "docs/onboarding_hardware.md#p2",
+        "records/organizations.csv#0",
+        "records/items.csv#0",
+        "records/items.csv#1"
+      ]
+    },
+    {
+      "id": "b16",
+      "category": "ownership",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 7.6,
+      "question": "Who is the account manager for Vindhya Rail Systems?",
+      "answer": "Not recorded. The records show a task (WRK-129) targeting Vindhya Rail Systems (C-VINDHYA) assigned to P-KEERTHANA, but no record explicitly names an account manager for Vindhya Rail Systems. P-KEERTHANA's account role is only documented for project PRJ-NILGIRI (project_members), not for Vindhya.",
+      "retrieved": [
+        "records/customers.csv#2",
+        "records/tasks.csv#28",
+        "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "docs/contract_SO-881_nilgiri_excerpt.md#p1",
+        "docs/HB-ENG-04_change_policy.md#p2",
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "records/project_members.csv#1",
+        "docs/HB-HR-02_leave_handover.md#p2"
+      ]
+    },
+    {
+      "id": "b17",
+      "category": "decision",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.58,
+      "question": "According to the records, why does BCU-24 telemetry drop after a cold start?",
+      "answer": "According to the records, the BCU-24 telemetry drops because the **CT-1051 CAN transceiver enters bus-off during the cold-start inrush**, and the firmware never requests bus-off recovery, so telemetry stays down (SUP-1057, Nagarjun, 2026-10-14).",
+      "retrieved": [
+        "docs/TR-112_thermal_test_report.md#p14",
+        "docs/onboarding_hardware.md#p2",
+        "tickets/SUP-1057.json#description",
+        "tickets/SUP-1057.json#comment-1",
+        "tickets/SUP-1057.json#comment-2",
+        "tickets/SUP-1057.json#title",
+        "inbox/escalation_konkan_2026-10-15.md#p2",
+        "tickets/SUP-1042.json#description"
+      ]
+    },
+    {
+      "id": "b18",
+      "category": "org",
+      "split": "blind",
+      "pass": false,
+      "missing": [
+        "Dileep",
+        "Pradeep"
+      ],
+      "seconds": 2.44,
+      "question": "Who reports to Sharath?",
+      "answer": "No one reports to Sharath. The `reports_to` records show managers P-JAYARAM, P-ANIL, and P-MARKANDE, but no record lists P-SHARATH as a manager.",
+      "retrieved": [
+        "docs/leadership_weekly_2026-10-12.md#p2",
+        "docs/ops_review_2026-09-28.md#p2",
+        "records/people.csv#23",
+        "docs/ops_review_2026-09-28.md#p1",
+        "records/reports_to.csv#0",
+        "records/reports_to.csv#1",
+        "records/reports_to.csv#2",
+        "records/reports_to.csv#3"
+      ]
+    }
+  ]
+}

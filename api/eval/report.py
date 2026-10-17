@@ -18,9 +18,9 @@ NAMES = {"graph": "Neura1 graph agent", "rag": "Search only", "context": "Whole 
 ORDER = ("graph", "rag", "context")
 
 
-def load(folder: Path) -> dict[str, dict]:
+def load(folder: Path, split: str = "all") -> dict[str, dict]:
     runs: dict[str, dict] = {}
-    for path in sorted(folder.glob("*-base-all-*.json")):
+    for path in sorted(folder.glob(f"*-base-{split}-*.json")):
         data = json.loads(path.read_text())
         runs[data["system"]] = data | {"file": str(path.relative_to(HERE.parent))}
     return runs
@@ -77,6 +77,28 @@ def main() -> None:
                   "failures, so treat this as a development result, not a blind one.", "", head,
                   row(NAMES["graph"] + " (after fixes)", rescored(run2["graph"], cases))]
         lines += [row(NAMES[k] + " (rescored, unchanged)", rescored(run1[k], cases)) for k in ("rag", "context") if k in run1]
+    blind = load(HERE / "results", "blind")
+    if blind:
+        lines += ["", "## 4. Blind set: 18 new questions, one run, as scored", "",
+                  "Written after the tool fixes and before any system saw them; expected answers were checked against "
+                  "the records. Each system answered once and nothing was changed afterwards.", "", head]
+        lines[-1] = "| System | Passed | Median seconds |\n|---|---|---|"
+        for k in ORDER:
+            if k in blind:
+                res = blind[k]["results"]
+                secs = sorted(x["seconds"] for x in res)
+                passed = sum(x["pass"] for x in res)
+                lines.append(f"| {NAMES[k]} | **{passed}/{len(res)}** ({round(100 * passed / len(res))}%) | {secs[len(secs) // 2]:.0f} |")
+        lines += ["", "{blind_analysis}"]
+        for key in ORDER:
+            if key not in blind:
+                continue
+            fails = [x for x in blind[key]["results"] if not x["pass"]]
+            lines += ["", f"**{NAMES[key]}, blind failures ({len(fails)}):**", ""]
+            for x in fails:
+                ans = " ".join(str(x["answer"]).split())
+                lines.append(f"- **{x['id']}** {x['question']} Missing: {', '.join(map(str, x['missing']))}. "
+                             f"Answer: _{ans[:200]}{'…' if len(ans) > 200 else ''}_")
     final = {"graph": rescored(run2["graph"], cases) if "graph" in run2 else rescored(run1["graph"], cases)}
     final |= {k: rescored(run1[k], cases) for k in ("rag", "context") if k in run1}
     lines += ["", "## By question type (latest)", "", "| Category | " + " | ".join(NAMES[k] for k in ORDER if k in final) + " |",
@@ -100,11 +122,13 @@ def main() -> None:
             lines.append(f"- **{x['id']}** ({x['category']}, {x['split']}) {x['question']}  \n  Missing: "
                          f"{', '.join(map(str, x['missing'])) or '—'}. Answer: _{ans[:240]}{'…' if len(ans) > 240 else ''}_")
         lines.append("")
-    files = [r["file"] for r in run1.values()] + [r["file"] for r in run2.values()]
+    files = [r["file"] for r in run1.values()] + [r["file"] for r in run2.values()] + [r["file"] for r in blind.values()]
     lines += ["Raw results with every answer and tool call: " + ", ".join(f"`api/{f}`" for f in files), ""]
     text = "\n".join(lines)
     analysis_path = HERE / "analysis.md"
     text = text.replace("{analysis}", analysis_path.read_text().strip() if analysis_path.exists() else "_Pending._")
+    blind_path = HERE / "blind_analysis.md"
+    text = text.replace("{blind_analysis}", blind_path.read_text().strip() if blind_path.exists() else "")
     OUT.write_text(text)
     print(f"wrote {OUT}")
 

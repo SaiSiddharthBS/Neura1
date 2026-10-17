@@ -1,5 +1,6 @@
 "use client";
 
+import ResetDemo from "@/components/ResetDemo";
 import { PageTitle } from "@/components/ui";
 import { Download, FileUp } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -142,6 +143,7 @@ export default function ImportPage() {
         )}
       </section>
 
+      <div className="space-y-4">
       <aside className="card h-fit p-4">
         <h2 className="font-medium">Templates</h2>
         <p className="mt-1 text-xs text-muted">
@@ -165,6 +167,8 @@ export default function ImportPage() {
           ))}
         </ul>
       </aside>
+      <ResetDemo />
+      </div>
     </div>
   );
 }

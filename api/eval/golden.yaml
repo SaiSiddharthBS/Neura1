@@ -264,3 +264,100 @@
   category: absence
   question: Is Raghavendra away in November, and who covers while away?
   all: [Vishwas]
+
+# ---------------------------------------------------------------------------------------------------------------
+# Blind set, written 2026-10-17 after the agent's tool fixes and before any system answered them. Expected answers
+# were checked against the records, not against any system's output. Run once with --split blind; results are
+# published as they come. ("all" keeps meaning dev + heldout, so earlier results stay comparable.)
+- id: b01
+  split: blind
+  category: exposure
+  question: Which customer order does build BO-0421 fulfil, and for which customer?
+  all: [SO-887, Vindhya]
+- id: b02
+  split: blind
+  category: project
+  question: Which project does Pruthvi work on?
+  all: [Firmware 2.4]
+- id: b03
+  split: blind
+  category: people
+  question: Who covers for Keerthana when Keerthana is away?
+  all: [Praveen]
+- id: b04
+  split: blind
+  category: supply
+  question: What is the minimum order quantity on quote Q-102, and which part is it for?
+  all: ["250", NB54361-L]
+- id: b05
+  split: blind
+  category: project
+  question: Who leads the AS9100D surveillance audit project?
+  all: [Gurumurthy]
+- id: b06
+  split: blind
+  category: exposure
+  question: When is order SO-881 due, and how many units does it cover?
+  all: [2026-11-20, "80"]
+- id: b07
+  split: blind
+  category: ownership
+  question: Which team is Gurumurthy in?
+  all: [Quality Assurance]
+- id: b08
+  split: blind
+  category: dependency
+  question: Which certifications must be retested if the PSM-28 module changes?
+  any: [[CERT-PDU28C-461, EMI/EMC], [CERT-PDU28C-704, aircraft power], [CERT-BCU24A-JSS, environmental]]
+- id: b09
+  split: blind
+  category: org
+  question: Who is Flyvi's Chief Operating Officer?
+  all: [Markande]
+- id: b10
+  split: blind
+  category: org
+  question: Who reports directly to Markande?
+  all: [Praveen, Gurumurthy, Sharath, Ambika, Tejaswini]
+- id: b11
+  split: blind
+  category: exposure
+  question: When is build BO-0412 planned, and how many units does it build?
+  all: [2026-11-03, "100"]
+- id: b12
+  split: blind
+  category: supply
+  question: How many NB54360 regulators are on hand, and how many of them are allocated?
+  all: ["180", "120"]
+- id: b13
+  split: blind
+  category: abstain
+  question: What is the unit price of the PSM-28 power stage module?
+  any: [[no quote, not recorded, unknown, "no price", don't have, does not have, not available, no recorded]]
+  none: ["₹"]
+- id: b14
+  split: blind
+  category: people
+  question: Which skills has Vinay stated?
+  all: [Embedded C, CAN bus]
+- id: b15
+  split: blind
+  category: where_used
+  question: Which product revisions use the CT-1051 CAN transceiver?
+  any: [[BCU-24-A, BCU-24 Rev A, "BCU-24 revision A"]]
+- id: b16
+  split: blind
+  category: ownership
+  question: Who is the account manager for Vindhya Rail Systems?
+  all: [Keerthana]
+- id: b17
+  split: blind
+  category: decision
+  question: According to the records, why does BCU-24 telemetry drop after a cold start?
+  all: [bus-off]
+  any: [[recovery, re-initialis, reinitialis, never requests]]
+- id: b18
+  split: blind
+  category: org
+  question: Who reports to Sharath?
+  all: [Dileep, Pradeep]

@@ -84,6 +84,7 @@ export default function Capabilities() {
         })}
       </section>
 
+      <div data-tour="thin">
       <Section title="Where Flyvi is thin" icon={TrendingUp} bodyClass="px-2 pb-2 pt-2">
         <p className="px-3 pb-2 text-[13px] text-muted">Skills that open work or active projects need, held by one person or not yet proven by finished work.</p>
         <ul className="divide-y divide-line">
@@ -101,6 +102,7 @@ export default function Capabilities() {
           {m && !attention.length && <li className="px-3 py-4 text-sm text-muted">Every skill that open work needs is held by more than one person.</li>}
         </ul>
       </Section>
+      </div>
 
       {m && Object.entries(byArea).map(([area, skills]) => (
         <Section key={area} title={<span id={area.replace(/\W+/g, "-")} className="scroll-mt-20">{area}</span>} bodyClass="px-2 pb-2 pt-1">

@@ -18,6 +18,7 @@ from decimal import Decimal
 from falkordb import Graph
 
 from neura1 import brain, scenarios
+from neura1 import access
 from neura1.access import MONEY_TEXT
 from neura1.graph import rows
 from neura1.ingest.unstructured import entity_lexicon, mentions
@@ -241,7 +242,8 @@ def ask_in_channel(graph: Graph, channel_id: str, question: str, asker_id: str |
                             "MATCH (v:Conversation {id:$cid}) SET v.private = (c.kind = 'dm')", {"id": channel_id, "cid": cid})
             audience = Audience(graph, channel_id)
             result = agent.ask(graph, question, history=memory.history(graph, cid),
-                               restrict={"money": audience.money, "leave_of": audience.sees_leave_of})
+                               restrict={"money": audience.money, "leave_of": audience.sees_leave_of,
+                                         "hidden": access.hidden_sources(graph, audience.sees_leave_of)})
             memory.record(graph, cid, question, result)
             text = redact_text(result["answer"], audience)
             if result.get("warnings"):

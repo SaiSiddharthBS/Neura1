@@ -16,6 +16,7 @@ from pathlib import Path
 
 import yaml
 
+from neura1 import llm
 from neura1.config import settings
 from neura1.graph import get_graph, rows
 from neura1.ingest.structured import read_csv
@@ -89,12 +90,13 @@ def rag_retrieve(docs: list[dict], question: str, k: int = 8) -> list[dict]:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--system", choices=["graph", "rag", "context"], required=True)
-    ap.add_argument("--split", choices=["dev", "heldout", "all"], default="all")
+    ap.add_argument("--split", choices=["dev", "heldout", "blind", "all"], default="all")
     ap.add_argument("--state", choices=["base", "updated"], default="base")
     args = ap.parse_args()
 
     cases = [c for c in yaml.safe_load((HERE / "golden.yaml").read_text())
-             if c.get("state", "base") == args.state and (args.split == "all" or c["split"] == args.split)]
+             if c.get("state", "base") == args.state
+             and (c["split"] == args.split or (args.split == "all" and c["split"] in ("dev", "heldout")))]
     graph = get_graph()
     docs = corpus(graph, args.state == "updated") if args.system != "graph" else []
     if args.system == "graph":
@@ -126,7 +128,7 @@ def main() -> None:
     out_dir.mkdir(exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
     (out_dir / f"{args.system}-{args.state}-{args.split}-{stamp}.json").write_text(json.dumps(
-        {"system": args.system, "model": settings.llm_model, "state": args.state, "split": args.split,
+        {"system": args.system, "model": llm.last_model or settings.llm_model, "state": args.state, "split": args.split,
          "passed": passed, "total": len(results), "results": results}, indent=2, ensure_ascii=False))
 
 

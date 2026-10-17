@@ -111,7 +111,8 @@ def tag_with_model(graph: Graph, batch: int = 12) -> dict:
                "\n".join(f"[{r['id']}] {r['text']}" for r in chunk)
         raw += chat_json(TAG_SYSTEM, user, TAG_SCHEMA, "skill_tags").get("tags", [])
     kept, rejected = verify_tags(raw, vocabulary, ids)
-    snap = {"model": settings.llm_model, "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    from neura1 import llm as _llm
+    snap = {"model": _llm.last_model or settings.llm_model, "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "tags": kept, "rejected": rejected}
     (settings.fixture_dir / TAGS_FILE).write_text(json.dumps(snap, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return snap

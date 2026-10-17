@@ -89,6 +89,40 @@ def redact_money_text(obj, note: str = "[amount hidden]"):
     return obj
 
 
+def hidden_sources(graph: Graph, sees_leave_of) -> set[str]:
+    """Leave notices whose person this reader may not see the leave of. Their passages must not reach the reader
+    through search, evidence, feeds or the agent."""
+    from neura1 import scenarios
+    return {s["id"] for s in scenarios.signals(graph) if s["kind"] == "leave" and not sees_leave_of(s.get("subject") or "")}
+
+
+_REF_KEYS = ("chunk", "ref", "id", "source", "source_id")
+
+
+def _is_hidden(value, hidden: set[str]) -> bool:
+    return isinstance(value, str) and (value in hidden or value.split("#")[0] in hidden)
+
+
+def drop_hidden(obj, hidden: set[str]):
+    """Remove every list entry that is, or points at, a hidden source or one of its passages."""
+    if not hidden:
+        return obj
+    if isinstance(obj, list):
+        out = []
+        for x in obj:
+            if _is_hidden(x, hidden) or (isinstance(x, dict) and any(_is_hidden(x.get(k), hidden) for k in _REF_KEYS)):
+                continue
+            out.append(drop_hidden(x, hidden))
+        return out
+    if isinstance(obj, dict):
+        return {k: drop_hidden(v, hidden) for k, v in obj.items()}
+    return obj
+
+
+def points_at_hidden(obj, hidden: set[str]) -> bool:
+    return isinstance(obj, dict) and any(_is_hidden(obj.get(k), hidden) for k in _REF_KEYS)
+
+
 def redact_money(obj, keys=("value", "unit_price", "max_penalty", "open_value", "value_at_risk", "total_delta",
                             "material_delta", "one_time_total", "baseline_unit_price", "new_unit_price",
                             "cost_total", "amount")):

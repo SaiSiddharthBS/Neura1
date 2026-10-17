@@ -183,7 +183,7 @@ export default function ChatView() {
           <div ref={bottom} />
         </div>
         {error && <div className="px-5 pb-1 text-xs text-warn">{error}</div>}
-        <form onSubmit={send} className="relative border-t border-line p-3">
+        <form data-tour="chat" onSubmit={send} className="relative border-t border-line p-3">
           {hints.length > 0 && (
             <div className="absolute bottom-full left-3 right-3 mb-2 overflow-hidden rounded-xl border border-line bg-panel backdrop-blur">
               {hints.map(([c, d]) => (

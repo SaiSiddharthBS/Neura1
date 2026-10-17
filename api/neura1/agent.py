@@ -12,10 +12,8 @@ from decimal import Decimal
 from falkordb import Graph
 
 from neura1 import brain, queries as Q, scenarios
-from neura1.config import settings
 from neura1.graph import rows
 from neura1.impact import ChangeEvent, Trace, analyse
-from neura1.llm import client
 
 SYSTEM = """You are Neura1, the company brain of Flyvi Technologies, a Bengaluru company (part of Datasol (Bangalore)
 Limited) that designs and builds power distribution units, power converters, battery chargers and embedded control
@@ -91,8 +89,11 @@ TOOLS = [
      {"item_id": {"type": "string"}}),
     ("alternates", "Alternate parts listed for a part, with their quotes and approval status.",
      {"item_id": {"type": "string"}}),
-    ("quotes", "Supplier quotes with price, lead time and validity dates. Pass an item id, or leave it empty for "
-               "every quote.", {"item_id": {"type": ["string", "null"]}}),
+    ("quotes", "Supplier quotes with price, minimum order quantity (moq), lead time and validity dates. Pass an item "
+               "id or a quote id (Q-102), or leave it empty for every quote.", {"item_id": {"type": ["string", "null"]}}),
+    ("certifications", "Certifications (EMI/EMC, aircraft power, environmental), the product revision each covers, the "
+                       "items whose change forces a retest, and the owner. Pass an item, a product, a revision, or nothing.",
+     {"item_id": {"type": ["string", "null"]}}),
     ("organisation", "Flyvi's leadership and their titles (Managing Director, directors, COO, CTO, General Manager), "
                      "and, given a person's name, their manager, direct reports, team and backup.",
      {"name": {"type": ["string", "null"]}}),
@@ -100,8 +101,8 @@ TOOLS = [
     ("who_knows", "Who knows about something: a part, project, customer, order or alias like 'pmic_seq.c'. "
                   "Returns people ranked with the reasons (owns it, decided, discussed, works on it).",
      {"text": {"type": "string"}}),
-    ("person", "A person's profile: role, team, manager, backup, what they own, projects, decisions, open tasks, "
-               "recently finished work, topics.",
+    ("person", "A person's profile: role, team, manager, backup, stated skills, what they own, projects, decisions, "
+               "open tasks, recently finished work, topics.",
      {"name": {"type": "string"}}),
     ("project", "A project's lead, members, scope, related decisions, open tasks and recent discussion. "
                 "Pass the project name or id; use list_projects first if unsure.",
@@ -206,13 +207,25 @@ def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
     if name == "decisions":
         return trace.run(name, Q.DECISIONS, {"item_id": args["item_id"]})
     if name == "quotes":
-        if args.get("item_id"):
-            return trace.run(name, Q.QUOTES, {"item_id": args["item_id"]})
-        return trace.run("all_quotes", """MATCH (s:Supplier)-[:QUOTED]->(q:Quote)-[:FOR]->(i:Item)
-                                           RETURN q.id AS id, i.id AS item, s.name AS supplier, q.unit_price AS unit_price,
-                                                  q.currency AS currency, q.lead_weeks AS lead_weeks,
-                                                  q.valid_from AS valid_from, q.valid_until AS valid_until
-                                           ORDER BY valid_until""", {})
+        every = """MATCH (s:Supplier)-[:QUOTED]->(q:Quote)-[:FOR]->(i:Item) WHERE $id IS NULL OR q.id = $id
+                   RETURN q.id AS id, i.id AS item, s.name AS supplier, q.unit_price AS unit_price, q.currency AS currency,
+                          q.moq AS moq, q.lead_weeks AS lead_weeks, q.valid_from AS valid_from, q.valid_until AS valid_until
+                   ORDER BY valid_until"""
+        iid = args.get("item_id")
+        if iid:
+            found = trace.run(name, Q.QUOTES, {"item_id": iid})
+            # A quote id (Q-102) was passed instead of a part: return that quote.
+            return found or trace.run("quote_by_id", every, {"id": iid})
+        return trace.run("all_quotes", every, {"id": None})
+    if name == "certifications":
+        return trace.run(name, """
+            MATCH (c:Certification)-[:CERTIFIES]->(r:Revision)
+            OPTIONAL MATCH (c)-[:RETEST_IF_CHANGED]->(i:Item)
+            OPTIONAL MATCH (o:Person)-[:OWNS]->(c)
+            WITH c, r, o, collect(DISTINCT i.id) AS retest_if_changed
+            WHERE $id IS NULL OR r.id = $id OR $id IN retest_if_changed OR r.id STARTS WITH $id + '-'
+            RETURN c.id AS id, c.name AS name, r.id AS certifies_revision, retest_if_changed, o.name AS owner""",
+            {"id": args.get("item_id")})
     if name == "organisation":
         leaders = trace.run("leadership", """MATCH (p:Person)-[:MEMBER_OF]->(:Team {id:'T-LEAD'})
                                               OPTIONAL MATCH (p)-[r:HOLDS_ROLE]->(o:Organization)
@@ -252,6 +265,8 @@ def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
             MATCH (a:Action)-[:ASSIGNED_TO]->(:Person {id:$id}) WHERE a.status = 'done'
             RETURN a.id AS id, a.title AS title, a.completed_at AS completed_at ORDER BY completed_at DESC LIMIT 8""",
             {"id": found[0]["id"]})
+        r["stated_skills"] = [x["name"] for x in trace.run("stated_skills", """
+            MATCH (:Person {id:$id})-[:HAS_SKILL]->(s:Skill) RETURN s.name AS name ORDER BY name""", {"id": found[0]["id"]})]
         r["reporting"] = trace.run("reporting", """
             MATCH (p:Person {id:$id}) OPTIONAL MATCH (p)-[:REPORTS_TO]->(m:Person)
             OPTIONAL MATCH (b:Person)-[:BACKS_UP]->(p) OPTIONAL MATCH (p)-[:MEMBER_OF]->(t:Team)
@@ -381,7 +396,9 @@ def _restrict(name: str, result, restrict: dict | None):
     """Remove what the reader may not see before the model ever reads it."""
     if not restrict:
         return result
-    from neura1.access import redact_money, redact_money_text
+    from neura1.access import drop_hidden, redact_money, redact_money_text
+    if restrict.get("hidden"):
+        result = drop_hidden(result, restrict["hidden"])
     if not restrict.get("money"):
         result = redact_money_text(redact_money(result))
     if name == "absence_impact" and isinstance(result, dict) and result.get("person"):
@@ -398,9 +415,9 @@ def ask(graph: Graph, question: str, max_steps: int = 10, history: list[dict] | 
         on_step=None, restrict: dict | None = None) -> dict:
     """Plan-act loop using JSON output only, so it works on any OpenAI-compatible server,
     including local models whose native tool-call parsing is unreliable."""
-    from neura1.llm import _parse_json
+    from neura1.llm import _parse_json, active, complete
 
-    c = client()
+    active()  # fails fast with LLMUnavailable when no model is configured
     trace = Trace(graph)
     calls, results = [], []
     messages = [{"role": "system", "content": PLANNER.replace("{catalogue}", _catalogue())}]
@@ -410,9 +427,8 @@ def ask(graph: Graph, question: str, max_steps: int = 10, history: list[dict] | 
     messages.append({"role": "user", "content": question})
     for _ in range(max_steps):
         try:
-            resp = c.chat.completions.create(
-                model=settings.llm_model, messages=messages, temperature=0,
-                response_format={"type": "json_schema", "json_schema": {"name": "step", "schema": STEP_SCHEMA}})
+            resp = complete(messages=messages, temperature=0,
+                            response_format={"type": "json_schema", "json_schema": {"name": "step", "schema": STEP_SCHEMA}})
             step = _parse_json(resp.choices[0].message.content or "")
         except Exception as exc:
             return _finish(graph, f"The model could not complete this question ({exc}).", calls, trace, results)
@@ -433,9 +449,8 @@ def ask(graph: Graph, question: str, max_steps: int = 10, history: list[dict] | 
                          + "\n\nNext step (another tool, or the answer)?"})
     messages.append({"role": "user", "content": "Give your final answer now from the results so far."})
     try:
-        resp = c.chat.completions.create(
-            model=settings.llm_model, messages=messages, temperature=0,
-            response_format={"type": "json_schema", "json_schema": {"name": "step", "schema": STEP_SCHEMA}})
+        resp = complete(messages=messages, temperature=0,
+                        response_format={"type": "json_schema", "json_schema": {"name": "step", "schema": STEP_SCHEMA}})
         answer = _parse_json(resp.choices[0].message.content or "").get("answer", "")
     except Exception:
         answer = ""

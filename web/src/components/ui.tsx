@@ -26,7 +26,7 @@ export function Section({ title, icon: Icon, action, href, children, className =
   children: React.ReactNode; className?: string; bodyClass?: string;
 }) {
   return (
-    <section className={`card flex flex-col ${className}`}>
+    <section className={`card flex min-w-0 flex-col ${className}`}>
       <header className="flex items-center justify-between gap-3 px-5 pt-4">
         <h2 className="flex items-center gap-2 text-[14px] font-semibold tracking-tight">
           {Icon && <Icon size={15} className="text-muted" />} {title}

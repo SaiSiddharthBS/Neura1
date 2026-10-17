@@ -129,7 +129,7 @@ export default function ImpactView({ source, item, price, lead, asOf }: Props) {
       </section>
 
       {/* Headline numbers */}
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-5">
+      <section data-tour="headline" className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <Stat label="Product revisions affected" value={<Ticker value={applicable.length} />}
               note={`${excluded.length} excluded (${excluded.map((e) => `${e.revision} ${e.status}`).join(", ")})`} />
         <Stat label="Builds at risk" value={<><Ticker value={atRisk.length} className="text-danger" /><span className="text-[18px] text-muted"> of {r.builds.length}</span></>}
@@ -200,7 +200,7 @@ function AlternateBanner({ a, part, onOpen }: { a: Alternate; part: string; onOp
   if (a.status === "rejected") {
     const d = a.decisions.find((x) => x.outcome === "rejected")!;
     return (
-      <div className="rounded-xl border border-danger/25 bg-danger/[0.07] p-4">
+      <div data-tour="rejected" className="rounded-xl border border-danger/25 bg-danger/[0.07] p-4">
         <div className="flex items-start gap-3">
           <ShieldX className="mt-0.5 shrink-0 text-danger" size={20} />
           <div className="min-w-0 flex-1">
@@ -336,7 +336,7 @@ function ActionsPanel({ report: r, onDone, onOpen }: { report: ImpactReport; onD
   }
 
   return (
-    <div className="card flex h-[560px] flex-col">
+    <div data-tour="actions" className="card flex h-[560px] flex-col">
       <div className="border-b border-line p-4">
         <div className="font-medium">Who needs to do what</div>
         {inv ? (

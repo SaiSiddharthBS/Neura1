@@ -84,7 +84,7 @@ export default function AskBox({ onOpen, initial }: { onOpen?: (chunk: string) =
 
   const thinking = turns.some((t) => t.pending);
   return (
-    <section className="card grid min-h-[560px] overflow-hidden lg:grid-cols-[232px_1fr]">
+    <section data-tour="ask" className="card grid min-h-[560px] overflow-hidden lg:grid-cols-[232px_1fr]">
       <aside className="border-b border-line bg-bg-raised/40 p-3 lg:border-b-0 lg:border-r">
         <button onClick={() => { setCid(null); setTurns([]); }}
                 className="flex w-full items-center gap-2 rounded-lg border border-line bg-panel px-3 py-2 text-[13px] font-medium shadow-[var(--shadow)] transition hover:border-line2">

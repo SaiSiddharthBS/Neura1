@@ -20,8 +20,8 @@ is not needed to get the answer.
 search: 28). Read that with care. The fixes were found by studying held-out failures, so 46/46 is a development result,
 not a blind test, and 46 questions is a small set. What it does show is that the remaining gap was in the agent's tools,
 not in the graph: once the tools could reach revisions, builds, leadership titles and notices, the graph answered everything,
-and the cost questions stay exact because code does the arithmetic. A blind check needs new questions written after
-these fixes.
+and the cost questions stay exact because code does the arithmetic. Section 4 is that blind check: 18 new questions,
+where the graph agent answered 15.
 
 **Why the graph agent lost questions in the first run.** Almost all were bugs in the agent's tools rather than limits of
 the graph: assemblies and revisions did not resolve (q05, q22, q30), the cost tool sent so much data that the model timed

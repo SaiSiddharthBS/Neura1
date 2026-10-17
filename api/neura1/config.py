@@ -26,10 +26,17 @@ class Settings(BaseSettings):
     llm_embed_base_url: str | None = None
     llm_embed_api_key: str | None = None
     llm_timeout: float = 900  # seconds; CPU-only local models are slow, a DGX is fast
+    # Used automatically when the main endpoint is unreachable (e.g. the DGX is off the network).
+    llm_fallback_base_url: str | None = None
+    llm_fallback_model: str | None = None
+    llm_fallback_api_key: str = "not-needed"
 
     # Live ingestion. Slack requests are verified with the app's signing secret; Jira with a shared secret header.
     slack_signing_secret: str | None = None
     webhook_secret: str = "change-me"
+
+    # Background jobs: the mail-drop inbox and the 09:00 IST morning brief. Off in tests.
+    background: bool = True
 
     # Required in the X-Demo-Passcode header for anything that writes to the graph.
     demo_passcode: str = "change-me"

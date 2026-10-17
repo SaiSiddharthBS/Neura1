@@ -107,7 +107,7 @@ function Library() {
           Saved documents become knowledge, linked to the parts, people and orders they name.</p>
       </div>
 
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+      <section data-tour="templates" className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         <button onClick={() => start("blank", undefined, { title: "Untitled document" })} disabled={!!busy}
                 className="card flex flex-col items-start gap-2 p-4 text-left hover:border-line2 disabled:opacity-60">
           <FilePlus2 size={18} className="text-cyan" />

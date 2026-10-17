@@ -1,0 +1,542 @@
+{
+  "system": "graph",
+  "model": "ornith-1.5-35b-a3b",
+  "state": "base",
+  "split": "blind",
+  "passed": 15,
+  "total": 18,
+  "results": [
+    {
+      "id": "b01",
+      "category": "exposure",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 232.02,
+      "question": "Which customer order does build BO-0421 fulfil, and for which customer?",
+      "answer": "Build BO-0421 fulfils order SO-887 for customer Vindhya Rail Systems.",
+      "tool_calls": [
+        {
+          "tool": "exposure",
+          "args": {
+            "item_id": "BO-0421"
+          }
+        },
+        {
+          "tool": "resolve_item",
+          "args": {
+            "text": "BO-0421"
+          }
+        },
+        {
+          "tool": "read_only_cypher",
+          "args": {
+            "query": "MATCH (b:Build {id:'BO-0421'})-[:FULFILLED_BY]->(o:Order)-[:FULFILLED_BY]->(c:Customer) RETURN o.id AS order_id, c.name AS customer"
+          }
+        },
+        {
+          "tool": "read_only_cypher",
+          "args": {
+            "query": "MATCH (c:Customer)-[:PLACED]->(o:Order)-[:FULFILLED_BY]->(b:Build {id:'BO-0421'}) RETURN o.id AS order_id, c.name AS customer"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b02",
+      "category": "project",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 15.24,
+      "question": "Which project does Pruthvi work on?",
+      "answer": "Pruthvi works on the **Firmware 2.4 release** project (PRJ-FW24), where they are responsible for test automation. The project is currently active.",
+      "tool_calls": [
+        {
+          "tool": "person",
+          "args": {
+            "name": "Pruthvi"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b03",
+      "category": "people",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 9.73,
+      "question": "Who covers for Keerthana when Keerthana is away?",
+      "answer": "Praveen covers for Keerthana. He is her recorded backup and takes over her owned items while she is away.",
+      "tool_calls": [
+        {
+          "tool": "absence_impact",
+          "args": {
+            "name": "Keerthana"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b04",
+      "category": "supply",
+      "split": "blind",
+      "pass": false,
+      "missing": [
+        "250"
+      ],
+      "seconds": 22.83,
+      "question": "What is the minimum order quantity on quote Q-102, and which part is it for?",
+      "answer": "Quote Q-102 is for part **NB54361-L** (Buck regulator 3.3V 3A, low-cost, Northbridge Semi). The quote itself (Q-102) has no minimum order quantity recorded — the only MOQ on record is 100, but that is stated for NB54360 in the supplier notice (inbox/notice_NB54360_2026-10-14.md), not for NB54361-L. I cannot attribute that MOQ to Q-102, so the MOQ on Q-102 is not recorded.",
+      "tool_calls": [
+        {
+          "tool": "quotes",
+          "args": {
+            "item_id": "Q-102"
+          }
+        },
+        {
+          "tool": "resolve_item",
+          "args": {
+            "text": "Q-102"
+          }
+        },
+        {
+          "tool": "quotes",
+          "args": {
+            "item_id": null
+          }
+        },
+        {
+          "tool": "resolve_item",
+          "args": {
+            "text": "NB54361-L"
+          }
+        },
+        {
+          "tool": "notices",
+          "args": {}
+        },
+        {
+          "tool": "search_documents",
+          "args": {
+            "query": "Q-102 minimum order quantity NB54361-L"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b05",
+      "category": "project",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.0,
+      "question": "Who leads the AS9100D surveillance audit project?",
+      "answer": "The AS9100D surveillance audit project (PRJ-AS9100) is led by Gurumurthy (P-GURUMURTHY) of Quality Assurance.",
+      "tool_calls": [
+        {
+          "tool": "project",
+          "args": {
+            "text": "AS9100D surveillance audit"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b06",
+      "category": "exposure",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 45.51,
+      "question": "When is order SO-881 due, and how many units does it cover?",
+      "answer": "Order SO-881 is due 2026-11-20 and covers 80 units of PDU-28 Rev C.\n\nFacts:\n- Contract excerpt (docs/contract_SO-881_nilgiri_excerpt.md): \"80 x PDU-28 Rev C power distribution units... Committed delivery: 2026-11-20.\"\n- Cypher on SO-881 confirms qty = 80 (no due-date property stored; the committed date is recorded in the contract excerpt).\n- Customer: Nilgiri Aero Systems (C-NILGIRI). Late-delivery penalty per Clause 9.2: 0.5% of order value per week, capped at 5% (ops_review_2026-09-28.md).",
+      "tool_calls": [
+        {
+          "tool": "resolve_item",
+          "args": {
+            "text": "SO-881"
+          }
+        },
+        {
+          "tool": "search_documents",
+          "args": {
+            "query": "SO-881 order due date units"
+          }
+        },
+        {
+          "tool": "exposure",
+          "args": {
+            "item_id": "SO-881"
+          }
+        },
+        {
+          "tool": "customer",
+          "args": {
+            "text": "SO-881"
+          }
+        },
+        {
+          "tool": "read_only_cypher",
+          "args": {
+            "query": "MATCH (o:Order {id:'SO-881'}) RETURN o.id AS id, o.due AS due, o.qty AS qty, o.value AS value"
+          }
+        },
+        {
+          "tool": "read_only_cypher",
+          "args": {
+            "query": "MATCH (o:Order {id:'SO-881'}) RETURN keys(o) AS keys, {k: k(o) => o[k]} AS props"
+          }
+        },
+        {
+          "tool": "read_only_cypher",
+          "args": {
+            "query": "MATCH (o:Order {id:'SO-881'}) RETURN o.id AS id, o.qty AS qty, o.value AS value, o.due AS due, o.committed AS committed, o.delivery AS delivery, o.date AS date"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b07",
+      "category": "ownership",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 3.81,
+      "question": "Which team is Gurumurthy in?",
+      "answer": "Gurumurthy is in the **Quality Assurance** team, reporting to Markande.",
+      "tool_calls": [
+        {
+          "tool": "person",
+          "args": {
+            "name": "Gurumurthy"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b08",
+      "category": "dependency",
+      "split": "blind",
+      "pass": false,
+      "missing": [
+        "one of ['CERT-PDU28C-461', 'EMI/EMC']",
+        "one of ['CERT-PDU28C-704', 'aircraft power']",
+        "one of ['CERT-BCU24A-JSS', 'environmental']"
+      ],
+      "seconds": 53.27,
+      "question": "Which certifications must be retested if the PSM-28 module changes?",
+      "answer": "A change to the PSM-28 module requires re-testing under two records:\n\n**1. TP-PSM-07 (power stage thermal and load qualification)** — required for any change to the regulator, inductor, or output capacitors on PSM-28, and for any new regulator candidate. Its three steps are:\n- Full-load thermal soak at 70°C ambient in a sealed enclosure (TR-112, TP-PSM-07)\n- Cold-start test at -20°C with firmware power sequencing enabled (added by Satish so any regulator change also re-checks power sequencing; slack #fw-team 2026-09-15)\n- Load-step response and ripple check (TP-PSM-07)\n\n**2. FW-233 / FW-PMIC-SEQ (power-good timing review)** — any regulator change on PSM-28 needs a firmware review of the power-good delay, otherwise the VX7 MCU can brown out during cold start (FW-233). Sai budgets a week of firmware work per candidate (PDU-48 kickoff).\n\nCitations: TP-PSM-07, TR-112, FW-233, FW-PMIC-SEQ, HW-311.",
+      "tool_calls": [
+        {
+          "tool": "resolve_item",
+          "args": {
+            "text": "PSM-28"
+          }
+        },
+        {
+          "tool": "dependents",
+          "args": {
+            "item_id": "PSM-28"
+          }
+        },
+        {
+          "tool": "search_documents",
+          "args": {
+            "query": "PSM-28 certification retest"
+          }
+        },
+        {
+          "tool": "resolve_item",
+          "args": {
+            "text": "TP-PSM-07"
+          }
+        },
+        {
+          "tool": "search_documents",
+          "args": {
+            "query": "TP-PSM-07 test procedure scope what it covers qualification"
+          }
+        },
+        {
+          "tool": "read_only_cypher",
+          "args": {
+            "query": "MATCH (t:Item {id:'TP-PSM-07'})<-[:PART_OF]-(c:Chunk)-[:PART_OF]-(s:Source) RETURN s.id AS source, c.text AS text"
+          }
+        },
+        {
+          "tool": "read_only_cypher",
+          "args": {
+            "query": "MATCH (t:Item {id:'TP-PSM-07'})<-[:PART_OF]-(c:Chunk) RETURN c.text AS text"
+          }
+        },
+        {
+          "tool": "search_documents",
+          "args": {
+            "query": "TP-PSM-07 power stage thermal load qualification full procedure requirements"
+          }
+        },
+        {
+          "tool": "search_documents",
+          "args": {
+            "query": "TP-PSM-07 test procedure full text thermal soak cold-start power sequencing power-good timing"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b09",
+      "category": "org",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 1.61,
+      "question": "Who is Flyvi's Chief Operating Officer?",
+      "answer": "Flyvi's Chief Operating Officer is **Markande**.",
+      "tool_calls": [
+        {
+          "tool": "organisation",
+          "args": {
+            "name": "Chief Operating Officer"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b10",
+      "category": "org",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 1.85,
+      "question": "Who reports directly to Markande?",
+      "answer": "Markande's direct reports are: Tejaswini, Ambika, Sharath, Gurumurthy, and Praveen.",
+      "tool_calls": [
+        {
+          "tool": "organisation",
+          "args": {
+            "name": "Markande"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b11",
+      "category": "exposure",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 4.2,
+      "question": "When is build BO-0412 planned, and how many units does it build?",
+      "answer": "Build BO-0412 is planned for 2026-11-03 and builds 100 units.",
+      "tool_calls": [
+        {
+          "tool": "resolve_item",
+          "args": {
+            "text": "BO-0412"
+          }
+        },
+        {
+          "tool": "read_only_cypher",
+          "args": {
+            "query": "MATCH (b:Build {id:'BO-0412'}) RETURN b.qty AS qty, b.planned_date AS planned_date"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b12",
+      "category": "supply",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.2,
+      "question": "How many NB54360 regulators are on hand, and how many of them are allocated?",
+      "answer": "NB54360 (Buck regulator 3.3V 3A, Northbridge Semi): 180 on hand, 120 allocated.",
+      "tool_calls": [
+        {
+          "tool": "resolve_item",
+          "args": {
+            "text": "NB54360"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b13",
+      "category": "abstain",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 8.79,
+      "question": "What is the unit price of the PSM-28 power stage module?",
+      "answer": "The unit price of the PSM-28 Power Stage Module is not recorded. No supplier quote exists for PSM-28 in the system.",
+      "tool_calls": [
+        {
+          "tool": "resolve_item",
+          "args": {
+            "text": "PSM-28"
+          }
+        },
+        {
+          "tool": "quotes",
+          "args": {
+            "item_id": "PSM-28"
+          }
+        },
+        {
+          "tool": "quotes",
+          "args": {
+            "item_id": null
+          }
+        },
+        {
+          "tool": "notices",
+          "args": {}
+        }
+      ]
+    },
+    {
+      "id": "b14",
+      "category": "people",
+      "split": "blind",
+      "pass": false,
+      "missing": [
+        "Embedded C"
+      ],
+      "seconds": 22.09,
+      "question": "Which skills has Vinay stated?",
+      "answer": "Not recorded. There is nothing in the records about Vinay stating any skills. The person record for Vinay (P-VINAY) lists his role (Software team), project (Firmware 2.4 release, CAN and comms), and an open task (WRK-107, CAN bus-off recovery for CT-1051), but no stated skills. Document searches also return no mention of Vinay at all.",
+      "tool_calls": [
+        {
+          "tool": "person",
+          "args": {
+            "name": "Vinay"
+          }
+        },
+        {
+          "tool": "search_documents",
+          "args": {
+            "query": "Vinay skills stated"
+          }
+        },
+        {
+          "tool": "search_documents",
+          "args": {
+            "query": "Vinay resume skills expertise qualifications"
+          }
+        },
+        {
+          "tool": "search_documents",
+          "args": {
+            "query": "Vinay stated skills"
+          }
+        },
+        {
+          "tool": "search_documents",
+          "args": {
+            "query": "Vinay skills can do expertise"
+          }
+        },
+        {
+          "tool": "who_knows",
+          "args": {
+            "text": "Vinay skills"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b15",
+      "category": "where_used",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 3.54,
+      "question": "Which product revisions use the CT-1051 CAN transceiver?",
+      "answer": "Only one product revision uses the CT-1051 CAN transceiver:\n\n- **BCU-24 Rev A** (BCU-24-A) — released, 1 per unit, at refdes U7.\n\nNo other revisions list CT-1051.",
+      "tool_calls": [
+        {
+          "tool": "resolve_item",
+          "args": {
+            "text": "CT-1051"
+          }
+        },
+        {
+          "tool": "where_used",
+          "args": {
+            "item_id": "CT-1051"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b16",
+      "category": "ownership",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.13,
+      "question": "Who is the account manager for Vindhya Rail Systems?",
+      "answer": "The account manager for Vindhya Rail Systems is Keerthana (P-KEERTHANA), who owns the account in Business Development. Praveen (P-PRAVEEN) is listed as her backup.",
+      "tool_calls": [
+        {
+          "tool": "customer",
+          "args": {
+            "text": "Vindhya Rail Systems"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b17",
+      "category": "decision",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 6.23,
+      "question": "According to the records, why does BCU-24 telemetry drop after a cold start?",
+      "answer": "According to ticket SUP-1057, the BCU-24 Rev A loses CAN telemetry after a cold start because the CT-1051 CAN transceiver enters bus-off mode during the cold-start inrush, and the firmware never requests bus-off recovery — so telemetry stays down until someone power-cycles the charger. (Evidence: SUP-1057 comment by Nagarjun, 2026-10-14.)",
+      "tool_calls": [
+        {
+          "tool": "resolve_item",
+          "args": {
+            "text": "BCU-24"
+          }
+        },
+        {
+          "tool": "search_documents",
+          "args": {
+            "query": "BCU-24 telemetry drop cold start"
+          }
+        },
+        {
+          "tool": "resolve_item",
+          "args": {
+            "text": "CT-1051"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b18",
+      "category": "org",
+      "split": "blind",
+      "pass": true,
+      "missing": [],
+      "seconds": 2.14,
+      "question": "Who reports to Sharath?",
+      "answer": "Dileep and Pradeep report to Sharath. Sharath is an Employee in the Production team, managed by Markande, and is backed up by Dileep.",
+      "tool_calls": [
+        {
+          "tool": "organisation",
+          "args": {
+            "name": "Sharath"
+          }
+        }
+      ]
+    }
+  ]
+}
