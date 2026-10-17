@@ -1,0 +1,30 @@
+{
+  "source_id": "docs/leadership_weekly_2026-10-12.md",
+  "kind": "decisions",
+  "model": "ornith-1.5-35b-a3b",
+  "extracted_at": "2026-10-17T06:11:41+00:00",
+  "source_versions": [
+    "docs/leadership_weekly_2026-10-12.md"
+  ],
+  "output": {
+    "decisions": [
+      {
+        "outcome": "proposed",
+        "subject": "MX-3360",
+        "instead_of": "NB54360",
+        "applies_to": [],
+        "summary": "MX-3360 from Sahyadri identified as most likely second source for NB54360",
+        "reason": null,
+        "decided_by": "Ambika",
+        "decided_at": "2026-10-12",
+        "ref": null,
+        "evidence": [
+          {
+            "chunk_id": "docs/leadership_weekly_2026-10-12.md#p2",
+            "quote": "still single-sourced on NB54360; MX-3360 from Sahyadri is the most likely second source."
+          }
+        ]
+      }
+    ]
+  }
+}

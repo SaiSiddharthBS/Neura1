@@ -1,0 +1,32 @@
+{
+  "source_id": "docs/PRJ-PDU48_kickoff_2026-07-15.md",
+  "kind": "decisions",
+  "model": "ornith-1.5-35b-a3b",
+  "extracted_at": "2026-10-17T06:09:02+00:00",
+  "source_versions": [
+    "docs/PRJ-PDU48_kickoff_2026-07-15.md"
+  ],
+  "output": {
+    "decisions": [
+      {
+        "outcome": "proposed",
+        "subject": "MX-3360",
+        "instead_of": "NB54360",
+        "applies_to": [
+          "PDU-48"
+        ],
+        "summary": "Raghavendra proposes evaluating MX-3360 as a second source for the 3.3 V rail to avoid single-sourcing NB54360",
+        "reason": "so we are not single-sourced on NB54360 again",
+        "decided_by": "Raghavendra",
+        "decided_at": "2026-07-15",
+        "ref": null,
+        "evidence": [
+          {
+            "chunk_id": "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+            "quote": "I will look at MX-3360 as a second source for the 3.3 V rail so we are not single-sourced on NB54360 again."
+          }
+        ]
+      }
+    ]
+  }
+}

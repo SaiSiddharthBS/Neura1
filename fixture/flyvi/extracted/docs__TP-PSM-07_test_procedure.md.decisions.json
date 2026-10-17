@@ -1,0 +1,12 @@
+{
+  "source_id": "docs/TP-PSM-07_test_procedure.md",
+  "kind": "decisions",
+  "model": "ornith-1.5-35b-a3b",
+  "extracted_at": "2026-10-17T06:09:06+00:00",
+  "source_versions": [
+    "docs/TP-PSM-07_test_procedure.md"
+  ],
+  "output": {
+    "decisions": []
+  }
+}

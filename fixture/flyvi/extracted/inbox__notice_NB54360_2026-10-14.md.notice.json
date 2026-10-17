@@ -1,8 +1,8 @@
 {
   "source_id": "inbox/notice_NB54360_2026-10-14.md",
   "kind": "notice",
-  "model": "qwen2.5:7b",
-  "extracted_at": "2026-10-16T11:48:05+00:00",
+  "model": "ornith-1.5-35b-a3b",
+  "extracted_at": "2026-10-17T06:31:27+00:00",
   "source_versions": [
     "inbox/notice_NB54360_2026-10-14.md"
   ],
@@ -13,7 +13,7 @@
       "lead_time"
     ],
     "new_unit_price": 320,
-    "currency": "₹",
+    "currency": "INR",
     "effective_date": "2026-11-01",
     "lead_weeks": 22,
     "last_time_buy": "2027-03-31",

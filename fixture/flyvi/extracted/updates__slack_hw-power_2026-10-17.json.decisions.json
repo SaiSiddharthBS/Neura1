@@ -1,8 +1,8 @@
 {
   "source_id": "updates/slack_hw-power_2026-10-17.json",
   "kind": "decisions",
-  "model": "qwen2.5:7b",
-  "extracted_at": "2026-10-16T11:55:42+00:00",
+  "model": "ornith-1.5-35b-a3b",
+  "extracted_at": "2026-10-17T06:32:03+00:00",
   "source_versions": [
     "updates/slack_hw-power_2026-10-17.json"
   ],
@@ -13,13 +13,13 @@
         "subject": "MX-3360",
         "instead_of": null,
         "applies_to": [
-          "PSM-28 Rev 1"
+          "TP-PSM-07"
         ],
-        "summary": "MX-3360 passed the bench check on regulation at 70C ambient with 8C junction margin in a sealed enclosure.",
+        "summary": "MX-3360 bench check held regulation at 70C ambient with 8C junction margin; not full TP-PSM-07 qualification",
         "reason": null,
         "decided_by": "Raghavendra",
         "decided_at": "2026-10-17",
-        "ref": "TR-131",
+        "ref": null,
         "evidence": [
           {
             "chunk_id": "updates/slack_hw-power_2026-10-17.json#m1",

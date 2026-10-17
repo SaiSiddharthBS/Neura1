@@ -1,0 +1,20 @@
+{
+  "source_id": "docs/PRJ-PDU48_kickoff_2026-07-15.md",
+  "kind": "actions",
+  "model": "ornith-1.5-35b-a3b",
+  "extracted_at": "2026-10-17T06:47:13+00:00",
+  "source_versions": [
+    "docs/PRJ-PDU48_kickoff_2026-07-15.md"
+  ],
+  "output": {
+    "actions": [
+      {
+        "owner": "Raghavendra",
+        "task": "Look at MX-3360 as a second source for the 3.3 V rail",
+        "due": null,
+        "chunk_id": "docs/PRJ-PDU48_kickoff_2026-07-15.md#p2",
+        "quote": "I will look at MX-3360 as a second source for the 3.3 V rail so we are not single-sourced on NB54360 again."
+      }
+    ]
+  }
+}

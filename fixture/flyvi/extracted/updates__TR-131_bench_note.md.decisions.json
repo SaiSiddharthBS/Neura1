@@ -1,0 +1,36 @@
+{
+  "source_id": "updates/TR-131_bench_note.md",
+  "kind": "decisions",
+  "model": "ornith-1.5-35b-a3b",
+  "extracted_at": "2026-10-17T06:31:46+00:00",
+  "source_versions": [
+    "updates/TR-131_bench_note.md"
+  ],
+  "output": {
+    "decisions": [
+      {
+        "outcome": "evidence_only",
+        "subject": "MX-3360",
+        "instead_of": null,
+        "applies_to": [
+          "PSM-28 Rev 2"
+        ],
+        "summary": "MX-3360 held regulation at 70C ambient with 8C junction margin on PSM-28 Rev 2; bench check only, not a TP-PSM-07 qualification",
+        "reason": null,
+        "decided_by": "Raghavendra",
+        "decided_at": "2026-10-17",
+        "ref": null,
+        "evidence": [
+          {
+            "chunk_id": "updates/TR-131_bench_note.md#p2",
+            "quote": "MX-3360 on a PSM-28 Rev 2 board, sealed enclosure, 3 A load. Held regulation at 70C ambient with 8C junction margin."
+          },
+          {
+            "chunk_id": "updates/TR-131_bench_note.md#p3",
+            "quote": "This is a bench check. It is not a TP-PSM-07 qualification, and cold-start behaviour with firmware sequencing was not tested."
+          }
+        ]
+      }
+    ]
+  }
+}

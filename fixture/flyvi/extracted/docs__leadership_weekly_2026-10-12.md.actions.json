@@ -1,0 +1,12 @@
+{
+  "source_id": "docs/leadership_weekly_2026-10-12.md",
+  "kind": "actions",
+  "model": "ornith-1.5-35b-a3b",
+  "extracted_at": "2026-10-17T06:47:22+00:00",
+  "source_versions": [
+    "docs/leadership_weekly_2026-10-12.md"
+  ],
+  "output": {
+    "actions": []
+  }
+}

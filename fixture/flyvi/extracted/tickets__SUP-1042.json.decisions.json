@@ -1,0 +1,12 @@
+{
+  "source_id": "tickets/SUP-1042.json",
+  "kind": "decisions",
+  "model": "ornith-1.5-35b-a3b",
+  "extracted_at": "2026-10-17T06:29:28+00:00",
+  "source_versions": [
+    "tickets/SUP-1042.json"
+  ],
+  "output": {
+    "decisions": []
+  }
+}

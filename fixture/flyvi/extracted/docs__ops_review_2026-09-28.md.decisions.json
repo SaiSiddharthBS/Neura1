@@ -1,0 +1,12 @@
+{
+  "source_id": "docs/ops_review_2026-09-28.md",
+  "kind": "decisions",
+  "model": "ornith-1.5-35b-a3b",
+  "extracted_at": "2026-10-17T06:12:07+00:00",
+  "source_versions": [
+    "docs/ops_review_2026-09-28.md"
+  ],
+  "output": {
+    "decisions": []
+  }
+}

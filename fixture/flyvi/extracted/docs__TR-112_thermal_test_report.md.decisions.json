@@ -1,0 +1,38 @@
+{
+  "source_id": "docs/TR-112_thermal_test_report.md",
+  "kind": "decisions",
+  "model": "ornith-1.5-35b-a3b",
+  "extracted_at": "2026-10-17T06:10:37+00:00",
+  "source_versions": [
+    "docs/TR-112_thermal_test_report.md"
+  ],
+  "output": {
+    "decisions": [
+      {
+        "outcome": "evidence_only",
+        "subject": "NB54361-L",
+        "instead_of": "NB54360",
+        "applies_to": [
+          "PSM-28 Rev 2",
+          "PDU-28",
+          "BCU-24"
+        ],
+        "summary": "NB54361-L (proposed cost-down) failed the TP-PSM-07 thermal derating test with thermal shutdown at 68C ambient, not meeting the 70C ambient requirement for sealed avionics installations; NB54360 passes. Decision pending.",
+        "reason": "Thermal shutdown at 68C ambient; does not meet 70C ambient requirement for sealed avionics installations",
+        "decided_by": "Raghavendra",
+        "decided_at": "2025-03-10",
+        "ref": null,
+        "evidence": [
+          {
+            "chunk_id": "docs/TR-112_thermal_test_report.md#p14",
+            "quote": "NB54361-L does not meet the 70C ambient requirement for sealed avionics installations."
+          },
+          {
+            "chunk_id": "docs/TR-112_thermal_test_report.md#p13",
+            "quote": "NB54361-L | 65C | Thermal shutdown at 68C ambient"
+          }
+        ]
+      }
+    ]
+  }
+}

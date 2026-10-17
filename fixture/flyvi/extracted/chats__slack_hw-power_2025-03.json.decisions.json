@@ -1,13 +1,32 @@
 {
   "source_id": "chats/slack_hw-power_2025-03.json",
   "kind": "decisions",
-  "model": "qwen2.5:7b",
-  "extracted_at": "2026-10-16T10:59:52+00:00",
+  "model": "ornith-1.5-35b-a3b",
+  "extracted_at": "2026-10-17T05:53:10+00:00",
   "source_versions": [
     "chats/slack_hw-power_2025-03.json"
   ],
   "output": {
     "decisions": [
+      {
+        "outcome": "proposed",
+        "subject": "NB54361-L",
+        "instead_of": "NB54360",
+        "applies_to": [
+          "PSM-28 Rev 2"
+        ],
+        "summary": "NB54361-L proposed as pin-compatible substitute for NB54360 on PSM-28 Rev 2 for cost-down",
+        "reason": null,
+        "decided_by": "Ambika",
+        "decided_at": "2025-03-04",
+        "ref": null,
+        "evidence": [
+          {
+            "chunk_id": "chats/slack_hw-power_2025-03.json#m1",
+            "quote": "Could we use it on PSM-28 Rev 2?"
+          }
+        ]
+      },
       {
         "outcome": "rejected",
         "subject": "NB54361-L",
@@ -23,11 +42,11 @@
         "evidence": [
           {
             "chunk_id": "chats/slack_hw-power_2025-03.json#m4",
-            "quote": "Decision: we reject NB54361-L as a substitute for NB54360 on PSM-28 Rev 2 because it fails thermal derating at 70C ambient in sealed avionics enclosures (TR-112). Keep NB54360. Logging this as DEC-117."
+            "quote": "we reject NB54361-L as a substitute for NB54360 on PSM-28 Rev 2 because it fails thermal derating at 70C ambient in sealed avionics enclosures (TR-112)"
           },
           {
             "chunk_id": "chats/slack_hw-power_2025-03.json#m3",
-            "quote": "NB54361-L on PSM-28 Rev 2 went into thermal shutdown at 68C ambient under full load in the sealed enclosure. NB54360 held regulation through 70C with margin."
+            "quote": "NB54361-L on PSM-28 Rev 2 went into thermal shutdown at 68C ambient under full load in the sealed enclosure."
           }
         ]
       }

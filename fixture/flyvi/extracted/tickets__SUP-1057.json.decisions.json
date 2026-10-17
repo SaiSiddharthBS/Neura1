@@ -1,0 +1,55 @@
+{
+  "source_id": "tickets/SUP-1057.json",
+  "kind": "decisions",
+  "model": "ornith-1.5-35b-a3b",
+  "extracted_at": "2026-10-17T06:30:40+00:00",
+  "source_versions": [
+    "tickets/SUP-1057.json"
+  ],
+  "output": {
+    "decisions": [
+      {
+        "outcome": "evidence_only",
+        "subject": "CT-1051",
+        "instead_of": null,
+        "applies_to": [
+          "BCU-24 Rev A"
+        ],
+        "summary": "CT-1051 CAN transceiver enters bus-off during cold-start inrush; firmware never requests bus-off recovery, so telemetry stays down",
+        "reason": null,
+        "decided_by": "Nagarjun",
+        "decided_at": "2026-10-14",
+        "ref": null,
+        "evidence": [
+          {
+            "chunk_id": "tickets/SUP-1057.json#comment-1",
+            "quote": "Logs show the CT-1051 CAN transceiver entering bus-off during the cold-start inrush."
+          },
+          {
+            "chunk_id": "tickets/SUP-1057.json#comment-1",
+            "quote": "The firmware never requests bus-off recovery, so telemetry stays down."
+          }
+        ]
+      },
+      {
+        "outcome": "proposed",
+        "subject": "CT-1051",
+        "instead_of": null,
+        "applies_to": [
+          "BCU-24 Rev A"
+        ],
+        "summary": "Proposed adding automatic bus-off recovery with a watchdog that re-initialises the CT-1051 after 3 missed heartbeats, to ship in Firmware 2.4",
+        "reason": null,
+        "decided_by": "Sai",
+        "decided_at": "2026-10-15",
+        "ref": null,
+        "evidence": [
+          {
+            "chunk_id": "tickets/SUP-1057.json#comment-2",
+            "quote": "We can add automatic bus-off recovery with a watchdog that re-initialises the CT-1051 after 3 missed heartbeats."
+          }
+        ]
+      }
+    ]
+  }
+}

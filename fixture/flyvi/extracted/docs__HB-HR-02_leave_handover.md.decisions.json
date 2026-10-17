@@ -1,0 +1,12 @@
+{
+  "source_id": "docs/HB-HR-02_leave_handover.md",
+  "kind": "decisions",
+  "model": "ornith-1.5-35b-a3b",
+  "extracted_at": "2026-10-17T05:53:14+00:00",
+  "source_versions": [
+    "docs/HB-HR-02_leave_handover.md"
+  ],
+  "output": {
+    "decisions": []
+  }
+}

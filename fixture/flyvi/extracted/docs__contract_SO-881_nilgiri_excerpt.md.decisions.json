@@ -1,0 +1,12 @@
+{
+  "source_id": "docs/contract_SO-881_nilgiri_excerpt.md",
+  "kind": "decisions",
+  "model": "ornith-1.5-35b-a3b",
+  "extracted_at": "2026-10-17T06:10:49+00:00",
+  "source_versions": [
+    "docs/contract_SO-881_nilgiri_excerpt.md"
+  ],
+  "output": {
+    "decisions": []
+  }
+}

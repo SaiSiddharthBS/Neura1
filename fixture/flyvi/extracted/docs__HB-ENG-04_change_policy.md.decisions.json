@@ -1,0 +1,12 @@
+{
+  "source_id": "docs/HB-ENG-04_change_policy.md",
+  "kind": "decisions",
+  "model": "ornith-1.5-35b-a3b",
+  "extracted_at": "2026-10-17T05:53:12+00:00",
+  "source_versions": [
+    "docs/HB-ENG-04_change_policy.md"
+  ],
+  "output": {
+    "decisions": []
+  }
+}
