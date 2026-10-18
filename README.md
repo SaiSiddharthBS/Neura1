@@ -306,7 +306,7 @@ a browser cannot submit made-up tasks or prices · if FalkorDB is down the API r
 | Models | **NVIDIA DGX Spark** serving **ornith-1.5-35b-a3b** with **vLLM** (OpenAI-compatible) · Qwen2.5-7B on Ollama as fallback · nomic-embed-text embeddings |
 | Speech | **faster-whisper** (open-source Whisper, CTranslate2), on premises, primed with the graph's vocabulary |
 | API | **Python 3.12** · **FastAPI** · Pydantic · a JSON plan-act agent with 27 tools |
-| MCP | **Model Context Protocol** both ways: a local server with 16 tools, a remote Streamable HTTP server with 14 permission-filtered tools for cloud agents (off until switched on in the app) (OpenAI Dots, ChatGPT, Claude), and a client that syncs Zoho Inventory and Zoho Projects |
+| MCP | **Model Context Protocol** both ways: a local server with 16 tools, a remote Streamable HTTP server with 14 permission-filtered tools for cloud agents such as OpenAI Dots, ChatGPT and Claude (off until switched on in the app), and a client that syncs Zoho Inventory and Zoho Projects |
 | Web | **Next.js 16** · **React 19** with View Transitions · **Tailwind CSS 4** with OKLCH tokens · **Motion** · Lenis · React Flow |
 | Documents | **SuperDoc** (Word layout, tracked changes, .docx) · pdf.js |
 | Operations | Docker Compose · Tailscale · Cloudflare Tunnel · **Playwright**, which captured every screenshot here |
