@@ -29,6 +29,12 @@ def ripple_gif(browser, base: str) -> None:
     tmp = tempfile.mkdtemp()
     ctx = context(browser, "P-HITHESH", video=tmp)
     page = ctx.new_page()
+    # Only for this film: the greeting and plan strip step aside so the map is in view from the first frame.
+    page.add_init_script("""document.addEventListener('DOMContentLoaded', () => {
+      const s = document.createElement('style');
+      s.textContent = '.space-y-6 > :has(+ * [data-tour=ripple]), .space-y-6 > :has(+ * + * [data-tour=ripple]) { display: none !important; }';
+      document.head.appendChild(s);
+    });""")
     started = time.monotonic()
     page.goto(base + "/")
     page.wait_for_selector("[data-tour=ripple] svg[role=img]")   # the map itself, not an icon

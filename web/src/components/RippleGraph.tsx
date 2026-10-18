@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
 import { ArrowRight, ArrowUpRight, RotateCcw, Waves, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api";
@@ -99,6 +99,12 @@ export default function RippleGraph() {
   const [focus, setFocus] = useState<string | null>(null);
   const [spot, setSpot] = useState<{ x: number; y: number } | null>(null);
   const box = useRef<HTMLDivElement>(null);
+  // The map leans a few degrees towards the pointer, on a soft spring, so it feels like an object in space.
+  const px = useMotionValue(0), py = useMotionValue(0);
+  const sx = useSpring(px, { stiffness: 90, damping: 18, mass: 0.7 });
+  const sy = useSpring(py, { stiffness: 90, damping: 18, mass: 0.7 });
+  const rotateY = useTransform(sx, [-0.5, 0.5], [-4, 4]);
+  const rotateX = useTransform(sy, [-0.5, 0.5], [3.2, -3.2]);
 
   useEffect(() => {
     api<Impact>(`/api/impact/notice?source_id=${encodeURIComponent(NOTICE)}`, { method: "POST" })
@@ -173,8 +179,13 @@ export default function RippleGraph() {
       </div>
 
       <div ref={box} className="relative"
-           onPointerMove={(e) => { const b = box.current?.getBoundingClientRect(); if (b) setSpot({ x: e.clientX - b.left, y: e.clientY - b.top }); }}
-           onPointerLeave={() => { setSpot(null); setHover(null); }}>
+           onPointerMove={(e) => {
+             const b = box.current?.getBoundingClientRect();
+             if (!b) return;
+             setSpot({ x: e.clientX - b.left, y: e.clientY - b.top });
+             if (!reduce) { px.set((e.clientX - b.left) / b.width - 0.5); py.set((e.clientY - b.top) / b.height - 0.5); }
+           }}
+           onPointerLeave={() => { setSpot(null); setHover(null); px.set(0); py.set(0); }}>
         {/* A soft light that follows the pointer across the map. */}
         {spot && !reduce && (
           <div aria-hidden className="pointer-events-none absolute inset-0 transition-opacity duration-500"
@@ -182,6 +193,7 @@ export default function RippleGraph() {
         )}
         {!g && <div className="m-5 skeleton h-[300px]" />}
         {g && r && (
+          <motion.div style={{ rotateX, rotateY, transformPerspective: 1600 }} className="will-change-transform">
           <motion.svg key={run} viewBox={`0 0 ${W} ${H}`} animate={{ viewBox: view }} transition={{ duration: reduce ? 0 : 0.9, ease: EASE }}
                       className="relative block h-auto w-full touch-manipulation" role="img"
                       aria-label={`Impact of the ${r.part.id} change across ${r.graph.nodes.length} records`}
@@ -199,19 +211,25 @@ export default function RippleGraph() {
               <filter id="ripple-glow" x="-50%" y="-50%" width="200%" height="200%">
                 <feGaussianBlur stdDeviation="5" />
               </filter>
+              <filter id="ripple-soft" x="-200%" y="-200%" width="500%" height="500%">
+                <feGaussianBlur stdDeviation="1.4" result="b" />
+                <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
             </defs>
 
-            <circle cx={CX} cy={CY} r={120} fill="url(#ripple-core)" />
+            <motion.circle cx={CX} cy={CY} r={120} fill="url(#ripple-core)" style={{ transformOrigin: `${CX}px ${CY}px` }}
+                           animate={reduce ? undefined : { scale: [1, 1.12, 1], opacity: [0.8, 1, 0.8] }}
+                           transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }} />
             {Array.from({ length: g.maxLevel }).map((_, i) => (
               <motion.ellipse key={`ring${i}`} cx={CX} cy={CY} rx={ringScale(i + 1, g.maxLevel) * (W / 2 - 80)} ry={ringScale(i + 1, g.maxLevel) * (H / 2 - 40)}
                               fill="none" style={{ stroke: "var(--line)" }} strokeDasharray="1 7" strokeLinecap="round"
                               initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: lit ? 0.4 : 1, scale: 1 }}
                               transition={{ delay: lit ? 0 : delay(i + 1) - 0.2, duration: 0.8, ease: EASE }} />
             ))}
-            {!reduce && [0, 1].map((i) => (
+            {!reduce && [0, 1, 2].map((i) => (
               <motion.ellipse key={`pulse${i}`} cx={CX} cy={CY} fill="none" style={{ stroke: "var(--accent)" }} strokeWidth={1}
-                              initial={{ rx: 10, ry: 10, opacity: 0.35 }} animate={{ rx: W / 2 - 60, ry: H / 2 - 30, opacity: 0 }}
-                              transition={{ duration: 5.5, delay: 1.2 + i * 2.75, repeat: Infinity, ease: [0.22, 0.61, 0.36, 1] }} />
+                              initial={{ rx: 10, ry: 10, opacity: 0.3 }} animate={{ rx: W / 2 - 60, ry: H / 2 - 30, opacity: 0 }}
+                              transition={{ duration: 6.6, delay: 1.2 + i * 2.2, repeat: Infinity, ease: [0.22, 0.61, 0.36, 1] }} />
             ))}
 
             {r.graph.edges.map((e, i) => {
@@ -233,6 +251,14 @@ export default function RippleGraph() {
                   {!reduce && (
                     <path d={d} fill="none" pathLength={100} className="ripple-flow" strokeWidth={on ? 2.6 : 1.6}
                           style={{ stroke: on ? tint : "var(--accent)", opacity: on ? 0.95 : 0.35, animationDelay: `${(delay(l) + (i % 7) * 0.6).toFixed(2)}s` }} />
+                  )}
+                  {!reduce && (
+                    <circle r={on ? 2.6 : 1.9} style={{ fill: on ? tint : "var(--accent)" }} filter="url(#ripple-soft)" opacity={0}>
+                      <animateMotion dur={`${(3.4 + (i % 5) * 0.35).toFixed(2)}s`} begin={`${(delay(l) + 0.4 + (i % 9) * 0.45).toFixed(2)}s`}
+                                     repeatCount="indefinite" path={d} calcMode="spline" keyTimes="0;1" keyPoints="0;1" keySplines="0.45 0 0.25 1" />
+                      <animate attributeName="opacity" values="0;0.95;0.95;0" keyTimes="0;0.15;0.75;1" dur={`${(3.4 + (i % 5) * 0.35).toFixed(2)}s`}
+                               begin={`${(delay(l) + 0.4 + (i % 9) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
+                    </circle>
                   )}
                 </g>
               );
@@ -269,7 +295,7 @@ export default function RippleGraph() {
                     </motion.g>
                     {/* The label arrives with its record, ring by ring. */}
                     <motion.text y={center ? 34 : 20} textAnchor="middle" className="pointer-events-none select-none font-mono ripple-dim"
-                                 initial={{ opacity: 0, y: center ? 38 : 24 }} animate={{ opacity: 1, y: center ? 34 : 20 }}
+                                 initial={{ opacity: 0, y: center ? 38 : 24, filter: "blur(3px)" }} animate={{ opacity: 1, y: center ? 34 : 20, filter: "blur(0px)" }}
                                  transition={{ delay: delay(l) + 0.12, duration: 0.45, ease: EASE }}
                                  style={{ fill: center || isActive ? "var(--ink)" : "var(--muted)", fontSize: center ? 15 : 10.5, fontWeight: isActive ? 600 : 400,
                                           paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 3 }}>
@@ -280,6 +306,7 @@ export default function RippleGraph() {
               );
             })}
           </motion.svg>
+          </motion.div>
         )}
 
         <AnimatePresence>
