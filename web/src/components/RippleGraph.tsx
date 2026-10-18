@@ -35,6 +35,7 @@ export const KIND: Record<string, { label: string; color: string }> = {
 export const LEGEND: Record<string, string> = { part: "changed part", revision: "product revisions", build: "builds", order: "customer orders",
   customer: "customers", person: "people", decision: "past decisions" };
 const colorOf = (t: string) => KIND[t]?.color ?? "var(--muted)";
+const PLURAL: Record<string, string> = { person: "people", shipment: "batches of units in the field", firmware: "firmware modules" };
 
 /** Lay the records out in rings by distance from the changed part, keeping each record near what led to it. */
 export function layout(nodes: GNode[], edges: GEdge[], center: string) {
@@ -89,6 +90,71 @@ function curve(a: { x: number; y: number }, b: { x: number; y: number }) {
   return `M ${a.x.toFixed(1)} ${a.y.toFixed(1)} Q ${(mx + (dx / d) * bow).toFixed(1)} ${(my + (dy / d) * bow).toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
 }
 
+// ---------- labels that never overlap ----------
+
+const CHAR = 6.3; // Geist Mono at 10.5px
+const short = (s: string) => (s.length > 16 ? s.slice(0, 15) + "…" : s);
+type Label = { x: number; y: number; anchor: "start" | "middle" | "end"; fits: boolean };
+type Box = [number, number, number, number];
+const hits = (a: Box, b: Box) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3];
+const PRIORITY: Record<string, number> = { customer: 0, order: 1, build: 2, revision: 3, decision: 4, person: 5 };
+
+/** Ease records apart along their ring where two would touch, so dots and names have room. */
+function relax(pos: Map<string, { x: number; y: number }>, level: Map<string, number>, maxLevel: number) {
+  const ids = [...pos.keys()].filter((id) => (level.get(id) ?? 0) > 0);
+  const ang = new Map(ids.map((id) => {
+    const p = pos.get(id)!, k = ringScale(level.get(id)!, maxLevel);
+    return [id, Math.atan2((p.y - CY) / (k * (H / 2 - 40)), (p.x - CX) / (k * (W / 2 - 80)))];
+  }));
+  const at = (id: string) => {
+    const k = ringScale(level.get(id)!, maxLevel), a = ang.get(id)!;
+    return { x: CX + k * (W / 2 - 80) * Math.cos(a), y: CY + k * (H / 2 - 40) * Math.sin(a) };
+  };
+  for (let it = 0; it < 60; it++) {
+    let moved = false;
+    for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) {
+      const a = at(ids[i]), b = at(ids[j]);
+      if (Math.hypot(a.x - b.x, a.y - b.y) >= 30) continue;
+      // Turn each along its own ring, away from the other.
+      const da = Math.atan2(a.y - CY, a.x - CX) - Math.atan2(b.y - CY, b.x - CX);
+      const s = Math.sign(Math.sin(da)) || 1;
+      ang.set(ids[i], ang.get(ids[i])! + 0.018 * s);
+      ang.set(ids[j], ang.get(ids[j])! - 0.018 * s);
+      moved = true;
+    }
+    if (!moved) break;
+  }
+  return new Map([...pos].map(([id, p]) => [id, (level.get(id) ?? 0) > 0 ? at(id) : p]));
+}
+
+function placeLabels(nodes: GNode[], pos: Map<string, { x: number; y: number }>, level: Map<string, number>) {
+  const taken: Box[] = [[CX - 40, CY - 40, CX + 40, CY + 64]]; // the orb and its name
+  for (const n of nodes) {
+    const p = pos.get(n.id);
+    if (p && (level.get(n.id) ?? 0) > 0) taken.push([p.x - 9, p.y - 9, p.x + 9, p.y + 9]);
+  }
+  const out = new Map<string, Label>();
+  const order = nodes.filter((n) => (level.get(n.id) ?? 0) > 0)
+    .sort((a, b) => (level.get(a.id)! - level.get(b.id)!) || ((PRIORITY[a.type] ?? 9) - (PRIORITY[b.type] ?? 9)));
+  for (const n of order) {
+    const p = pos.get(n.id)!;
+    const w = short(n.label).length * CHAR;
+    const dx = (p.x - CX) / (W / 2), dy = (p.y - CY) / (H / 2);
+    const right: Label & { box: Box } = { x: p.x + 12, y: p.y + 3.5, anchor: "start", fits: true, box: [p.x + 11, p.y - 7, p.x + 13 + w, p.y + 6] };
+    const left: Label & { box: Box } = { x: p.x - 12, y: p.y + 3.5, anchor: "end", fits: true, box: [p.x - 13 - w, p.y - 7, p.x - 11, p.y + 6] };
+    const below: Label & { box: Box } = { x: p.x, y: p.y + 20, anchor: "middle", fits: true, box: [p.x - w / 2 - 1, p.y + 11, p.x + w / 2 + 1, p.y + 23] };
+    const above: Label & { box: Box } = { x: p.x, y: p.y - 13, anchor: "middle", fits: true, box: [p.x - w / 2 - 1, p.y - 23, p.x + w / 2 + 1, p.y - 10] };
+    const outward = Math.abs(dx) > Math.abs(dy) * 0.9 ? (dx > 0 ? [right, below, above, left] : [left, below, above, right])
+      : dy > 0 ? [below, dx > 0 ? right : left, dx > 0 ? left : right, above] : [above, dx > 0 ? right : left, dx > 0 ? left : right, below];
+    const inside = (b: Box) => b[0] > 4 && b[2] < W - 4 && b[1] > 4 && b[3] < H - 4;
+    const ok = outward.find((c) => inside(c.box) && !taken.some((t) => hits(t, c.box)));
+    if (ok) taken.push(ok.box);
+    const pick = ok ?? outward[0];
+    out.set(n.id, { x: pick.x, y: pick.y, anchor: pick.anchor, fits: !!ok });
+  }
+  return out;
+}
+
 export default function RippleGraph() {
   const router = useRouter();
   const reduce = useReducedMotion();
@@ -96,41 +162,65 @@ export default function RippleGraph() {
   const [error, setError] = useState(false);
   const [run, setRun] = useState(0);
   const [hover, setHover] = useState<string | null>(null);
+  const [ring, setRing] = useState<number | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
   const [spot, setSpot] = useState<{ x: number; y: number } | null>(null);
   const box = useRef<HTMLDivElement>(null);
   // The map leans a few degrees towards the pointer, on a soft spring, so it feels like an object in space.
   const px = useMotionValue(0), py = useMotionValue(0);
-  const sx = useSpring(px, { stiffness: 90, damping: 18, mass: 0.7 });
-  const sy = useSpring(py, { stiffness: 90, damping: 18, mass: 0.7 });
-  const rotateY = useTransform(sx, [-0.5, 0.5], [-4, 4]);
-  const rotateX = useTransform(sy, [-0.5, 0.5], [3.2, -3.2]);
+  const sx = useSpring(px, { stiffness: 80, damping: 18, mass: 0.8 });
+  const sy = useSpring(py, { stiffness: 80, damping: 18, mass: 0.8 });
+  const rotateY = useTransform(sx, [-0.5, 0.5], [-3.5, 3.5]);
+  const rotateX = useTransform(sy, [-0.5, 0.5], [2.8, -2.8]);
 
   useEffect(() => {
     api<Impact>(`/api/impact/notice?source_id=${encodeURIComponent(NOTICE)}`, { method: "POST" })
       .then((x) => (x.status === "ok" ? setR(x) : setError(true))).catch(() => setError(true));
   }, []);
 
-  const g = useMemo(() => (r ? layout(r.graph.nodes, r.graph.edges, r.part.id) : null), [r]);
+  const g = useMemo(() => {
+    if (!r) return null;
+    const base = layout(r.graph.nodes, r.graph.edges, r.part.id);
+    return { ...base, pos: relax(base.pos, base.level, base.maxLevel) };
+  }, [r]);
+  const labels = useMemo(() => (r && g ? placeLabels(r.graph.nodes, g.pos, g.level) : new Map<string, Label>()), [r, g]);
   const byId = useMemo(() => new Map(r?.graph.nodes.map((n) => [n.id, n]) ?? []), [r]);
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
     r?.graph.nodes.forEach((n) => { c[n.type] = (c[n.type] ?? 0) + 1; });
     return c;
   }, [r]);
+  // What each ring holds, for its caption.
+  const rings = useMemo(() => {
+    const out = new Map<number, Record<string, number>>();
+    if (!r || !g) return out;
+    for (const n of r.graph.nodes) {
+      const l = g.level.get(n.id) ?? 0;
+      if (!l) continue;
+      const c = out.get(l) ?? {};
+      c[n.type] = (c[n.type] ?? 0) + 1;
+      out.set(l, c);
+    }
+    return out;
+  }, [r, g]);
 
-  // The record under the pointer (or the one clicked) lights up with its whole chain back to the changed part,
-  // and everything it leads to; the rest of the company steps back.
+  // The record under the pointer (or the one clicked) lights up with its whole chain back to the changed part and
+  // everything it leads to; hovering a ring lights that ring and the paths into it. The rest steps back.
   const active = hover ?? focus;
   const lit = useMemo(() => {
-    if (!g || !active) return null;
-    const out = new Set<string>([active]);
-    const up = [active];
+    if (!g) return null;
+    const seeds = active ? [active] : ring !== null ? [...g.level].filter(([, l]) => l === ring).map(([id]) => id) : [];
+    if (!seeds.length) return null;
+    const out = new Set<string>(seeds);
+    const up = [...seeds];
     while (up.length) for (const p of g.parents.get(up.pop()!) ?? []) if (!out.has(p)) { out.add(p); up.push(p); }
-    const down = [active];
-    while (down.length) for (const c of g.children.get(down.pop()!) ?? []) if (!out.has(c)) { out.add(c); down.push(c); }
+    if (active) {
+      const down = [active];
+      while (down.length) for (const c of g.children.get(down.pop()!) ?? []) if (!out.has(c)) { out.add(c); down.push(c); }
+    }
     return out;
-  }, [g, active]);
+  }, [g, active, ring]);
+  const excited = !!lit; // the orb answers whatever you point at
 
   const delay = (l: number) => (reduce ? 0 : 0.3 + l * STEP);
   const close = useCallback(() => setFocus(null), []);
@@ -160,6 +250,7 @@ export default function RippleGraph() {
   const hovered = hover ? byId.get(hover) : null;
   const focused = focus ? byId.get(focus) : null;
   const neighbours = focused && g ? [...(g.parents.get(focused.id) ?? []), ...(g.children.get(focused.id) ?? [])].map((id) => byId.get(id)).filter(Boolean) as GNode[] : [];
+  const ringCaption = ring !== null && !active ? rings.get(ring) : null;
 
   return (
     <section data-tour="ripple" className="card no-reveal overflow-hidden">
@@ -171,7 +262,7 @@ export default function RippleGraph() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => { setFocus(null); setRun((x) => x + 1); }} className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-[12.5px] text-muted hover:border-line2 hover:text-ink">
+          <button onClick={() => { setFocus(null); setRing(null); setRun((x) => x + 1); }} className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-[12.5px] text-muted hover:border-line2 hover:text-ink">
             <RotateCcw size={13} /> Replay</button>
           <Link href={`/impact?source=${encodeURIComponent(NOTICE)}`} className="press flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-[12.5px] font-medium text-accent-ink hover:bg-accent-hover">
             Open the impact <ArrowRight size={13} /></Link>
@@ -185,11 +276,11 @@ export default function RippleGraph() {
              setSpot({ x: e.clientX - b.left, y: e.clientY - b.top });
              if (!reduce) { px.set((e.clientX - b.left) / b.width - 0.5); py.set((e.clientY - b.top) / b.height - 0.5); }
            }}
-           onPointerLeave={() => { setSpot(null); setHover(null); px.set(0); py.set(0); }}>
+           onPointerLeave={() => { setSpot(null); setHover(null); setRing(null); px.set(0); py.set(0); }}>
         {/* A soft light that follows the pointer across the map. */}
         {spot && !reduce && (
           <div aria-hidden className="pointer-events-none absolute inset-0 transition-opacity duration-500"
-               style={{ background: `radial-gradient(260px circle at ${spot.x}px ${spot.y}px, color-mix(in oklch, var(--accent) 9%, transparent), transparent 70%)` }} />
+               style={{ background: `radial-gradient(280px circle at ${spot.x}px ${spot.y}px, color-mix(in oklch, var(--accent) 8%, transparent), transparent 70%)` }} />
         )}
         {!g && <div className="m-5 skeleton h-[300px]" />}
         {g && r && (
@@ -199,115 +290,189 @@ export default function RippleGraph() {
                       aria-label={`Impact of the ${r.part.id} change across ${r.graph.nodes.length} records`}
                       onClick={(e) => { if (e.target === e.currentTarget) setFocus(null); }}>
             <defs>
-              <radialGradient id="ripple-gloss" cx="35%" cy="30%" r="70%">
-                <stop offset="0%" stopColor="white" stopOpacity="0.55" />
-                <stop offset="55%" stopColor="white" stopOpacity="0.08" />
-                <stop offset="100%" stopColor="white" stopOpacity="0" />
-              </radialGradient>
-              <radialGradient id="ripple-core" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" style={{ stopColor: "var(--accent)" }} stopOpacity="0.32" />
+              <radialGradient id="orb-aura" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" style={{ stopColor: "var(--accent)" }} stopOpacity="0.55" />
+                <stop offset="45%" style={{ stopColor: "var(--accent)" }} stopOpacity="0.16" />
                 <stop offset="100%" style={{ stopColor: "var(--accent)" }} stopOpacity="0" />
               </radialGradient>
-              <filter id="ripple-glow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="5" />
-              </filter>
-              <filter id="ripple-soft" x="-200%" y="-200%" width="500%" height="500%">
-                <feGaussianBlur stdDeviation="1.4" result="b" />
-                <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-              </filter>
+              <radialGradient id="orb-core" cx="42%" cy="38%" r="62%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="38%" style={{ stopColor: "color-mix(in oklch, var(--accent) 45%, white)" }} />
+                <stop offset="100%" style={{ stopColor: "var(--accent)" }} />
+              </radialGradient>
+              <linearGradient id="orb-band" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" style={{ stopColor: "var(--accent)" }} stopOpacity="0" />
+                <stop offset="45%" style={{ stopColor: "var(--accent)" }} stopOpacity="0.9" />
+                <stop offset="70%" style={{ stopColor: "var(--cyan)" }} stopOpacity="1" />
+                <stop offset="100%" style={{ stopColor: "var(--violet)" }} stopOpacity="0" />
+              </linearGradient>
+              <radialGradient id="dot-gloss" cx="35%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="white" stopOpacity="0.5" />
+                <stop offset="60%" stopColor="white" stopOpacity="0.06" />
+                <stop offset="100%" stopColor="white" stopOpacity="0" />
+              </radialGradient>
+              <filter id="orb-blur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.2" /></filter>
             </defs>
 
-            <motion.circle cx={CX} cy={CY} r={120} fill="url(#ripple-core)" style={{ transformOrigin: `${CX}px ${CY}px` }}
-                           animate={reduce ? undefined : { scale: [1, 1.12, 1], opacity: [0.8, 1, 0.8] }}
-                           transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }} />
-            {Array.from({ length: g.maxLevel }).map((_, i) => (
-              <motion.ellipse key={`ring${i}`} cx={CX} cy={CY} rx={ringScale(i + 1, g.maxLevel) * (W / 2 - 80)} ry={ringScale(i + 1, g.maxLevel) * (H / 2 - 40)}
-                              fill="none" style={{ stroke: "var(--line)" }} strokeDasharray="1 7" strokeLinecap="round"
-                              initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: lit ? 0.4 : 1, scale: 1 }}
-                              transition={{ delay: lit ? 0 : delay(i + 1) - 0.2, duration: 0.8, ease: EASE }} />
-            ))}
-            {!reduce && [0, 1, 2].map((i) => (
-              <motion.ellipse key={`pulse${i}`} cx={CX} cy={CY} fill="none" style={{ stroke: "var(--accent)" }} strokeWidth={1}
-                              initial={{ rx: 10, ry: 10, opacity: 0.3 }} animate={{ rx: W / 2 - 60, ry: H / 2 - 30, opacity: 0 }}
-                              transition={{ duration: 6.6, delay: 1.2 + i * 2.2, repeat: Infinity, ease: [0.22, 0.61, 0.36, 1] }} />
-            ))}
-
-            {r.graph.edges.map((e, i) => {
-              const a = g.pos.get(e.source), b = g.pos.get(e.target);
-              if (!a || !b) return null;
-              // Always draw from the record nearer the change to the one further out.
-              const out = (g.level.get(e.source) ?? 0) <= (g.level.get(e.target) ?? 0);
-              const from = out ? a : b, to = out ? b : a;
-              const l = Math.max(g.level.get(e.source) ?? 0, g.level.get(e.target) ?? 0);
-              const on = lit ? lit.has(e.source) && lit.has(e.target) : false;
-              const d = curve(from, to);
-              const tint = colorOf(byId.get(out ? e.target : e.source)?.type ?? "");
+            {/* Rings: hover one to light everything at that distance from the change. */}
+            {Array.from({ length: g.maxLevel }).map((_, i) => {
+              const l = i + 1, k = ringScale(l, g.maxLevel);
+              const on = ring === l && !active;
               return (
-                <g key={i} className="ripple-dim" style={{ opacity: lit && !on ? 0.12 : 1 }}>
-                  <motion.path d={d} fill="none" strokeLinecap="round" className="ripple-dim"
-                               style={{ stroke: on ? tint : "var(--line2)" }} strokeWidth={on ? 1.8 : 1}
-                               initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }}
-                               transition={{ delay: delay(l) - 0.3, duration: 0.7, ease: EASE }} />
-                  {!reduce && (
-                    <path d={d} fill="none" pathLength={100} className="ripple-flow" strokeWidth={on ? 2.6 : 1.6}
-                          style={{ stroke: on ? tint : "var(--accent)", opacity: on ? 0.95 : 0.35, animationDelay: `${(delay(l) + (i % 7) * 0.6).toFixed(2)}s` }} />
-                  )}
-                  {!reduce && (
-                    <circle r={on ? 2.6 : 1.9} style={{ fill: on ? tint : "var(--accent)" }} filter="url(#ripple-soft)" opacity={0}>
-                      <animateMotion dur={`${(3.4 + (i % 5) * 0.35).toFixed(2)}s`} begin={`${(delay(l) + 0.4 + (i % 9) * 0.45).toFixed(2)}s`}
-                                     repeatCount="indefinite" path={d} calcMode="spline" keyTimes="0;1" keyPoints="0;1" keySplines="0.45 0 0.25 1" />
-                      <animate attributeName="opacity" values="0;0.95;0.95;0" keyTimes="0;0.15;0.75;1" dur={`${(3.4 + (i % 5) * 0.35).toFixed(2)}s`}
-                               begin={`${(delay(l) + 0.4 + (i % 9) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
-                    </circle>
-                  )}
+                <g key={`ring${l}`}>
+                  <motion.ellipse cx={CX} cy={CY} rx={k * (W / 2 - 80)} ry={k * (H / 2 - 40)} fill="none"
+                                  style={{ stroke: on ? "var(--accent)" : "var(--line2)" }} strokeDasharray={on ? "0" : "1 7"} strokeLinecap="round"
+                                  strokeWidth={on ? 1.2 : 1} className="ripple-dim"
+                                  initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: lit && !on ? 0.35 : on ? 0.8 : 1, scale: 1 }}
+                                  transition={{ delay: lit ? 0 : delay(l) - 0.2, duration: 0.8, ease: EASE }} />
+                  <ellipse cx={CX} cy={CY} rx={k * (W / 2 - 80)} ry={k * (H / 2 - 40)} fill="none" stroke="transparent" strokeWidth={14}
+                           style={{ pointerEvents: "stroke", cursor: "help" }} onMouseEnter={() => setRing(l)} onMouseLeave={() => setRing((x) => (x === l ? null : x))} />
                 </g>
               );
             })}
+            {!reduce && [0, 1, 2].map((i) => (
+              <motion.ellipse key={`pulse${i}`} cx={CX} cy={CY} fill="none" style={{ stroke: "var(--accent)", pointerEvents: "none" }} strokeWidth={1}
+                              initial={{ rx: 18, ry: 18, opacity: 0.32 }} animate={{ rx: W / 2 - 60, ry: H / 2 - 30, opacity: 0 }}
+                              transition={{ duration: 6.6, delay: 1.2 + i * 2.2, repeat: Infinity, ease: [0.22, 0.61, 0.36, 1] }} />
+            ))}
 
+            {/* Connections: faint at rest, with light gliding outward; the lit chain carries a brighter flow. */}
+            <g style={{ pointerEvents: "none" }}>
+              {r.graph.edges.map((e, i) => {
+                const a = g.pos.get(e.source), b = g.pos.get(e.target);
+                if (!a || !b) return null;
+                const out = (g.level.get(e.source) ?? 0) <= (g.level.get(e.target) ?? 0);
+                const from = out ? a : b, to = out ? b : a;
+                const l = Math.max(g.level.get(e.source) ?? 0, g.level.get(e.target) ?? 0);
+                const on = lit ? lit.has(e.source) && lit.has(e.target) : false;
+                const d = curve(from, to);
+                const tint = colorOf(byId.get(out ? e.target : e.source)?.type ?? "");
+                const dur = (3.6 + (i % 5) * 0.35).toFixed(2), begin = (delay(l) + 0.5 + (i % 9) * 0.45).toFixed(2);
+                return (
+                  <g key={i} className="ripple-dim" style={{ opacity: lit && !on ? 0.1 : 1 }}>
+                    <motion.path d={d} fill="none" strokeLinecap="round" className="ripple-dim"
+                                 style={{ stroke: on ? tint : "var(--line2)" }} strokeWidth={on ? 1.6 : 1}
+                                 initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }}
+                                 transition={{ delay: delay(l) - 0.3, duration: 0.7, ease: EASE }} />
+                    {!reduce && on && (
+                      <path d={d} fill="none" pathLength={100} className="ripple-flow-lit" strokeWidth={2.4} style={{ stroke: tint }} />
+                    )}
+                    {!reduce && (
+                      <circle r={on ? 2.4 : 1.7} style={{ fill: on ? tint : "var(--accent)" }} opacity={0}>
+                        <animateMotion dur={`${dur}s`} begin={`${begin}s`} repeatCount="indefinite" path={d}
+                                       calcMode="spline" keyTimes="0;1" keyPoints="0;1" keySplines="0.45 0 0.25 1" />
+                        <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.15;0.75;1" dur={`${dur}s`} begin={`${begin}s`} repeatCount="indefinite" />
+                      </circle>
+                    )}
+                  </g>
+                );
+              })}
+            </g>
+
+            {/* The orb: the changed part, a light source that brightens whenever you point at something. */}
+            <g transform={`translate(${CX} ${CY})`} style={{ pointerEvents: "none" }}>
+              <motion.circle r={110} fill="url(#orb-aura)" initial={{ opacity: 0, scale: 0.6 }}
+                             animate={excited ? { opacity: 1, scale: 1.3 } : reduce ? { opacity: 0.7, scale: 1 } : { opacity: [0.55, 0.85, 0.55], scale: [1, 1.08, 1] }}
+                             transition={excited ? { type: "spring", stiffness: 120, damping: 18 } : { duration: 4.4, repeat: Infinity, ease: "easeInOut" }} />
+              <motion.g initial={{ opacity: 0 }} animate={{ opacity: excited ? 1 : 0.65 }} transition={{ duration: 0.6, ease: EASE }}>
+                <g className={reduce ? "" : "orb-spin"}>
+                  <circle r={27} fill="none" stroke="url(#orb-band)" strokeWidth={2.2} strokeLinecap="round" strokeDasharray="70 100" filter="url(#orb-blur)" />
+                  <circle r={27} fill="none" stroke="url(#orb-band)" strokeWidth={1} strokeLinecap="round" strokeDasharray="70 100" />
+                </g>
+                <g className={reduce ? "" : "orb-spin rev"}>
+                  <circle r={34} fill="none" stroke="url(#orb-band)" strokeWidth={0.8} strokeLinecap="round" strokeDasharray="34 180" opacity={0.7} />
+                </g>
+              </motion.g>
+              <motion.circle r={24} style={{ fill: "var(--accent)" }} filter="url(#orb-blur)" initial={{ opacity: 0 }}
+                             animate={{ opacity: excited ? 0.55 : 0.28, scale: excited ? 1.15 : 1 }} transition={{ type: "spring", stiffness: 140, damping: 18 }} />
+              <motion.g initial={{ scale: 0.2, opacity: 0 }} animate={{ scale: excited ? 1.08 : 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 220, damping: 16, delay: excited ? 0 : delay(0) }}>
+                <circle r={15} fill="url(#orb-core)" />
+                <circle r={15} fill="url(#dot-gloss)" />
+              </motion.g>
+            </g>
+
+            {/* Records */}
             {r.graph.nodes.map((n) => {
               const p = g.pos.get(n.id);
               if (!p) return null;
               const l = g.level.get(n.id) ?? 0;
-              const center = l === 0;
+              if (l === 0) return (
+                <g key={n.id} transform={`translate(${p.x} ${p.y})`} role="button" tabIndex={0} aria-label={`${n.label}, ${KIND[n.type]?.label ?? n.type}`}
+                   style={{ cursor: "pointer" }} onMouseEnter={() => setHover(n.id)} onMouseLeave={() => setHover(null)}
+                   onClick={(ev) => { ev.stopPropagation(); setFocus((f) => (f === n.id ? null : n.id)); }}>
+                  <circle r={30} fill="transparent" />
+                </g>
+              );
               const isOn = !lit || lit.has(n.id);
               const isActive = active === n.id;
-              const rad = center ? 15 : 7;
               return (
-                <g key={n.id} transform={`translate(${p.x} ${p.y})`} className="ripple-dim" style={{ opacity: isOn ? 1 : 0.22 }}>
+                <g key={n.id} transform={`translate(${p.x} ${p.y})`} className="ripple-dim" style={{ opacity: isOn ? 1 : 0.2 }}>
                   <g className={reduce ? "" : "ripple-drift"} style={{ animationDelay: `${((n.id.length * 37) % 70) / 10}s` }}>
                     <motion.g style={{ cursor: "pointer" }} role="button" tabIndex={0} aria-label={`${n.label}, ${KIND[n.type]?.label ?? n.type}`}
                               onMouseEnter={() => setHover(n.id)} onMouseLeave={() => setHover(null)}
                               onFocus={() => setHover(n.id)} onBlur={() => setHover(null)}
                               onClick={(ev) => { ev.stopPropagation(); setFocus((f) => (f === n.id ? null : n.id)); }}
                               onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); setFocus(n.id); } }}
-                              initial={{ opacity: 0, scale: 0.2 }} animate={{ opacity: 1, scale: isActive ? 1.35 : 1 }}
-                              whileHover={{ scale: center ? 1.08 : 1.35 }} whileTap={{ scale: 0.92 }}
-                              transition={{ opacity: { delay: delay(l), duration: 0.4 }, scale: isActive || lit ? { type: "spring", stiffness: 380, damping: 22 } : { delay: delay(l), type: "spring", stiffness: 260, damping: 17 } }}>
-                      <circle r={rad + 10} fill="transparent" />
-                      {(center || isActive) && <circle r={rad + 9} style={{ fill: colorOf(n.type), opacity: 0.22 }} filter="url(#ripple-glow)" />}
-                      {center && <circle r={26} style={{ fill: "var(--accent)", opacity: 0.14 }} />}
-                      <circle r={rad} style={{ fill: colorOf(n.type), stroke: "var(--panel)" }} strokeWidth={2} />
-                      <circle r={rad} fill="url(#ripple-gloss)" />
-                      {isActive && !center && (
-                        <motion.circle r={rad + 4} fill="none" style={{ stroke: colorOf(n.type) }} strokeWidth={1}
-                                       initial={{ opacity: 0.8, scale: 1 }} animate={{ opacity: 0, scale: 1.9 }} transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut" }} />
+                              initial={{ opacity: 0, scale: 0.2 }} animate={{ opacity: 1, scale: isActive ? 1.4 : 1 }}
+                              whileHover={{ scale: 1.4 }} whileTap={{ scale: 0.92 }}
+                              transition={{ opacity: { delay: delay(l), duration: 0.45 }, scale: isActive || lit ? { type: "spring", stiffness: 380, damping: 22 } : { delay: delay(l), type: "spring", stiffness: 260, damping: 17 } }}>
+                      <circle r={16} fill="transparent" />
+                      <circle r={isActive || (lit && isOn) ? 12 : 10} style={{ fill: colorOf(n.type), opacity: isActive ? 0.28 : 0.12 }} className="ripple-dim" />
+                      <circle r={6} style={{ fill: colorOf(n.type), stroke: "var(--panel)" }} strokeWidth={1.5} />
+                      <circle r={6} fill="url(#dot-gloss)" />
+                      {isActive && (
+                        <motion.circle r={10} fill="none" style={{ stroke: colorOf(n.type) }} strokeWidth={1}
+                                       initial={{ opacity: 0.8, scale: 1 }} animate={{ opacity: 0, scale: 2 }} transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut" }} />
                       )}
                     </motion.g>
-                    {/* The label arrives with its record, ring by ring. */}
-                    <motion.text y={center ? 34 : 20} textAnchor="middle" className="pointer-events-none select-none font-mono ripple-dim"
-                                 initial={{ opacity: 0, y: center ? 38 : 24, filter: "blur(3px)" }} animate={{ opacity: 1, y: center ? 34 : 20, filter: "blur(0px)" }}
-                                 transition={{ delay: delay(l) + 0.12, duration: 0.45, ease: EASE }}
-                                 style={{ fill: center || isActive ? "var(--ink)" : "var(--muted)", fontSize: center ? 15 : 10.5, fontWeight: isActive ? 600 : 400,
-                                          paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 3 }}>
-                      {n.label.length > 16 && !isActive ? n.label.slice(0, 15) + "…" : n.label}
-                    </motion.text>
                   </g>
                 </g>
               );
             })}
+
+            {/* Names, placed so they never overlap; any that cannot fit appear when their record is lit. */}
+            <g style={{ pointerEvents: "none" }} className="select-none font-mono">
+              {r.graph.nodes.map((n) => {
+                const p = g.pos.get(n.id);
+                if (!p) return null;
+                const l = g.level.get(n.id) ?? 0;
+                if (l === 0) return (
+                  <motion.text key={n.id} x={CX} y={CY + 52} textAnchor="middle" initial={{ opacity: 0, filter: "blur(4px)" }} animate={{ opacity: 1, filter: "blur(0px)" }}
+                               transition={{ delay: delay(0) + 0.2, duration: 0.6, ease: EASE }}
+                               style={{ fill: "var(--ink)", fontSize: 15, fontWeight: 600, letterSpacing: "0.04em", paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 4 }}>
+                    {n.label}
+                  </motion.text>
+                );
+                const lab = labels.get(n.id);
+                if (!lab) return null;
+                const isActive = active === n.id;
+                const isOn = !lit || lit.has(n.id);
+                const show = lab.fits ? (isOn ? 1 : 0.18) : (lit && lit.has(n.id) ? 1 : 0);
+                return (
+                  <motion.text key={n.id} x={lab.x} y={lab.y} textAnchor={lab.anchor} className="ripple-dim ripple-label"
+                               initial={{ opacity: 0, filter: "blur(3px)" }} animate={{ opacity: show, filter: "blur(0px)" }}
+                               transition={{ opacity: { delay: lit ? 0 : delay(l) + 0.15, duration: 0.45, ease: EASE }, filter: { delay: delay(l) + 0.15, duration: 0.5 } }}
+                               style={{ fill: isActive || (lit && isOn) ? "var(--ink)" : "var(--muted)", fontSize: 10.5, fontWeight: isActive ? 600 : 400,
+                                        paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 3 }}>
+                    {isActive ? n.label : short(n.label)}
+                  </motion.text>
+                );
+              })}
+            </g>
           </motion.svg>
           </motion.div>
         )}
+
+        <AnimatePresence>
+          {ringCaption && ring !== null && (
+            <motion.div key={`ring${ring}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} transition={{ duration: 0.25, ease: EASE }}
+                        className="surface-pop pointer-events-none absolute left-4 top-3 z-10 px-3 py-2 text-[12.5px]">
+              <div className="font-medium">{ring === 1 ? "One step from the change" : `${ring} steps from the change`}</div>
+              <div className="text-muted">{Object.entries(ringCaption).map(([t, c]) => `${c} ${c === 1 ? KIND[t]?.label ?? t : PLURAL[t] ?? `${KIND[t]?.label ?? t}s`}`).join(" · ")}</div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <AnimatePresence>
           {hovered && hover !== focus && (() => {
@@ -364,7 +529,7 @@ export default function RippleGraph() {
               <span className="num font-semibold text-ink">{counts[t]}</span> {LEGEND[t]}
             </motion.span>
           ))}
-          <span className="ml-auto text-faint">Hover to trace a path · click to focus</span>
+          <span className="ml-auto text-faint">Hover a record or a ring · click to focus</span>
         </div>
       )}
     </section>

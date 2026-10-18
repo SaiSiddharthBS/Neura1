@@ -303,6 +303,11 @@ html.lenis, html.lenis body { height: auto; }
 @keyframes ripple-drift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(0, -2.5px); } }
 [data-tour="ripple"] g[role="button"] { outline: none; }  /* focus shows as the node's halo instead */
 .ripple-dim { transition: opacity 380ms var(--spring), stroke 300ms var(--spring), stroke-width 300ms var(--spring); }
+.ripple-flow-lit { stroke-dasharray: 12 88; stroke-linecap: round; animation: ripple-flow 1.6s linear infinite; }
+.orb-spin { animation: orb-spin 9s linear infinite; transform-box: fill-box; transform-origin: center; }
+.orb-spin.rev { animation-duration: 15s; animation-direction: reverse; }
+@keyframes orb-spin { to { transform: rotate(360deg); } }
+@media (max-width: 640px) { .ripple-label { display: none; } }  /* too small to read on a phone; a tap names the record */
 
 @keyframes rise { from { opacity: 0; transform: translateY(8px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
 .rise { animation: rise 520ms var(--spring) both; }
@@ -314,7 +319,8 @@ html.lenis, html.lenis body { height: auto; }
 
 @media (prefers-reduced-motion: reduce) {
   .rise, .shimmer, .skeleton, .ai-ring::before, .aurora span, .ripple-drift { animation: none; }
-  .ripple-flow { display: none; }
+  .ripple-flow, .ripple-flow-lit { display: none; }
+  .orb-spin { animation: none; }
   .lift:hover, .press:not(:disabled):hover { transform: none; }
   main .card { animation: none !important; }
   ::view-transition-old(page), ::view-transition-new(page) { animation: none; }
