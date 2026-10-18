@@ -12,6 +12,9 @@ Graph Hacks allows coding assistants if their use is disclosed. This is that dis
   audio. They read supplier notices, extract decisions from documents and meetings, and drive the Ask agent. Their
   outputs are verified by code before they enter the graph; raw outputs are saved in `fixture/flyvi/extracted/`.
 
+- **Demo video narration**: the voice is synthetic, generated on this Mac with Kokoro (an open-source text-to-speech
+  model, Apache-2.0). The screen recording is the real, running Neura1 on synthetic data, driven by a Playwright script.
+
 ## What the participant did
 
 <!-- Author: this draft lists only what is on record in the project. Review it, correct it and add anything else

@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const API = process.env.NEURA1_API_URL ?? "http://localhost:8000";
 
 const nextConfig: NextConfig = {
+  // A second copy (for example, one that films the demo) can build into its own folder.
+  distDir: process.env.NEURA1_DIST ?? ".next",
   cacheComponents: true,
   devIndicators: false,
   experimental: {
