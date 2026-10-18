@@ -25,7 +25,6 @@
 <img alt="Python" src="https://img.shields.io/badge/Python_3.12-FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white&labelColor=0b0d12">
 <img alt="Next.js" src="https://img.shields.io/badge/Next.js_16-React_19-ffffff?style=flat-square&logo=nextdotjs&logoColor=white&labelColor=0b0d12">
 <img alt="Tailwind" src="https://img.shields.io/badge/Tailwind_4-OKLCH-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white&labelColor=0b0d12">
-<img alt="three.js" src="https://img.shields.io/badge/three.js-WebGL-ffffff?style=flat-square&logo=threedotjs&logoColor=white&labelColor=0b0d12">
 <img alt="Motion" src="https://img.shields.io/badge/Motion-View_Transitions-ff4f9a?style=flat-square&logo=framer&logoColor=white&labelColor=0b0d12">
 <img alt="Tests" src="https://img.shields.io/badge/tests-120_passing-34d399?style=flat-square&labelColor=0b0d12">
 <img alt="Licence" src="https://img.shields.io/badge/licence-AGPL--3.0-a42e2b?style=flat-square&labelColor=0b0d12">
@@ -101,9 +100,9 @@ break?"* And someone will suggest the cheaper, "pin-compatible" part that engine
 Neura1 holds the whole company in one FalkorDB graph, so one traversal answers it:
 
 <div align="center">
-<img src="docs/demo/ripple.gif" alt="A live 3D map: the change spreads ring by ring through revisions, builds, customer orders, customers and people; hovering a record lights its whole path back to the part; clicking it flies the camera in" width="88%">
+<img src="docs/demo/ripple.gif" alt="The change ripples ring by ring through revisions, builds, customer orders, customers and people; hovering a record lights its whole path back to the part; clicking it glides the map in" width="88%">
 <br>
-<sub>One supplier change, traced ring by ring in a live 3D map (three.js, WebGL bloom): revisions → builds → orders → customers → people. Drag to orbit, hover a record to light its path, click to fly in.</sub>
+<sub>One supplier change, traced ring by ring: revisions → builds → orders → customers → people. Hover a record to light its path; click to focus.</sub>
 </div>
 
 <br>
@@ -308,7 +307,7 @@ a browser cannot submit made-up tasks or prices · if FalkorDB is down the API r
 | Speech | **faster-whisper** (open-source Whisper, CTranslate2), on premises, primed with the graph's vocabulary |
 | API | **Python 3.12** · **FastAPI** · Pydantic · a JSON plan-act agent with 26 tools |
 | MCP | **Model Context Protocol** both ways: a local server with 16 tools, a remote Streamable HTTP server with 14 permission-filtered tools for cloud agents (OpenAI Dots, ChatGPT, Claude), and a client that syncs Zoho Inventory and Zoho Projects |
-| Web | **Next.js 16** · **React 19** with View Transitions · **Tailwind CSS 4** with OKLCH tokens · **three.js** (WebGL, bloom, CSS2D labels) · **Motion** · Lenis · React Flow |
+| Web | **Next.js 16** · **React 19** with View Transitions · **Tailwind CSS 4** with OKLCH tokens · **Motion** · Lenis · React Flow |
 | Documents | **SuperDoc** (Word layout, tracked changes, .docx) · pdf.js |
 | Operations | Docker Compose · Tailscale · Cloudflare Tunnel · **Playwright**, which captured every screenshot here |
 

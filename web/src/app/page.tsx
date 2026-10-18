@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
@@ -9,14 +8,10 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import PlanStrip from "@/components/PlanStrip";
+import RippleGraph from "@/components/RippleGraph";
 import { startTour } from "@/components/Tour";
 import { PageTitle, Pill, Section, Stagger, Ticker, riseItem } from "@/components/ui";
 import { api, inr } from "@/lib/api";
-
-// The 3D constellation loads on its own, so the rest of the overview never waits for WebGL.
-const Constellation = dynamic(() => import("@/components/Constellation"), {
-  ssr: false, loading: () => <div className="card skeleton h-[560px]" />,
-});
 
 type Signal = { id: string; kind: "notice" | "escalation" | "leave"; title: string; date: string | null; subject: string | null; investigation: string | null };
 type Board = { pipeline: { notices: number; investigations: number; open: number; in_progress: number; blocked: number; done: number } };
@@ -94,7 +89,7 @@ export default function Overview() {
 
       <motion.div variants={riseItem}><PlanStrip /></motion.div>
 
-      <motion.div variants={riseItem}><Constellation /></motion.div>
+      <motion.div variants={riseItem}><RippleGraph /></motion.div>
 
       <motion.form variants={riseItem} onSubmit={(e) => { e.preventDefault(); ask(q); }}
                    className="ai-ring card overflow-visible rounded-2xl p-1.5">

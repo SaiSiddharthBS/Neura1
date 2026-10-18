@@ -25,53 +25,37 @@ def context(browser, who: str, dark: bool = True, video: str | None = None):
 
 
 def ripple_gif(browser, base: str) -> None:
-    """The overview's 3D map: the change spreading ring by ring, a hover tracing a path, then a click flying to a record."""
+    """The overview's ripple map: the rings spreading, then a hover tracing a path, then a click focusing a record."""
     tmp = tempfile.mkdtemp()
     ctx = context(browser, "P-HITHESH", video=tmp)
     page = ctx.new_page()
-    # Only for this film: the greeting and plan strip step aside so the map is in view from the first frame.
-    page.add_init_script("""document.addEventListener('DOMContentLoaded', () => {
-      const s = document.createElement('style');
-      s.textContent = '.space-y-6 > :has(+ * [data-tour=ripple]), .space-y-6 > :has(+ * + * [data-tour=ripple]) { display: none !important; }';
-      document.head.appendChild(s);
-    });""")
     started = time.monotonic()
     page.goto(base + "/")
-    page.wait_for_selector("[data-tour=ripple] [data-ripple-canvas] canvas")   # the 3D map itself
-    page.wait_for_timeout(2500)
-    box = page.locator("[data-tour=ripple]").bounding_box()   # at the top of the page from the first frame
-    page.get_by_role("button", name="Replay").click()           # the change spreads again, on camera
-    ready = time.monotonic() - started            # the GIF starts here
+    page.wait_for_selector("[data-tour=ripple] svg[role=img]")   # the map itself, not an icon
+    ready = time.monotonic() - started            # the GIF starts here, as the map appears
     page.wait_for_timeout(6500)
-
-    def glide(record: str, steps: int = 18) -> None:
-        """Move the pointer onto a record as it orbits, so the hover lands on it."""
-        p = page.evaluate("id => window.__constellation && window.__constellation.at(id)", record)
-        if p:
-            page.mouse.move(p["x"], p["y"], steps=steps)
-
-    glide("BO-0412")
-    page.wait_for_timeout(1800)
-    glide("SO-881")
-    page.wait_for_timeout(1200)
-    glide("SO-881", steps=2)
-    page.mouse.down()
-    page.mouse.up()
-    page.wait_for_timeout(3200)
+    box = page.locator("[data-tour=ripple]").bounding_box()   # measured once the page has settled
+    nodes = page.locator("[data-tour=ripple] g[role=button]")
+    nodes.nth(9).hover(force=True)
+    page.wait_for_timeout(1600)
+    nodes.nth(6).hover(force=True)
+    page.wait_for_timeout(1400)
+    nodes.nth(6).click(force=True)
+    page.wait_for_timeout(2600)
     video = page.video.path()
     ctx.close()
     x, y, w, h = (int(round(v / 2) * 2) for v in (box["x"], box["y"], box["width"], box["height"]))
     gif = OUT / "ripple.gif"
     palette = Path(tmp) / "palette.png"
-    crop = f"crop={w}:{h}:{x}:{y},fps=8,scale=700:-1:flags=lanczos"
+    crop = f"crop={w}:{h}:{x}:{y},fps=10,scale=760:-1:flags=lanczos"
     start = f"{ready + 0.15:.2f}"
-    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-ss", start, "-i", video, "-vf", f"{crop},palettegen=max_colors=128:stats_mode=diff",
+    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-ss", start, "-i", video, "-vf", f"{crop},palettegen=max_colors=96:stats_mode=diff",
                     str(palette)], check=True)
     subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-ss", start, "-i", video, "-i", str(palette), "-lavfi",
                     f"{crop}[v];[v][1:v]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle", str(gif)], check=True)
     shutil.rmtree(tmp, ignore_errors=True)
     if shutil.which("gifsicle"):  # smaller file, same look
-        subprocess.run(["gifsicle", "-O3", "--lossy=100", "--colors", "128", str(gif), "-o", str(gif)], check=True)
+        subprocess.run(["gifsicle", "-O3", "--lossy=50", "--colors", "96", str(gif), "-o", str(gif)], check=True)
     print(f"ripple.gif {gif.stat().st_size // 1024} KB")
 
 
