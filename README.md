@@ -33,11 +33,32 @@
 
 <br>
 
+## ◆ Who it's for
+
+**Neura1 is a company brain for small and mid-sized hardware manufacturers**: companies of roughly 50 to 500 people
+that design and build electronics in low volumes, often to order, for demanding customers in aerospace, defence,
+transportation and industry. In these companies one supplier email can break builds, customer orders and delivery
+promises, and the knowledge needed to catch it is spread across spreadsheets, chats, documents and a few people's heads.
+
+| It keeps track of | |
+|---|---|
+| **People and the organisation** | who does what, who backs up whom, who knows what, who is away |
+| **Products and parts** | revisions, bills of materials, approved and rejected alternates |
+| **Supply** | suppliers, quotes, price and lead-time notices, stock, purchase orders and goods received |
+| **Work and customers** | builds, customer orders and their due dates, projects and tasks |
+| **What the company knows** | decisions, documents, chats, tickets and meetings, each fact linked to its source |
+
+Part of Neura1 is general: chat, meetings, knowledge health, permissions, briefs and Ask work for any organisation.
+The part that traces parts, builds, orders and suppliers is built for manufacturers.
+
 > [!NOTE]
-> The demo company is **Flyvi Technologies Pvt. Ltd.** (part of Datasol (Bangalore) Limited), a real Bengaluru maker of
-> power distribution units, converters, battery chargers and embedded controls for aerospace and defence.
-> **Every record here is synthetic**: products, customers, orders, prices, decisions, tasks, leave, meetings. People
-> appear by first name only, customers are fictional, and every number below comes from the running system.
+> **Flyvi Technologies is the reference company, not the limit.** Neura1 was designed around a real manufacturer:
+> **Flyvi Technologies Pvt. Ltd.** (part of Datasol (Bangalore) Limited), a Bengaluru maker of power distribution units,
+> power converters, battery chargers and embedded control systems for aerospace and defence. Its leadership and people
+> are real (first names only). **Every record in this demo is synthetic**: products, customers, orders, prices, decisions,
+> tasks, leave and meetings. Customers are fictional, and every number below comes from the running system.
+> The graph schema and engines are not specific to Flyvi: another manufacturer's records load into the same model.
+> Only the company name in the AI prompts, letters and messages is still written in for Flyvi.
 
 <br>
 

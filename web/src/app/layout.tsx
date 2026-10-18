@@ -10,7 +10,7 @@ const serif = Instrument_Serif({ variable: "--font-instrument", subsets: ["latin
 
 export const metadata: Metadata = {
   title: { default: "Neura1", template: "%s · Neura1" },
-  description: "The company brain for Flyvi Technologies. Know what a change breaks before it breaks.",
+  description: "The company brain for hardware manufacturers, shown on Flyvi Technologies with synthetic data. Know what a change breaks before it breaks.",
   icons: { icon: "/mark.png" },
 };
 

@@ -179,7 +179,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <ViewerSwitch />
         <div className="px-1"><ModelStatus /></div>
         <div className="flex items-center justify-between px-1">
-          <span className="flex items-center gap-1.5 text-[11px] text-faint"><span className="h-1.5 w-1.5 rounded-full bg-warn" /> Synthetic data</span>
+          <span title="Neura1 is built for hardware manufacturers. Flyvi Technologies is the reference company, and every record here is synthetic." className="flex items-center gap-1.5 text-[11px] text-faint"><span className="h-1.5 w-1.5 rounded-full bg-warn" /> Synthetic data</span>
           <ThemeSwitch />
         </div>
       </div>

@@ -7,7 +7,7 @@ time stretches to 22 weeks. Someone forwards it. Someone searches the BOM spread
 the cheaper alternative was tried once and "didn't work out". Sales hears about the late order last.
 
 Neura1 is our attempt to make that morning boring. We built it for one kind of company, a 50–500 person electronics
-manufacturer, and modelled one in detail: Flyvi Technologies, a defence and rail electronics maker in Bangalore, with its
+manufacturer, and modelled one in detail: Flyvi Technologies, a Bengaluru maker of power electronics for aerospace and defence, with its
 real leadership structure and synthetic operational data.
 
 ## Why a graph
