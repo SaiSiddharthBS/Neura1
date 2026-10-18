@@ -128,7 +128,7 @@ function relax(pos: Map<string, { x: number; y: number }>, level: Map<string, nu
 }
 
 function placeLabels(nodes: GNode[], pos: Map<string, { x: number; y: number }>, level: Map<string, number>) {
-  const taken: Box[] = [[CX - 40, CY - 40, CX + 40, CY + 64]]; // the orb and its name
+  const taken: Box[] = [[CX - 44, CY - 44, CX + 44, CY + 66]]; // the orb and its name
   for (const n of nodes) {
     const p = pos.get(n.id);
     if (p && (level.get(n.id) ?? 0) > 0) taken.push([p.x - 9, p.y - 9, p.x + 9, p.y + 9]);
@@ -153,6 +153,30 @@ function placeLabels(nodes: GNode[], pos: Map<string, { x: number; y: number }>,
     out.set(n.id, { x: pick.x, y: pick.y, anchor: pick.anchor, fits: !!ok });
   }
   return out;
+}
+
+/** Four soft lights on slow, different orbits: inside the glass they blend like liquid; blurred, they are the halo. */
+function OrbLight({ reduce, spread }: { reduce: boolean; spread: number }) {
+  const lights = [
+    { color: "#3b82f6", r: 15, at: [6, -3], dur: 9, dir: 1 },
+    { color: "#22d3ee", r: 12, at: [-7, 5], dur: 12, dir: -1 },
+    { color: "#a78bfa", r: 13, at: [3, 8], dur: 7.5, dir: 1 },
+    { color: "#f472b6", r: 9, at: [-5, -7], dur: 10.5, dir: -1 },
+  ];
+  return (
+    <>
+      {lights.map((l, i) => (
+        <g key={i}>
+          {!reduce && <animateTransform attributeName="transform" type="rotate" from={l.dir > 0 ? "0" : "360"} to={l.dir > 0 ? "360" : "0"}
+                                        dur={`${l.dur}s`} repeatCount="indefinite" />}
+          <circle cx={l.at[0] * spread} cy={l.at[1] * spread} r={l.r * spread} fill={l.color} opacity={0.9}>
+            {!reduce && <animate attributeName="r" values={`${l.r * spread};${l.r * spread * 1.22};${l.r * spread}`} dur={`${(l.dur * 0.55).toFixed(1)}s`}
+                                 repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />}
+          </circle>
+        </g>
+      ))}
+    </>
+  );
 }
 
 export default function RippleGraph() {
@@ -290,28 +314,20 @@ export default function RippleGraph() {
                       aria-label={`Impact of the ${r.part.id} change across ${r.graph.nodes.length} records`}
                       onClick={(e) => { if (e.target === e.currentTarget) setFocus(null); }}>
             <defs>
-              <radialGradient id="orb-aura" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" style={{ stopColor: "var(--accent)" }} stopOpacity="0.55" />
-                <stop offset="45%" style={{ stopColor: "var(--accent)" }} stopOpacity="0.16" />
-                <stop offset="100%" style={{ stopColor: "var(--accent)" }} stopOpacity="0" />
+              <clipPath id="orb-clip"><circle r={24} /></clipPath>
+              <filter id="orb-liquid" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4.5" /></filter>
+              <filter id="orb-halo" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="16" /></filter>
+              <filter id="orb-soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6" /></filter>
+              <radialGradient id="orb-sheen" cx="50%" cy="50%" r="50%">
+                <stop offset="62%" stopColor="white" stopOpacity="0" />
+                <stop offset="92%" stopColor="white" stopOpacity="0.14" />
+                <stop offset="100%" stopColor="white" stopOpacity="0.32" />
               </radialGradient>
-              <radialGradient id="orb-core" cx="42%" cy="38%" r="62%">
-                <stop offset="0%" stopColor="#ffffff" />
-                <stop offset="38%" style={{ stopColor: "color-mix(in oklch, var(--accent) 45%, white)" }} />
-                <stop offset="100%" style={{ stopColor: "var(--accent)" }} />
-              </radialGradient>
-              <linearGradient id="orb-band" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" style={{ stopColor: "var(--accent)" }} stopOpacity="0" />
-                <stop offset="45%" style={{ stopColor: "var(--accent)" }} stopOpacity="0.9" />
-                <stop offset="70%" style={{ stopColor: "var(--cyan)" }} stopOpacity="1" />
-                <stop offset="100%" style={{ stopColor: "var(--violet)" }} stopOpacity="0" />
-              </linearGradient>
               <radialGradient id="dot-gloss" cx="35%" cy="30%" r="70%">
                 <stop offset="0%" stopColor="white" stopOpacity="0.5" />
                 <stop offset="60%" stopColor="white" stopOpacity="0.06" />
                 <stop offset="100%" stopColor="white" stopOpacity="0" />
               </radialGradient>
-              <filter id="orb-blur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.2" /></filter>
             </defs>
 
             {/* Rings: hover one to light everything at that distance from the change. */}
@@ -369,26 +385,27 @@ export default function RippleGraph() {
               })}
             </g>
 
-            {/* The orb: the changed part, a light source that brightens whenever you point at something. */}
+            {/* The orb: the changed part, as liquid light. Soft colours swirl inside a glass sphere and blend; the halo
+                is the same light, blurred. It swells and brightens whenever you point at something. */}
             <g transform={`translate(${CX} ${CY})`} style={{ pointerEvents: "none" }}>
-              <motion.circle r={110} fill="url(#orb-aura)" initial={{ opacity: 0, scale: 0.6 }}
-                             animate={excited ? { opacity: 1, scale: 1.3 } : reduce ? { opacity: 0.7, scale: 1 } : { opacity: [0.55, 0.85, 0.55], scale: [1, 1.08, 1] }}
-                             transition={excited ? { type: "spring", stiffness: 120, damping: 18 } : { duration: 4.4, repeat: Infinity, ease: "easeInOut" }} />
-              <motion.g initial={{ opacity: 0 }} animate={{ opacity: excited ? 1 : 0.65 }} transition={{ duration: 0.6, ease: EASE }}>
-                <g className={reduce ? "" : "orb-spin"}>
-                  <circle r={27} fill="none" stroke="url(#orb-band)" strokeWidth={2.2} strokeLinecap="round" strokeDasharray="70 100" filter="url(#orb-blur)" />
-                  <circle r={27} fill="none" stroke="url(#orb-band)" strokeWidth={1} strokeLinecap="round" strokeDasharray="70 100" />
-                </g>
-                <g className={reduce ? "" : "orb-spin rev"}>
-                  <circle r={34} fill="none" stroke="url(#orb-band)" strokeWidth={0.8} strokeLinecap="round" strokeDasharray="34 180" opacity={0.7} />
+              <motion.g initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: excited ? 1 : 0.72, scale: excited ? 1.25 : 1 }}
+                        transition={{ type: "spring", stiffness: 90, damping: 18, delay: excited ? 0 : delay(0) }}>
+                <g filter="url(#orb-halo)">
+                  <OrbLight reduce={!!reduce} spread={1.75} />
                 </g>
               </motion.g>
-              <motion.circle r={24} style={{ fill: "var(--accent)" }} filter="url(#orb-blur)" initial={{ opacity: 0 }}
-                             animate={{ opacity: excited ? 0.55 : 0.28, scale: excited ? 1.15 : 1 }} transition={{ type: "spring", stiffness: 140, damping: 18 }} />
-              <motion.g initial={{ scale: 0.2, opacity: 0 }} animate={{ scale: excited ? 1.08 : 1, opacity: 1 }}
-                        transition={{ type: "spring", stiffness: 220, damping: 16, delay: excited ? 0 : delay(0) }}>
-                <circle r={15} fill="url(#orb-core)" />
-                <circle r={15} fill="url(#dot-gloss)" />
+              <motion.g initial={{ opacity: 0, scale: 0.3 }} animate={{ opacity: 1, scale: excited ? 1.12 : 1 }}
+                        transition={{ type: "spring", stiffness: 180, damping: 17, delay: excited ? 0 : delay(0) }}>
+                <circle r={24} style={{ fill: "color-mix(in oklch, var(--panel) 60%, #1d2a6b)" }} />
+                <g clipPath="url(#orb-clip)">
+                  <g filter="url(#orb-liquid)"><OrbLight reduce={!!reduce} spread={1.15} /></g>
+                  {/* the light inside, so it glows from within rather than looking painted */}
+                  <motion.circle r={9} fill="white" filter="url(#orb-liquid)" animate={reduce ? undefined : { opacity: [0.22, 0.4, 0.22] }}
+                                 transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }} opacity={0.3} />
+                </g>
+                <circle r={24} fill="url(#orb-sheen)" />
+                <circle r={23.6} fill="none" stroke="white" strokeOpacity={0.5} strokeWidth={0.7} />
+                <ellipse cx={-7} cy={-10.5} rx={8} ry={4.4} fill="white" opacity={0.38} transform="rotate(-28 -7 -10.5)" filter="url(#orb-soft)" />
               </motion.g>
             </g>
 
@@ -438,7 +455,7 @@ export default function RippleGraph() {
                 if (!p) return null;
                 const l = g.level.get(n.id) ?? 0;
                 if (l === 0) return (
-                  <motion.text key={n.id} x={CX} y={CY + 52} textAnchor="middle" initial={{ opacity: 0, filter: "blur(4px)" }} animate={{ opacity: 1, filter: "blur(0px)" }}
+                  <motion.text key={n.id} x={CX} y={CY + 56} textAnchor="middle" initial={{ opacity: 0, filter: "blur(4px)" }} animate={{ opacity: 1, filter: "blur(0px)" }}
                                transition={{ delay: delay(0) + 0.2, duration: 0.6, ease: EASE }}
                                style={{ fill: "var(--ink)", fontSize: 15, fontWeight: 600, letterSpacing: "0.04em", paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 4 }}>
                     {n.label}
