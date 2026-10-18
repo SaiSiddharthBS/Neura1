@@ -25,8 +25,9 @@
 <img alt="Python" src="https://img.shields.io/badge/Python_3.12-FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white&labelColor=0b0d12">
 <img alt="Next.js" src="https://img.shields.io/badge/Next.js_16-React_19-ffffff?style=flat-square&logo=nextdotjs&logoColor=white&labelColor=0b0d12">
 <img alt="Tailwind" src="https://img.shields.io/badge/Tailwind_4-OKLCH-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white&labelColor=0b0d12">
+<img alt="three.js" src="https://img.shields.io/badge/three.js-WebGL-ffffff?style=flat-square&logo=threedotjs&logoColor=white&labelColor=0b0d12">
 <img alt="Motion" src="https://img.shields.io/badge/Motion-View_Transitions-ff4f9a?style=flat-square&logo=framer&logoColor=white&labelColor=0b0d12">
-<img alt="Tests" src="https://img.shields.io/badge/tests-119_passing-34d399?style=flat-square&labelColor=0b0d12">
+<img alt="Tests" src="https://img.shields.io/badge/tests-120_passing-34d399?style=flat-square&labelColor=0b0d12">
 <img alt="Licence" src="https://img.shields.io/badge/licence-AGPL--3.0-a42e2b?style=flat-square&labelColor=0b0d12">
 
 </div>
@@ -78,9 +79,10 @@ OpenAI Dots, ask it questions. Modules can take over from paid tools later, one 
 > 2. **[Connections](#06--it-works-with-what-you-already-use): the ERP and planner, over MCP.** Neura1 reads Zoho
 >    Inventory and Zoho Projects through the Model Context Protocol, compares field by field, validates and loads only
 >    what changed. A date moved in Zoho appears on the timeline against the original plan.
-> 3. **OpenAI Dots and other agents, over MCP.** A token-protected, read-only endpoint lets Dots, ChatGPT or Claude ask
->    Neura1 what is slipping, whether a date can be promised and who knows what, with a person's permissions.
->    Ask Neura1 and the `/slips` chat command answer the same question inside the app.
+> 3. **OpenAI Dots and other agents, over MCP: optional, and off by default.** Nothing leaves Neura1 until a director
+>    or leader switches external AI access on in the app. Then a token-protected, read-only endpoint lets Dots, ChatGPT
+>    or Claude ask what is slipping, whether a date can be promised and who knows what, with a person's permissions;
+>    one switch turns it off again. Inside the app, Ask Neura1 and the `/slips` chat command answer the same questions.
 
 <div align="center">
 <img src="docs/demo/timeline.png" alt="The timeline: baseline, plan and forecast for every project, task, build and order, with deviations in red" width="92%">
@@ -99,9 +101,9 @@ break?"* And someone will suggest the cheaper, "pin-compatible" part that engine
 Neura1 holds the whole company in one FalkorDB graph, so one traversal answers it:
 
 <div align="center">
-<img src="docs/demo/ripple.gif" alt="The change ripples ring by ring through revisions, builds, customer orders, customers and people; hovering a record lights its whole path back to the part; clicking it glides the map in" width="88%">
+<img src="docs/demo/ripple.gif" alt="A live 3D map: the change spreads ring by ring through revisions, builds, customer orders, customers and people; hovering a record lights its whole path back to the part; clicking it flies the camera in" width="88%">
 <br>
-<sub>One supplier change, traced ring by ring: revisions → builds → orders → customers → people. Hover a record to light its path; click to focus.</sub>
+<sub>One supplier change, traced ring by ring in a live 3D map (three.js, WebGL bloom): revisions → builds → orders → customers → people. Drag to orbit, hover a record to light its path, click to fly in.</sub>
 </div>
 
 <br>
@@ -115,7 +117,7 @@ Neura1 holds the whole company in one FalkorDB graph, so one traversal answers i
 | ✅ | **11 tasks for 7 people** from the company's own change policy, approved once, never duplicated | Idempotent actions in the graph |
 | 📅 | **SO-881 ships 142 days late and the Nilgiri project misses its target by 117 days**, because BO-0412 waits for NB54360 | Timeline engine: stock and orders allocated in date order, in code |
 | 🔌 | **7 changes read from Zoho over MCP**, field by field (stock 320 → 520, a PO received, a due date moved), validated, loaded | MCP client · field diff · import validator |
-| 🤖 | **OpenAI Dots can ask Neura1** what is slipping and why, with the same permissions as a person | Remote MCP, token-protected, read-only |
+| 🤖 | **OpenAI Dots can ask Neura1** what is slipping and why, only once a leader switches it on, and with a person's permissions | Remote MCP: off by default, token-protected, read-only |
 
 <br>
 
@@ -194,7 +196,7 @@ Neura1 holds the whole company in one FalkorDB graph, so one traversal answers i
 
 <table>
   <tr>
-    <td><img src="docs/demo/connect.png" alt="Connections: Zoho over MCP and OpenAI Dots"><br><sub><b>Your ERP and planner, over MCP; your agents, over MCP.</b> Neura1 Connect calls Zoho's tools (items, purchase orders, goods received, projects, tasks), maps Zoho's fields and MM-DD-YYYY dates, compares field by field, validates like any import and loads only what changed: here, stock 320 → 520, a PO received, a task finished, a due date moved and a new task. A replanned date shows on the timeline against the original plan. The other way round, a token-protected remote MCP endpoint gives OpenAI Dots, ChatGPT or Claude 14 read-only tools, such as <code>timeline_deviations</code> and <code>can_we_promise</code>, with the same permissions as a person: by default no amounts and nobody's leave. Plan checks can be posted to Slack or Teams. The demo reads a simulated Zoho and has not been tried with a live Dot; both are settings, not new code.</sub></td>
+    <td><img src="docs/demo/connect.png" alt="Connections: Zoho over MCP and OpenAI Dots"><br><sub><b>Your ERP and planner, over MCP; your agents, over MCP.</b> Neura1 Connect calls Zoho's tools (items, purchase orders, goods received, projects, tasks), maps Zoho's fields and MM-DD-YYYY dates, compares field by field, validates like any import and loads only what changed: here, stock 320 → 520, a PO received, a task finished, a due date moved and a new task. A replanned date shows on the timeline against the original plan. The other way round, and only if the company wants it: one switch in the app (off by default, so nothing leaves the building) opens a token-protected remote MCP endpoint that gives OpenAI Dots, ChatGPT or Claude 14 read-only tools, such as <code>timeline_deviations</code> and <code>can_we_promise</code>, with the same permissions as a person: by default no amounts and nobody's leave. The same switch governs plan checks posted to Slack or Teams. The demo reads a simulated Zoho and has not been tried with a live Dot; both are settings, not new code.</sub></td>
   </tr>
 </table>
 
@@ -277,7 +279,7 @@ CALL db.idx.fulltext.queryNodes('Chunk', $q) YIELD node, score RETURN node.id, s
 
 ## ◆ Proof
 
-<img src="docs/readme/stats.svg" alt="15 of 18 blind questions answered by the graph agent (search alone: 10); a sandbox copies the company in 0.1 s; 110 documented Cypher queries; 119 automated tests; zero cloud cost" width="100%">
+<img src="docs/readme/stats.svg" alt="15 of 18 blind questions answered by the graph agent (search alone: 10); a sandbox copies the company in 0.1 s; 110 documented Cypher queries; 120 automated tests; zero cloud cost" width="100%">
 
 We wrote the expected answers before running anything and compared three systems on the same model
 (ornith-1.5-35b-a3b on the DGX Spark). Every result and every failure is published in [docs/EVAL.md](docs/EVAL.md).
@@ -306,7 +308,7 @@ a browser cannot submit made-up tasks or prices · if FalkorDB is down the API r
 | Speech | **faster-whisper** (open-source Whisper, CTranslate2), on premises, primed with the graph's vocabulary |
 | API | **Python 3.12** · **FastAPI** · Pydantic · a JSON plan-act agent with 26 tools |
 | MCP | **Model Context Protocol** both ways: a local server with 16 tools, a remote Streamable HTTP server with 14 permission-filtered tools for cloud agents (OpenAI Dots, ChatGPT, Claude), and a client that syncs Zoho Inventory and Zoho Projects |
-| Web | **Next.js 16** · **React 19** with View Transitions · **Tailwind CSS 4** with OKLCH tokens · **Motion** · Lenis · React Flow |
+| Web | **Next.js 16** · **React 19** with View Transitions · **Tailwind CSS 4** with OKLCH tokens · **three.js** (WebGL, bloom, CSS2D labels) · **Motion** · Lenis · React Flow |
 | Documents | **SuperDoc** (Word layout, tracked changes, .docx) · pdf.js |
 | Operations | Docker Compose · Tailscale · Cloudflare Tunnel · **Playwright**, which captured every screenshot here |
 
@@ -322,7 +324,7 @@ docker compose up -d falkordb                      # graph on :6380 · FalkorDB 
 
 cd api && cp .env.example .env && uv sync
 uv run python -m neura1.cli load                   # load Flyvi Technologies and the saved, verified extractions
-uv run pytest -q                                   # 119 tests
+uv run pytest -q                                   # 120 tests
 uv run uvicorn neura1.main:app --port 8000
 
 cd ../web && pnpm install && pnpm dev              # http://localhost:3000, then "Take the tour"
@@ -388,7 +390,7 @@ api/neura1/
   agent.py · mcp_server.py · search.py      Ask agent, MCP tools, hybrid search
   access.py · people.py · capabilities.py   permissions from the graph, organisation, capability map
   ingest/                                   validator, loaders, passages, verified extraction
-api/tests/  api/eval/                       119 tests · frozen evaluation with a blind set
+api/tests/  api/eval/                       120 tests · frozen evaluation with a blind set
 web/src/                                    Next.js app
 fixture/flyvi/                              the synthetic company: records, chats, tickets, documents, samples, Zoho changes
 docs/                                       evaluation, data model, Cypher reference, deployment, demo, video script

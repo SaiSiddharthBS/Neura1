@@ -121,9 +121,14 @@ def test_the_agent_endpoint_is_off_without_a_token_and_checks_it(monkeypatch):
         await send({"type": "http.response.body", "body": b"ok"})
 
     client = TestClient(agent_mcp.Gate(inner))
+    monkeypatch.setattr(agent_mcp, "sharing_on", lambda: True)
     monkeypatch.setattr(settings, "agent_mcp_token", None)
     assert client.post("/mcp").status_code == 404
     monkeypatch.setattr(settings, "agent_mcp_token", "s3cret-token")
+    monkeypatch.setattr(agent_mcp, "sharing_on", lambda: False)  # switched off in the app: closed even with the token
+    off = client.post("/s3cret-token/mcp")
+    assert off.status_code == 404 and "Nothing leaves" in off.json()["detail"]
+    monkeypatch.setattr(agent_mcp, "sharing_on", lambda: True)
     assert client.post("/mcp").status_code == 401
     assert client.post("/mcp", headers={"Authorization": "Bearer wrong"}).status_code == 401
     assert client.post("/wrong/mcp").status_code == 401
@@ -158,3 +163,13 @@ def test_ask_and_chat_can_say_what_is_slipping(graph):
     assert [p["id"] for p in nilgiri["projects"]] == ["PRJ-NILGIRI"]
     reply = chat.command(graph, "/slips")
     assert "Nilgiri airborne PDU delivery" in reply["text"] and reply["links"][0]["href"] == "/timeline"
+
+
+def test_external_sharing_is_off_until_a_leader_switches_it_on(fresh_graph, monkeypatch):
+    monkeypatch.setattr(agent_mcp, "get_graph", lambda: fresh_graph)
+    agent_mcp._cache["at"] = 0.0
+    assert agent_mcp.sharing(fresh_graph)["enabled"] is False and agent_mcp.sharing_on() is False
+    on = agent_mcp.set_sharing(fresh_graph, True, "Hithesh")
+    assert on["enabled"] is True and on["by"] == "Hithesh" and agent_mcp.sharing_on() is True
+    agent_mcp.set_sharing(fresh_graph, False, "Hithesh")
+    assert agent_mcp.sharing_on() is False

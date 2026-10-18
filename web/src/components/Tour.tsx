@@ -30,7 +30,7 @@ const STEPS: Step[] = [
   { path: "/timeline", target: "gantt", title: "The whole plan, and what is slipping",
     body: "Every project, task, build and customer order on one Gantt. The outline is the original plan; red is the forecast, worked out by code from stock, open orders, supplier notices, lead times and leave. The Nilgiri order ships 142 days late because BO-0412 waits for NB54360. Click any bar for the reason." },
   { path: "/connect", target: "connect", title: "Works with Zoho, talks to Dots",
-    body: "Neura1 is an add-on: it reads Zoho Inventory and Zoho Projects over MCP and loads only what changed, field by field, so the timeline follows the plan people keep in Zoho. Agents such as OpenAI Dots can ask Neura1 through a token-protected MCP endpoint, with the same permissions as a person." },
+    body: "Neura1 is an add-on: it reads Zoho Inventory and Zoho Projects over MCP and loads only what changed, field by field, so the timeline follows the plan people keep in Zoho. Optionally, and only when a leader switches it on, agents such as OpenAI Dots can ask Neura1 through a token-protected MCP endpoint, with a person's permissions. Off, nothing leaves the system." },
   { path: "/brain", target: "ask", title: "Ask anything",
     body: "The agent plans its own graph queries, shows each step and cites its sources. On 18 blind questions it answered 15 (search alone: 10); every result and failure, including where a plain prompt did better, is published in docs/EVAL.md." },
   { path: "/", title: "That is Neura1",

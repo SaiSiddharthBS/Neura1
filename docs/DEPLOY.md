@@ -29,7 +29,9 @@ scripts/serve_public.sh stop         # take it down
   own key, so keep it in `api/.env`). If its tool names differ from `list_items`, `list_purchase_orders`,
   `list_purchase_receives`, `list_projects` and `list_tasks`, map them with `NEURA1_ERP_TOOLS='{"list_items": "..."}'`.
   `NEURA1_ERP_SYNC_MINUTES` syncs on a schedule. Only the directors and leadership can run a sync.
-- **Cloud agents (OpenAI Dots, ChatGPT, Claude).** Off unless `NEURA1_AGENT_MCP_TOKEN` is set. The endpoint is
+- **Cloud agents (OpenAI Dots, ChatGPT, Claude).** Optional and off by default: the server needs
+  `NEURA1_AGENT_MCP_TOKEN`, and a director or leader must switch *External AI access* on in Connections (a demo reset
+  switches it off again). While it is off, the endpoint refuses every agent and nothing leaves the system. The endpoint is
   `<public URL>/api/agent/mcp` with `Authorization: Bearer <token>`, or `<public URL>/api/agent/<token>/mcp` for
   clients that only take a URL. The agent reads as `NEURA1_AGENT_VIEWER` (a person id) with that person's permissions;
   unset, it sees no amounts and nobody's leave. Turning it on sends answers to the agent's provider.

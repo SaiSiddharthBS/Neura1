@@ -7,11 +7,11 @@ import { ArrowRight, ArrowUpRight, RotateCcw, Waves, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api";
 
-type GNode = { id: string; type: string; label: string; name?: string; role?: string };
-type GEdge = { source: string; target: string; label: string };
-type Impact = { status: string; part: { id: string; name: string }; graph: { nodes: GNode[]; edges: GEdge[] } };
+export type GNode = { id: string; type: string; label: string; name?: string; role?: string };
+export type GEdge = { source: string; target: string; label: string };
+export type Impact = { status: string; part: { id: string; name: string }; graph: { nodes: GNode[]; edges: GEdge[] } };
 
-const NOTICE = "inbox/notice_NB54360_2026-10-14.md";
+export const NOTICE = "inbox/notice_NB54360_2026-10-14.md";
 const W = 1000, H = 580, CX = W / 2, CY = H / 2;
 // Ring spacing: inner rings get more room than a linear spacing would give them, so labels near the centre breathe.
 const ringScale = (l: number, max: number) => 0.24 + 0.76 * Math.pow(l / max, 0.85);
@@ -19,7 +19,7 @@ const STEP = 0.5; // seconds between rings
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 // What each kind of record is, in the order a change travels.
-const KIND: Record<string, { label: string; color: string }> = {
+export const KIND: Record<string, { label: string; color: string }> = {
   part: { label: "changed part", color: "var(--accent)" },
   revision: { label: "product revision", color: "var(--cyan)" },
   build: { label: "planned build", color: "var(--warn)" },
@@ -32,12 +32,12 @@ const KIND: Record<string, { label: string; color: string }> = {
   firmware: { label: "firmware", color: "var(--success)" },
   test: { label: "test procedure", color: "var(--success)" },
 };
-const LEGEND: Record<string, string> = { part: "changed part", revision: "product revisions", build: "builds", order: "customer orders",
+export const LEGEND: Record<string, string> = { part: "changed part", revision: "product revisions", build: "builds", order: "customer orders",
   customer: "customers", person: "people", decision: "past decisions" };
 const colorOf = (t: string) => KIND[t]?.color ?? "var(--muted)";
 
 /** Lay the records out in rings by distance from the changed part, keeping each record near what led to it. */
-function layout(nodes: GNode[], edges: GEdge[], center: string) {
+export function layout(nodes: GNode[], edges: GEdge[], center: string) {
   const adj = new Map<string, Set<string>>();
   for (const e of edges) {
     if (!adj.has(e.source)) adj.set(e.source, new Set());

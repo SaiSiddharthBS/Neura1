@@ -585,8 +585,9 @@ class SyncIn(BaseModel):
 def connect_sync(body: SyncIn, g=Depends(graph), v: access.Viewer = Depends(require_leader)):
     from neura1 import alerts
     from neura1.connect import sync
+    from neura1 import agent_mcp
     report = sync.run(g, dry_run=body.dry_run, by=v.name)
-    if report.get("run") and settings.agent_alert_webhook:
+    if report.get("run") and settings.agent_alert_webhook and agent_mcp.sharing_on():
         alerts.post(f"Neura1 synced {len(report['changes'])} change(s) from Zoho:\n"
                     + "\n".join(f"• {c['summary']}" for c in report["changes"][:8]))
     return report
@@ -600,10 +601,25 @@ def agents_status(g=Depends(graph)):
     v = agent_mcp.agent_viewer(g)
     tools = [{"name": t.name, "description": (t.description or "").split("\n")[0]}
              for t in agent_mcp.mcp._tool_manager.list_tools()]
-    return {"mcp": {"enabled": bool(settings.agent_mcp_token), "path": "/api/agent/mcp", "transport": "Streamable HTTP",
+    share = agent_mcp.sharing(g)
+    return {"sharing": share | {"configured": bool(settings.agent_mcp_token)},
+            "mcp": {"enabled": bool(settings.agent_mcp_token) and share["enabled"], "path": "/api/agent/mcp",
+                    "transport": "Streamable HTTP",
                     "read_as": v.name, "sees_money": v.sees_money, "sees_leave": v.unrestricted or v.leader,
                     "tools": tools},
-            "alerts": {"enabled": bool(settings.agent_alert_webhook)}}
+            "alerts": {"enabled": bool(settings.agent_alert_webhook) and share["enabled"],
+                       "configured": bool(settings.agent_alert_webhook)}}
+
+
+class SharingIn(BaseModel):
+    enabled: bool
+
+
+@app.post("/api/agents/sharing")
+def agents_sharing(body: SharingIn, g=Depends(graph), v: access.Viewer = Depends(require_leader)):
+    """The one switch for anything leaving Neura1: the remote MCP endpoint for agents and alerts to Slack or Teams."""
+    from neura1 import agent_mcp
+    return agent_mcp.set_sharing(g, body.enabled, v.name)
 
 
 @app.post("/api/agents/test")
@@ -611,8 +627,11 @@ def agents_test(request: Request, v: access.Viewer = Depends(require_leader)):
     """Connect to Neura1's own remote MCP endpoint as an agent would, list its tools and call one."""
     import anyio
     from mcp import Client
+    from neura1 import agent_mcp
     if not settings.agent_mcp_token:
-        return {"ok": False, "error": "Agent access is off. Set NEURA1_AGENT_MCP_TOKEN to turn it on."}
+        return {"ok": False, "error": "Agent access is not set up. Set NEURA1_AGENT_MCP_TOKEN."}
+    if not agent_mcp.sharing_on():
+        return {"ok": False, "error": "External AI access is switched off. Switch it on above to let agents connect."}
     host, port = request.scope.get("server") or ("127.0.0.1", 8000)
     url = f"http://{host}:{port}/api/agent/{settings.agent_mcp_token}/mcp"
 
@@ -631,8 +650,10 @@ def agents_test(request: Request, v: access.Viewer = Depends(require_leader)):
 
 @app.post("/api/agents/alert")
 def agents_alert(g=Depends(graph), v: access.Viewer = Depends(require_leader)):
-    from neura1 import alerts
+    from neura1 import agent_mcp, alerts
     text = alerts.digest(g)
+    if not agent_mcp.sharing_on():
+        return {"text": text, "sent": False, "reason": "external sharing is off, so it stays in Neura1"}
     return {"text": text} | alerts.post(text)
 
 

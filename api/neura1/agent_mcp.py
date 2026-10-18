@@ -152,6 +152,38 @@ def risk_radar() -> str:
     return _call("risk_radar")
 
 
+# ---------- the switch: nothing leaves Neura1 unless the company turns this on ----------
+
+_cache: dict = {"at": 0.0, "value": None}
+
+
+def sharing(graph=None) -> dict:
+    """Whether external AI access is switched on in the app, by whom and when. Off unless a leader turned it on."""
+    from neura1.graph import rows
+    found = rows(graph or get_graph(), "MATCH (s:Setting {id:'external_ai'}) RETURN s.enabled AS enabled, s.by AS by, s.at AS at")
+    s = found[0] if found else {"enabled": False, "by": None, "at": None}
+    return {"enabled": bool(s["enabled"]), "by": s["by"], "at": s["at"]}
+
+
+def set_sharing(graph, enabled: bool, by: str) -> dict:
+    from datetime import datetime, timezone
+    graph.query("MERGE (s:Setting {id:'external_ai'}) SET s.enabled=$on, s.by=$by, s.at=$at",
+                {"on": enabled, "by": by, "at": datetime.now(timezone.utc).isoformat(timespec="seconds")})
+    _cache["at"] = 0.0
+    return sharing(graph)
+
+
+def sharing_on() -> bool:
+    import time
+    if time.monotonic() - _cache["at"] > 3:
+        try:
+            _cache["value"] = sharing()["enabled"]
+        except Exception:  # the graph being unreachable never opens the door
+            _cache["value"] = False
+        _cache["at"] = time.monotonic()
+    return bool(_cache["value"])
+
+
 # ---------- HTTP: a token gate in front of the MCP app ----------
 
 http_app = mcp.streamable_http_app(streamable_http_path="/mcp", stateless_http=True, json_response=True,
@@ -159,7 +191,8 @@ http_app = mcp.streamable_http_app(streamable_http_path="/mcp", stateless_http=T
 
 
 class Gate:
-    """Off unless a token is set; then a matching bearer token, or the token as the first path segment."""
+    """Off unless a token is set and a leader has switched external AI access on in the app; then a matching bearer
+    token, or the token as the first path segment."""
 
     def __init__(self, app):
         self.app = app
@@ -169,7 +202,8 @@ class Gate:
             return await self.app(scope, receive, send)
         token = settings.agent_mcp_token
         path = scope.get("path", "")
-        if token:
+        on = bool(token) and sharing_on()
+        if on:
             sent = dict(scope.get("headers") or []).get(b"authorization", b"").decode()
             if sent.startswith("Bearer ") and hmac.compare_digest(sent[7:], token):
                 return await self.app(scope, receive, send)
@@ -180,8 +214,9 @@ class Gate:
                 return await self.app(scope | {"path": (sub + rest) if sub and path.startswith(sub) else rest,
                                                "raw_path": ((sub + rest) if sub and path.startswith(sub) else rest).encode()},
                                       receive, send)
-        status, body = (404, b'{"detail":"Agent access is off. Set NEURA1_AGENT_MCP_TOKEN to turn it on."}') if not token \
-            else (401, b'{"detail":"A valid agent token is required"}')
+        status, body = ((404, b'{"detail":"Agent access is not set up. Set NEURA1_AGENT_MCP_TOKEN."}') if not token else
+                        (404, b'{"detail":"External AI access is switched off in Neura1. Nothing leaves the system."}')
+                        if not on else (401, b'{"detail":"A valid agent token is required"}'))
         await send({"type": "http.response.start", "status": status,
                     "headers": [(b"content-type", b"application/json"), (b"www-authenticate", b"Bearer")]})
         await send({"type": "http.response.body", "body": body})

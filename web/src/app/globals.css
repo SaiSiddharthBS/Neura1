@@ -292,6 +292,13 @@ html.lenis, html.lenis body { height: auto; }
 .press:not(:disabled):active { transform: scale(0.97); }
 
 /* The ripple map: a faint pulse travels outward along each connection, and records drift very slightly at rest. */
+.constellation-label {
+  font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .02em; color: #b9c6ef;
+  white-space: nowrap; pointer-events: none; text-shadow: 0 0 2px #04060c, 0 0 8px #04060c, 0 0 14px #04060c;
+  transition: color 200ms ease;
+}
+.constellation-label.is-center { font-size: 14px; font-weight: 600; letter-spacing: .08em; color: #fff; }
+.constellation-label.is-on { color: #fff; font-weight: 600; }
 .gantt-overrun {
   background: repeating-linear-gradient(-45deg, color-mix(in oklch, var(--danger) 88%, transparent) 0 4px,
                                                color-mix(in oklch, var(--danger) 58%, transparent) 4px 8px);

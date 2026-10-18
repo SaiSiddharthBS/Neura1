@@ -11,7 +11,7 @@ type Gantt = {
   groups: { id: string; name: string; deviation_days: number | null; forecast: { end: string | null } }[];
 };
 type Connect = { source: { simulated: boolean }; runs: { at: string; changes: number }[] };
-type Agents = { mcp: { enabled: boolean } };
+type Agents = { mcp: { enabled: boolean }; sharing: { enabled: boolean } };
 
 const lag = (d: number) => (d >= 14 ? `${Math.round(d / 7)} weeks late` : `${d} days late`);
 const ago = (iso: string) => {
@@ -70,7 +70,7 @@ export default function PlanStrip() {
         <div className="flex items-center gap-2 text-[13px]">
           <Bot size={14} className="shrink-0 text-violet" />
           <span className="font-medium">OpenAI Dots</span>
-          <span className="text-muted">{a ? (a.mcp.enabled ? "connected over remote MCP" : "remote MCP, off until enabled") : "…"}</span>
+          <span className="text-muted">{a ? (a.mcp.enabled ? "on: answers agents when they ask" : "optional · off, nothing leaves") : "…"}</span>
         </div>
       </Link>
     </div>

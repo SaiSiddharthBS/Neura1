@@ -21,6 +21,7 @@ type Report = {
   changes?: Change[]; message?: string; run?: string; error?: string; stage?: string;
 };
 type Agents = {
+  sharing: { enabled: boolean; configured: boolean; by: string | null; at: string | null };
   mcp: { enabled: boolean; path: string; transport: string; read_as: string; sees_money: boolean; sees_leave: boolean;
          tools: { name: string; description: string }[] };
   alerts: { enabled: boolean };
@@ -200,6 +201,29 @@ export default function ConnectPage() {
             </div>
             {agents && (agents.mcp.enabled ? <Pill tone="success" dot>On</Pill> : <Pill dot>Off</Pill>)}
           </header>
+
+          {agents && (
+            <div className={`mt-4 flex items-center gap-3 rounded-xl border p-3 ${agents.sharing.enabled ? "border-success/35 bg-success/[0.06]" : "border-line bg-elev"}`}>
+              <button role="switch" aria-checked={agents.sharing.enabled} aria-label="External AI access"
+                      disabled={!canSync || !!busy || !agents.sharing.configured}
+                      onClick={async () => {
+                        const s = await go<{ enabled: boolean }>("share", "/api/agents/sharing", { enabled: !agents.sharing.enabled });
+                        if (s) { toast.success(s.enabled ? "External AI access is on" : "External AI access is off: nothing leaves Neura1"); setAgentTest(null); load(); }
+                      }}
+                      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-40 ${agents.sharing.enabled ? "bg-success" : "bg-elev-strong"}`}>
+                <motion.span layout transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                             className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow ${agents.sharing.enabled ? "right-0.5" : "left-0.5"}`} />
+              </button>
+              <div className="min-w-0 text-[12.5px]">
+                <div className="font-medium">{agents.sharing.enabled ? "External AI access is on" : "Off: nothing leaves Neura1"}</div>
+                <div className="text-muted">
+                  {agents.sharing.enabled
+                    ? `Connected agents get answers only when they ask, with the permissions below.${agents.sharing.by ? ` Switched on by ${agents.sharing.by}.` : ""}`
+                    : agents.sharing.configured ? "An optional feature. A director or leader switches it on when the company wants it." : "Not set up on this server (NEURA1_AGENT_MCP_TOKEN)."}
+                </div>
+              </div>
+            </div>
+          )}
           <p className="mt-3 text-[13px] text-muted">
             Dots are OpenAI&apos;s always-on agents: they keep working on a goal and talk to the team in Slack and Teams. They reach
             outside tools through plugins built on MCP. Neura1 offers itself as one, so a Dot can watch the plan
@@ -238,7 +262,7 @@ export default function ConnectPage() {
             </button>
           </div>
           {agents && !agents.mcp.enabled && (
-            <p className="mt-2 text-[12px] text-faint">Off. Set <code className="font-mono">NEURA1_AGENT_MCP_TOKEN</code> to turn it on. Turning it on sends answers to the agent&apos;s provider; leave it off to keep everything on premises.</p>
+            <p className="mt-2 text-[12px] text-faint">While access is off, the endpoint refuses every agent and plan checks stay inside Neura1. Switching it on sends answers to the agent&apos;s provider when an agent asks.</p>
           )}
 
           <AnimatePresence>
@@ -263,7 +287,7 @@ export default function ConnectPage() {
           <div className="mt-5 border-t border-line pt-4 text-[12.5px] text-muted">
             <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-faint">Set up a Dot</div>
             <ol className="list-decimal space-y-1 pl-5">
-              <li>Set <code className="font-mono">NEURA1_AGENT_MCP_TOKEN</code> (and, if the Dot may see more, <code className="font-mono">NEURA1_AGENT_VIEWER</code>).</li>
+              <li>Switch external AI access on above (the server needs <code className="font-mono">NEURA1_AGENT_MCP_TOKEN</code>; <code className="font-mono">NEURA1_AGENT_VIEWER</code> if the Dot may see more).</li>
               <li>Add Neura1 to ChatGPT as a plugin using the endpoint above.</li>
               <li>Give a Dot a standing goal, for example: &ldquo;Each morning, call timeline_deviations and post anything new that slipped, with the reason, in #ops.&rdquo;</li>
             </ol>
