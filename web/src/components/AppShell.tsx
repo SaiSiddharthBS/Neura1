@@ -9,7 +9,7 @@ import { motion } from "motion/react";
 import { Toaster } from "sonner";
 import {
   AudioLines, Bell, Brain, Building2, ChevronRight, FileText, FolderKanban, History, Inbox, KanbanSquare, LayoutDashboard, Menu, MessageCircle,
-  Compass, FlaskConical, Handshake, HeartPulse, LifeBuoy, Network, Package, Radar, Search, Sparkles, Sun, Target, Upload, Users, Waypoints,
+  Compass, FlaskConical, GanttChartSquare, Handshake, HeartPulse, LifeBuoy, Network, Package, Plug, Radar, Search, Sparkles, Sun, Target, Upload, Users, Waypoints,
 } from "lucide-react";
 import CommandPalette from "@/components/CommandPalette";
 import ModelStatus from "@/components/ModelStatus";
@@ -38,6 +38,7 @@ const NAV: { section: string; items: Item[]; collapsible?: boolean }[] = [
     { href: "/risk", label: "Risk radar", icon: Radar },
   ]},
   { section: "Plan ahead", items: [
+    { href: "/timeline", label: "Timeline", icon: GanttChartSquare },
     { href: "/promise", label: "Can we promise?", icon: Handshake },
     { href: "/sandbox", label: "Sandbox", icon: FlaskConical },
     { href: "/rescue", label: "Knowledge rescue", icon: LifeBuoy },
@@ -48,6 +49,7 @@ const NAV: { section: string; items: Item[]; collapsible?: boolean }[] = [
     { href: "/projects", label: "Projects", icon: FolderKanban },
     { href: "/customers", label: "Customers", icon: Building2 },
     { href: "/inventory", label: "Inventory", icon: Package },
+    { href: "/connect", label: "Connections", icon: Plug },
   ]},
   { section: "More", collapsible: true, items: [
     { href: "/history", label: "Plans", icon: History },

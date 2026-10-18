@@ -132,7 +132,8 @@ LOADERS: list[tuple[str, str]] = [
     ("purchase_orders.csv", """
         MERGE (po:PurchaseOrder {id:$r.id})
         SET po.qty=toInteger($r.qty), po.unit_price=$r.unit_price, po.currency=$r.currency, po.ordered_on=$r.ordered_on,
-            po.expected_on=$r.expected_on, po.status=$r.status, po.source=$src, po.authority=$auth
+            po.expected_on=$r.expected_on, po.status=$r.status, po.source=$src, po.authority=$auth,
+            po.baseline_expected=coalesce(po.baseline_expected, $r.expected_on)
         WITH po MATCH (s:Supplier {id:$r.supplier_id}), (i:Item {id:$r.item_id})
         MERGE (po)-[:FROM_SUPPLIER]->(s) MERGE (po)-[:ORDERS]->(i)
         WITH po OPTIONAL MATCH (q:Quote {id:$r.quote_id})
@@ -151,7 +152,8 @@ LOADERS: list[tuple[str, str]] = [
     ("customers.csv", "MERGE (c:Customer {id:$r.id}) SET c.name=$r.name, c.source=$src, c.authority=$auth"),
     ("builds.csv", """
         MERGE (b:Build {id:$r.id})
-        SET b.qty=toInteger($r.qty), b.planned_date=$r.planned_date, b.status=$r.status, b.source=$src, b.authority=$auth
+        SET b.qty=toInteger($r.qty), b.planned_date=$r.planned_date, b.status=$r.status, b.source=$src, b.authority=$auth,
+            b.baseline_date=coalesce(b.baseline_date, $r.planned_date)
         WITH b MATCH (v:Revision {id:$r.rev_id}) MERGE (b)-[:BUILDS]->(v)"""),
     ("orders.csv", """
         MERGE (o:Order {id:$r.id})
@@ -171,7 +173,8 @@ LOADERS: list[tuple[str, str]] = [
     ("projects.csv", """
         MERGE (p:Project {id:$r.id})
         SET p.name=$r.name, p.status=$r.status, p.start_date=$r.start_date, p.target_date=$r.target_date,
-            p.summary=$r.summary, p.source=$src, p.authority=$auth
+            p.summary=$r.summary, p.source=$src, p.authority=$auth,
+            p.baseline_target=coalesce(p.baseline_target, $r.target_date)
         WITH p MATCH (lead:Person {id:$r.lead_id}) MERGE (lead)-[l:LEADS]->(p) SET l.source=$src"""),
     ("project_members.csv", """
         MATCH (p:Project {id:$r.project_id}), (m:Person {id:$r.person_id})
@@ -195,7 +198,10 @@ LOADERS: list[tuple[str, str]] = [
         MERGE (a:Action {id:$r.id})
         SET a.kind='work', a.title=$r.title, a.status=$r.status, a.created_at=$r.created,
             a.completed_at=CASE WHEN coalesce($r.completed, '') = '' THEN NULL ELSE $r.completed END,
+            a.start_date=CASE WHEN coalesce($r.start, '') = '' THEN NULL ELSE $r.start END,
+            a.due_date=CASE WHEN coalesce($r.due, '') = '' THEN NULL ELSE $r.due END,
             a.target=$r.target_id, a.source=$src, a.authority=$auth
+        SET a.baseline_start=coalesce(a.baseline_start, a.start_date), a.baseline_due=coalesce(a.baseline_due, a.due_date)
         WITH a OPTIONAL MATCH (p:Person {id:$r.assignee_id})
         FOREACH (_ IN CASE WHEN p IS NULL THEN [] ELSE [1] END | MERGE (a)-[:ASSIGNED_TO]->(p))
         WITH a OPTIONAL MATCH (pr:Project {id:$r.project_id})

@@ -1,6 +1,6 @@
 # Cypher queries Neura1 depends on
 
-Generated from the modules below by `uv run python -m neura1.docs`: [`queries.py`](../api/neura1/queries.py), [`brain.py`](../api/neura1/brain.py), [`scenarios.py`](../api/neura1/scenarios.py), [`people.py`](../api/neura1/people.py), [`search.py`](../api/neura1/search.py), [`memory.py`](../api/neura1/memory.py), [`access.py`](../api/neura1/access.py), [`supply.py`](../api/neura1/supply.py), [`inventory.py`](../api/neura1/inventory.py), [`purchasing.py`](../api/neura1/purchasing.py), [`promise.py`](../api/neura1/promise.py), [`sandbox.py`](../api/neura1/sandbox.py), [`knowledge_health.py`](../api/neura1/knowledge_health.py), [`rescue.py`](../api/neura1/rescue.py).
+Generated from the modules below by `uv run python -m neura1.docs`: [`queries.py`](../api/neura1/queries.py), [`brain.py`](../api/neura1/brain.py), [`scenarios.py`](../api/neura1/scenarios.py), [`people.py`](../api/neura1/people.py), [`search.py`](../api/neura1/search.py), [`memory.py`](../api/neura1/memory.py), [`access.py`](../api/neura1/access.py), [`supply.py`](../api/neura1/supply.py), [`inventory.py`](../api/neura1/inventory.py), [`purchasing.py`](../api/neura1/purchasing.py), [`promise.py`](../api/neura1/promise.py), [`sandbox.py`](../api/neura1/sandbox.py), [`knowledge_health.py`](../api/neura1/knowledge_health.py), [`rescue.py`](../api/neura1/rescue.py), [`timeline.py`](../api/neura1/timeline.py).
 All queries are parameterised. Analysis queries only read; writes happen in the loaders
 (`api/neura1/ingest/`) and in the modules that record actions (tasks, purchase orders, chat, meetings).
 
@@ -524,6 +524,9 @@ WHERE c.ts IS NOT NULL AND c.retracted_at IS NULL AND NOT c.id ENDS WITH '#title
   AND (s.kind IN ['chat', 'ticket'] OR c.ordinal = 1)
 RETURN CASE s.kind WHEN 'notice' THEN 'notice' WHEN 'doc' THEN 'document' ELSE 'message' END AS kind, c.ts AS at, c.author AS who, s.title AS what, c.text AS detail, c.id AS ref
 UNION ALL
+MATCH (x:SyncChange)
+RETURN 'sync' AS kind, x.at AS at, x.connector AS who, x.what AS what, x.detail AS detail, x.ref AS ref
+UNION ALL
 MATCH (d:Decision) OPTIONAL MATCH (d)-[:DECIDED_BY]->(p:Person)
 RETURN 'decision' AS kind, d.decided_at AS at, p.name AS who, d.id + ' · ' + d.outcome AS what,
        d.summary AS detail, d.id AS ref
@@ -1030,7 +1033,7 @@ ORDER BY name
 
 
 **Parameters:** `$id`  
-**Used by:** —
+**Used by:** Timeline: leave in a task's remaining window
 
 ```cypher
 MATCH (:Person {id:$id})-[:HAS_ABSENCE]->(a:Absence)
@@ -1614,4 +1617,99 @@ OPTIONAL MATCH (c)-[:MENTIONS]->(x)
 RETURN c.id AS id, c.question AS question, c.question_id AS question_id, c.text AS text, c.ts AS ts,
        collect(DISTINCT x.id) AS about
 ORDER BY ts
+```
+
+# Timeline: plan, baseline and forecast
+
+## `PLAN_PROJECTS`
+
+
+
+**Parameters:** none  
+**Used by:** Timeline (Gantt)
+
+```cypher
+MATCH (p:Project)
+OPTIONAL MATCH (lead:Person)-[:LEADS]->(p)
+RETURN p.id AS id, p.name AS name, p.status AS status, p.start_date AS start, p.target_date AS target,
+       coalesce(p.baseline_target, p.target_date) AS baseline_target, lead.name AS lead
+ORDER BY p.target_date, p.id
+```
+
+## `PLAN_TASKS`
+
+
+
+**Parameters:** none  
+**Used by:** Timeline (Gantt)
+
+```cypher
+MATCH (a:Action {kind:'work'})
+OPTIONAL MATCH (a)-[:IN_PROJECT]->(p:Project)
+OPTIONAL MATCH (a)-[:ASSIGNED_TO]->(who:Person)
+RETURN a.id AS id, a.title AS title, a.status AS status, a.start_date AS start, a.due_date AS due,
+       coalesce(a.baseline_start, a.start_date) AS baseline_start, coalesce(a.baseline_due, a.due_date) AS baseline_due,
+       a.created_at AS created, a.completed_at AS completed, a.target AS target, p.id AS project,
+       who.id AS person_id, who.name AS owner
+ORDER BY a.id
+```
+
+## `PLAN_BUILDS`
+
+
+
+**Parameters:** none  
+**Used by:** Timeline (Gantt)
+
+```cypher
+MATCH (b:Build)-[:BUILDS]->(r:Revision)
+OPTIONAL MATCH (o:Order)-[:FULFILLED_BY]->(b)
+OPTIONAL MATCH (c:Customer)-[:PLACED]->(o)
+OPTIONAL MATCH (owner:Person)-[:OWNS]->(b)
+OPTIONAL MATCH (pr:Project)-[:COVERS]->(b)
+RETURN b.id AS id, r.id AS revision, b.qty AS qty, b.status AS status, b.planned_date AS planned,
+       coalesce(b.baseline_date, b.planned_date) AS baseline, owner.name AS owner,
+       collect(DISTINCT pr.id) AS projects,
+       collect(DISTINCT {id:o.id, due:o.due_date, qty:o.qty, customer:c.name, penalty_note:o.penalty_note,
+                         unit_price:o.unit_price, penalty_pct:o.penalty_pct_per_week, cap_pct:o.penalty_cap_pct}) AS orders
+ORDER BY planned, id
+```
+
+## `ORDER_PROJECTS`
+
+
+
+**Parameters:** none  
+**Used by:** Timeline (Gantt)
+
+```cypher
+MATCH (pr:Project)-[:COVERS]->(o:Order) RETURN o.id AS id, collect(pr.id) AS projects
+```
+
+## `OPEN_POS`
+
+
+
+**Parameters:** `$id`  
+**Used by:** Timeline: open purchase orders feed builds in date order
+
+```cypher
+MATCH (po:PurchaseOrder)-[:ORDERS]->(:Item {id:$id})
+WHERE po.status IN ['open', 'partially_received']
+OPTIONAL MATCH (g:Receipt)-[:AGAINST]->(po)
+WITH po, sum(coalesce(g.qty, 0)) AS received
+RETURN po.id AS id, po.qty - received AS qty, po.expected_on AS expected
+ORDER BY expected
+```
+
+## `ABSENCES`
+
+
+
+**Parameters:** `$from`, `$id`, `$to`  
+**Used by:** Timeline: leave in a task's remaining window
+
+```cypher
+MATCH (p:Person {id:$id})-[:HAS_ABSENCE]->(a:Absence) WHERE a.end_date >= $from AND a.start_date <= $to
+RETURN a.start_date AS start, a.end_date AS end ORDER BY start
 ```

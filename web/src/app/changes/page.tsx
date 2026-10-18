@@ -11,7 +11,7 @@ type Item = { kind: string; at: string; who: string | null; what: string; detail
 type ActionItem = { id: string; task: string; due: string | null; quote: string; owner: string; chunk: string; meeting: string; at: string };
 type Flag = { record: string; label: string; chunk: string | null; reason: string };
 
-const KIND: Record<string, string> = { message: "bg-bg", decision: "bg-danger/10 text-danger", investigation: "bg-accent/12 text-accent", quote: "bg-warn/10 text-warn" };
+const KIND: Record<string, string> = { message: "bg-bg", decision: "bg-danger/10 text-danger", investigation: "bg-accent/12 text-accent", quote: "bg-warn/10 text-warn", sync: "bg-violet/12 text-violet" };
 
 export default function Changes() {
   const [d, setD] = useState<{ feed: Item[]; attention: Flag[] } | null>(null);

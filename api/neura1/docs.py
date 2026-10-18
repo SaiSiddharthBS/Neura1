@@ -29,6 +29,9 @@ USED_BY = {
     "CHANGES": "What's new feed", "STALE_EVIDENCE": "What's new · needs attention",
     "STALE_DECISIONS": "What's new · needs attention", "EXPIRING_QUOTES": "What's new · needs attention",
     "UNOWNED": "What's new · needs attention",
+    "PLAN_PROJECTS": "Timeline (Gantt)", "PLAN_TASKS": "Timeline (Gantt)", "PLAN_BUILDS": "Timeline (Gantt)",
+    "ORDER_PROJECTS": "Timeline (Gantt)", "OPEN_POS": "Timeline: open purchase orders feed builds in date order",
+    "ABSENCES": "Timeline: leave in a task's remaining window",
 }
 
 
@@ -38,7 +41,8 @@ def main() -> None:
                 "search.py": "Hybrid search", "memory.py": "Conversation memory", "access.py": "Permissions",
                 "supply.py": "Supply: parts lists, lead times and alternates", "inventory.py": "Inventory and stock ledger",
                 "purchasing.py": "Purchasing", "promise.py": "Can we promise this?", "sandbox.py": "Company sandbox",
-                "knowledge_health.py": "Knowledge health", "rescue.py": "Knowledge rescue"}
+                "knowledge_health.py": "Knowledge health", "rescue.py": "Knowledge rescue",
+                "timeline.py": "Timeline: plan, baseline and forecast"}
     out = ["# Cypher queries Neura1 depends on", "",
            "Generated from the modules below by `uv run python -m neura1.docs`: "
            + ", ".join(f"[`{m}`](../api/neura1/{m})" for m in sections) + ".",

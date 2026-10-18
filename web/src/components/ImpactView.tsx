@@ -137,8 +137,8 @@ export default function ImpactView({ source, item, price, lead, asOf }: Props) {
               note={r.builds[0]?.supply_eta_if_ordered_today ? `new supply ~${r.builds[0].supply_eta_if_ordered_today}` : ""} />
         <Stat label="Customer orders exposed" value={<Ticker value={orders.length} />}
               note={`${orders.filter((o) => o.penalty).length} with a penalty clause`} warn={orders.some((o) => o.penalty)} />
-        <Stat label="Cost increase" value={r.cost ? <Ticker value={Number(r.cost.total_delta)} format={(n) => inr(Math.round(n))} /> : "unknown"}
-              note={r.cost ? r.cost.formula : r.cost_error ?? ""} />
+        <Stat label="Cost increase" value={r.cost ? (r.cost.total_delta == null ? "Hidden" : <Ticker value={Number(r.cost.total_delta)} format={(n) => inr(Math.round(n))} />) : "unknown"}
+              note={r.cost ? (r.cost.formula ?? "Amounts are visible to the directors and leadership") : r.cost_error ?? ""} />
         <Stat label="People to involve" value={<Ticker value={owners.size} />} note={`${r.actions.length} tasks under HB-ENG-04`} />
       </section>
 
@@ -278,7 +278,7 @@ function briefText(r: ImpactReport): string {
   const lines = [
     `*${r.part.id} change*: ${r.change.new_unit_price ? `price ${inr(r.cost?.baseline_unit_price)} → ${inr(r.change.new_unit_price)}` : ""}${r.change.lead_weeks ? `, lead time ${r.change.lead_weeks} weeks` : ""}`,
     `Affects ${r.where_used.filter((u) => u.applicable).map((u) => u.revision).join(", ")}; ${r.builds.filter((b) => b.at_risk).length} builds at risk; orders ${orders.map((o) => `${o.order} (${o.customer}${o.penalty ? ", penalty clause" : ""})`).join(", ")}.`,
-    r.cost ? `Cost increase ${inr(r.cost.total_delta)} (${r.cost.formula}).` : "",
+    r.cost && r.cost.total_delta != null ? `Cost increase ${inr(r.cost.total_delta)} (${r.cost.formula}).` : "",
     ...r.alternates.filter((a) => a.status === "rejected").map((a) => `Do not use ${a.id}: ${a.decisions[0]?.reason ?? "previously rejected"} (${a.decisions[0]?.id}).`),
     "",
     ...[...byOwner].flatMap(([o, ts]) => [`*${o}*`, ...ts.map((t) => `• ${t}`)]),
@@ -492,7 +492,7 @@ function renderLens(lens: Lens, r: ImpactReport, onOpen: (o: Open) => void) {
             {r.builds.filter((b) => b.at_risk).length} planned builds cannot be covered from free stock before new supply could
             arrive. They feed {orders.length} customer orders: {orders.map((o) => `${o.customer} ${o.order} due ${o.due}${o.penalty ? " (penalty clause)" : ""}`).join("; ")}.
           </p>
-          {c && <p>Estimated cost increase: <b>{inr(c.total_delta)}</b> ({c.formula}). Excludes {c.excluded.join(", ")}.</p>}
+          {c && c.total_delta != null && <p>Estimated cost increase: <b>{inr(c.total_delta)}</b> ({c.formula}). Excludes {c.excluded.join(", ")}.</p>}
           {rejected.length > 0 && <p>The cheapest listed alternate, {rejected.map((a) => a.id).join(", ")}, was previously rejected. See the decision above.</p>}
           <p className="text-muted">Every sentence above is generated from the query results on this page, not by a language model.</p>
         </div>

@@ -25,13 +25,13 @@ A newer timestamp never overrides an approval. Only an explicit superseding deci
 | `Item` | `id`, `kind` (product · assembly · part · firmware · test), `mpn`, `manufacturer`, `on_hand`, `allocated`, `category`, `hsn`, `reorder_level`, `location` | One label for everything with a part number, so dependencies are uniform |
 | `Revision` | `id`, `rev`, `status` (draft · released · obsolete), `effective_from` | BOM lines hang off revisions, not items |
 | `Supplier`, `Quote` | `unit_price`, `currency`, `moq`, `lead_weeks`, `valid_from`, `valid_until` | Expired quotes stay in the graph but are never used as a baseline |
-| `Build`, `Order`, `Customer`, `Shipment` | quantities and dates; `Order.penalty_note` | |
+| `Build`, `Order`, `Customer`, `Shipment` | quantities and dates; `Build.baseline_date`; `Order.penalty_note` | |
 | `Person`, `Team` | `name`, `role` | Teams are Flyvi's three tiers (directors, leadership, employees). Ownership is a relationship, so "who owns this?" is one hop |
 | `Source` | `kind` (export · chat · ticket · doc · notice · meeting · rescue · document · dm), `title`, `version` (content hash), `ref` (e.g. TR-112) | A meeting source keeps its timed transcript; its passages carry `start` and `end` seconds |
 | `Chunk` | `text`, `author`, `ts`, `page`, `source_version` | A passage: one Slack message, one ticket comment, one paragraph. Full-text indexed |
 | `Decision` | `outcome` (approved · rejected · proposed · evidence), `summary`, `reason`, `decided_at`, `authority`, `extracted_by` | |
-| `Investigation`, `Action` | content-hash ids, `status`, `approved_by`, `created_at` | Idempotent: re-approving finds the same nodes |
-| `Project` | `name`, `status`, `start_date`, `target_date`, `summary` | Linked to people (`LEADS`, `WORKS_ON {role}`) and to whatever it covers |
+| `Investigation`, `Action` | content-hash ids, `status`, `approved_by`, `created_at`; work items also `start_date`, `due_date`, `baseline_start`, `baseline_due` | Idempotent: re-approving finds the same nodes. The baseline is the first plan loaded; a later import or ERP sync that moves a date keeps it, so the timeline can show the replan |
+| `Project` | `name`, `status`, `start_date`, `target_date`, `baseline_target`, `summary` | Linked to people (`LEADS`, `WORKS_ON {role}`) and to whatever it covers |
 | `Alias` | `term` | Names people actually use in chat ("pmic_seq.c", "Nilgiri") that point at a record |
 | `Organization` | `name`, `kind` | Datasol (parent) and Flyvi (`SUBSIDIARY_OF`); people `HOLDS_ROLE {role}` (Founder & Managing Director, President & Executive Officer, directors, COO, CTO, General Manager); teams are `PART_OF` an organisation |
 | `Skill` | `name` | `Person-HAS_SKILL->Skill`; stated skills sit alongside knowledge derived from work |
@@ -47,10 +47,11 @@ A newer timestamp never overrides an approval. Only an explicit superseding deci
 | `StockMove` | `date`, `qty` (signed), `kind` (opening · receipt · issue · adjustment), `ref` | The stock ledger: every movement `MOVES` an item, and the running balance equals stock on hand |
 | `Channel`, `Message` | `kind` (channel · dm · group · bot), `members`; message `text`, `reactions`, `reply_to` | Channel messages are `Chunk` passages (company knowledge); direct, group and personal messages are `Message` nodes no knowledge query matches |
 | `Brief` | `date`, `person` | One per day (and per person): the morning brief is posted once |
+| `SyncRun`, `SyncChange` | `connector`, `at`, `by`, `changes`; a change's `what`, `detail`, `ref` | One run per ERP sync over MCP; each change is `IN_RUN` and `ABOUT` the record it changed, and shows in What's new |
 
 Relationships not in the diagram above: `REPORTS_TO`, `BACKS_UP`, `IN_PROJECT` (work items), `ASSIGNED_TO` (tickets and
 tasks), `SUBSIDIARY_OF`, `HOLDS_ROLE`, `HAS_SKILL`, `HAS_ABSENCE`, `CERTIFIES`, `RETEST_IF_CHANGED`, `ON`, `STARTED`,
-`HAS_TURN`, `CITED`, `FOUND_IN`.
+`HAS_TURN`, `CITED`, `FOUND_IN`, `IN_RUN`.
 
 ## Who knows what
 

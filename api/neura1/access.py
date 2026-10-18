@@ -9,6 +9,7 @@ With no viewer (internal calls, tests, MCP) everything is visible; the web app a
 """
 
 import re
+from decimal import Decimal
 from dataclasses import dataclass, field
 
 from falkordb import Graph
@@ -131,12 +132,13 @@ def points_at_hidden(obj, hidden: set[str]) -> bool:
 def redact_money(obj, keys=("value", "unit_price", "max_penalty", "open_value", "value_at_risk", "total_delta",
                             "material_delta", "one_time_total", "baseline_unit_price", "new_unit_price",
                             "cost_total", "amount", "price", "last_price", "stock_value", "purchase_value", "total",
-                            "saving_vs_notice")):
+                            "saving_vs_notice", "formula")):
     """Replace money fields anywhere in a response with None and mark the response."""
     if isinstance(obj, dict):
         out = {}
         for k, v in obj.items():
-            out[k] = None if k in keys and isinstance(v, (int, float, str)) and v not in ("", None) else redact_money(v, keys)
+            out[k] = None if k in keys and isinstance(v, (int, float, str, Decimal)) and v not in ("", None) \
+                else redact_money(v, keys)
         return out
     if isinstance(obj, list):
         return [redact_money(x, keys) for x in obj]

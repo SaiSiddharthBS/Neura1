@@ -192,6 +192,9 @@ WHERE c.ts IS NOT NULL AND c.retracted_at IS NULL AND NOT c.id ENDS WITH '#title
   AND (s.kind IN ['chat', 'ticket'] OR c.ordinal = 1)
 RETURN CASE s.kind WHEN 'notice' THEN 'notice' WHEN 'doc' THEN 'document' ELSE 'message' END AS kind, c.ts AS at, c.author AS who, s.title AS what, c.text AS detail, c.id AS ref
 UNION ALL
+MATCH (x:SyncChange)
+RETURN 'sync' AS kind, x.at AS at, x.connector AS who, x.what AS what, x.detail AS detail, x.ref AS ref
+UNION ALL
 MATCH (d:Decision) OPTIONAL MATCH (d)-[:DECIDED_BY]->(p:Person)
 RETURN 'decision' AS kind, d.decided_at AS at, p.name AS who, d.id + ' · ' + d.outcome AS what,
        d.summary AS detail, d.id AS ref

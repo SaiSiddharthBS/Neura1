@@ -292,6 +292,11 @@ html.lenis, html.lenis body { height: auto; }
 .press:not(:disabled):active { transform: scale(0.97); }
 
 /* The ripple map: a faint pulse travels outward along each connection, and records drift very slightly at rest. */
+.gantt-overrun {
+  background: repeating-linear-gradient(-45deg, color-mix(in oklch, var(--danger) 88%, transparent) 0 4px,
+                                               color-mix(in oklch, var(--danger) 58%, transparent) 4px 8px);
+  box-shadow: 0 0 14px color-mix(in oklch, var(--danger) 28%, transparent);
+}
 .ripple-flow { stroke-dasharray: 4 96; stroke-linecap: round; animation: ripple-flow 4.2s linear infinite; }
 @keyframes ripple-flow { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
 .ripple-drift { animation: ripple-drift 7s ease-in-out infinite; transform-box: fill-box; }

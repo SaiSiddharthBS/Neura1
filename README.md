@@ -20,13 +20,13 @@
 <img alt="NVIDIA DGX Spark" src="https://img.shields.io/badge/NVIDIA-DGX_Spark-76B900?style=flat-square&logo=nvidia&logoColor=white&labelColor=0b0d12">
 <img alt="vLLM" src="https://img.shields.io/badge/vLLM-ornith--1.5--35b-8b5cf6?style=flat-square&labelColor=0b0d12">
 <img alt="Whisper" src="https://img.shields.io/badge/Whisper-on_premises-e5e7eb?style=flat-square&logo=openai&logoColor=white&labelColor=0b0d12">
-<img alt="MCP" src="https://img.shields.io/badge/MCP-16_tools-22d3ee?style=flat-square&labelColor=0b0d12">
+<img alt="MCP" src="https://img.shields.io/badge/MCP-server_%2B_client-22d3ee?style=flat-square&labelColor=0b0d12">
 <br>
 <img alt="Python" src="https://img.shields.io/badge/Python_3.12-FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white&labelColor=0b0d12">
 <img alt="Next.js" src="https://img.shields.io/badge/Next.js_16-React_19-ffffff?style=flat-square&logo=nextdotjs&logoColor=white&labelColor=0b0d12">
 <img alt="Tailwind" src="https://img.shields.io/badge/Tailwind_4-OKLCH-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white&labelColor=0b0d12">
 <img alt="Motion" src="https://img.shields.io/badge/Motion-View_Transitions-ff4f9a?style=flat-square&logo=framer&logoColor=white&labelColor=0b0d12">
-<img alt="Tests" src="https://img.shields.io/badge/tests-103_passing-34d399?style=flat-square&labelColor=0b0d12">
+<img alt="Tests" src="https://img.shields.io/badge/tests-117_passing-34d399?style=flat-square&labelColor=0b0d12">
 <img alt="Licence" src="https://img.shields.io/badge/licence-AGPL--3.0-a42e2b?style=flat-square&labelColor=0b0d12">
 
 </div>
@@ -50,6 +50,11 @@ promises, and the knowledge needed to catch it is spread across spreadsheets, ch
 
 Part of Neura1 is general: chat, meetings, knowledge health, permissions, briefs and Ask work for any organisation.
 The part that traces parts, builds, orders and suppliers is built for manufacturers.
+
+**An add-on to the planning tools a company already has.** Neura1 does not ask anyone to leave their ERP or project
+planner. It reads them over the Model Context Protocol (Zoho Inventory and Zoho Projects in the demo), keeps the graph in
+step, shows on one timeline where the plan is slipping and why, and lets the agents a team already works with, such as
+OpenAI Dots, ask it questions. Modules can take over from paid tools later, one at a time, when a company is ready.
 
 > [!NOTE]
 > **Flyvi Technologies is the reference company, not the limit.** Neura1 was designed around a real manufacturer:
@@ -120,6 +125,10 @@ Neura1 holds the whole company in one FalkorDB graph, so one traversal answers i
 
 <table>
   <tr>
+    <td width="50%"><img src="docs/demo/timeline.png" alt="Timeline with deviations"><br><sub><b>The plan, and where it is slipping.</b> Every project, task, build and customer order on one Gantt. The outline is the first plan recorded, the bar is today's plan, red hatching is the forecast, worked out by code from stock, open purchase orders, supplier notices, lead times and leave. Lines show which order waits on which build.</sub></td>
+    <td width="50%"><img src="docs/demo/timeline-why.png" alt="Why a customer order slips"><br><sub><b>Every slip explains itself.</b> SO-881 ships 142 days late because BO-0412 waits for NB54360, at 22 weeks by the supplier notice. The penalty clause is worked out for the directors and leadership only, and the date matches "Can we promise?" exactly. Deviations export as CSV for the planner.</sub></td>
+  </tr>
+  <tr>
     <td width="50%"><img src="docs/demo/promise.png" alt="Can we promise this?"><br><sub><b>Can we promise this?</b> "50 × PDU-28 by 31 December?" Stock and quotes alone say yes. Neura1 says no: the supplier notice of 14 October moved NB54360 to 22 weeks, so the honest date is 10 April 2027. It checks people, knowledge and certifications too, and says what would change the answer.</sub></td>
     <td width="50%"><img src="docs/demo/sandbox.png" alt="Company sandbox"><br><sub><b>A sandbox for the whole company.</b> FalkorDB copies the company graph in about 0.1 s. A scenario runs on the copy, each change alone and then together, and the copy is thrown away. What only breaks in combination is called out: the regulator change needs Sai's firmware review in the very weeks Sai is away.</sub></td>
   </tr>
@@ -155,11 +164,19 @@ Neura1 holds the whole company in one FalkorDB graph, so one traversal answers i
   </tr>
 </table>
 
+### 06 · It works with what you already use
+
+<table>
+  <tr>
+    <td><img src="docs/demo/connect.png" alt="Connections: Zoho over MCP and OpenAI Dots"><br><sub><b>Your ERP and planner, over MCP; your agents, over MCP.</b> Neura1 Connect calls Zoho's tools (items, purchase orders, goods received, projects, tasks), maps Zoho's fields and MM-DD-YYYY dates, compares field by field, validates like any import and loads only what changed: here, stock 320 → 520, a PO received, a task finished, a due date moved and a new task. A replanned date shows on the timeline against the original plan. The other way round, a token-protected remote MCP endpoint gives OpenAI Dots, ChatGPT or Claude 14 read-only tools, such as <code>timeline_deviations</code> and <code>can_we_promise</code>, with the same permissions as a person: by default no amounts and nobody's leave. Plan checks can be posted to Slack or Teams. The demo reads a simulated Zoho and has not been tried with a live Dot; both are settings, not new code.</sub></td>
+  </tr>
+</table>
+
 <br>
 
 ## ◆ Architecture
 
-<img src="docs/readme/architecture.svg" alt="Sources are validated and read on Flyvi's own hardware, verified facts enter one FalkorDB graph, code-only engines answer, and people use it through the web app, chat, the Ask agent, MCP and the docs editor" width="100%">
+<img src="docs/readme/architecture.svg" alt="Sources are validated and read on Flyvi's own hardware, verified facts enter one FalkorDB graph, code-only engines answer, and people use it through the web app, chat, the Ask agent, the docs editor and MCP, which also syncs the ERP and planner and serves cloud agents such as OpenAI Dots" width="100%">
 
 Three rules hold everywhere:
 
@@ -189,7 +206,7 @@ The product is the graph. Every feature above is a FalkorDB capability put to wo
 <img src="docs/readme/schema.svg" alt="The Neura1 graph schema: products, supply and stores; demand; people and organisation; knowledge; and work, with the relationships between them" width="100%">
 
 <details>
-<summary><b>See the Cypher</b> (104 queries, all documented in <a href="docs/queries.md">docs/queries.md</a>)</summary>
+<summary><b>See the Cypher</b> (110 queries, all documented in <a href="docs/queries.md">docs/queries.md</a>)</summary>
 <br>
 
 Where a part is used, quantities multiplied along every path, blocked by draft or obsolete revisions:
@@ -234,7 +251,7 @@ CALL db.idx.fulltext.queryNodes('Chunk', $q) YIELD node, score RETURN node.id, s
 
 ## ◆ Proof
 
-<img src="docs/readme/stats.svg" alt="15 of 18 blind questions answered by the graph agent (search alone: 10); a sandbox copies the company in 0.1 s; 104 documented Cypher queries; 103 automated tests; zero cloud cost" width="100%">
+<img src="docs/readme/stats.svg" alt="15 of 18 blind questions answered by the graph agent (search alone: 10); a sandbox copies the company in 0.1 s; 110 documented Cypher queries; 117 automated tests; zero cloud cost" width="100%">
 
 We wrote the expected answers before running anything and compared three systems on the same model
 (ornith-1.5-35b-a3b on the DGX Spark). Every result and every failure is published in [docs/EVAL.md](docs/EVAL.md).
@@ -261,7 +278,8 @@ a browser cannot submit made-up tasks or prices · if FalkorDB is down the API r
 | Graph | **FalkorDB**: Cypher, vector and full-text indexes, graph algorithms, `GRAPH.COPY` |
 | Models | **NVIDIA DGX Spark** serving **ornith-1.5-35b-a3b** with **vLLM** (OpenAI-compatible) · Qwen2.5-7B on Ollama as fallback · nomic-embed-text embeddings |
 | Speech | **faster-whisper** (open-source Whisper, CTranslate2), on premises, primed with the graph's vocabulary |
-| API | **Python 3.12** · **FastAPI** · Pydantic · a JSON plan-act agent with 26 tools · an **MCP** server with 16 tools |
+| API | **Python 3.12** · **FastAPI** · Pydantic · a JSON plan-act agent with 26 tools |
+| MCP | **Model Context Protocol** both ways: a local server with 16 tools, a remote Streamable HTTP server with 14 permission-filtered tools for cloud agents (OpenAI Dots, ChatGPT, Claude), and a client that syncs Zoho Inventory and Zoho Projects |
 | Web | **Next.js 16** · **React 19** with View Transitions · **Tailwind CSS 4** with OKLCH tokens · **Motion** · Lenis · React Flow |
 | Documents | **SuperDoc** (Word layout, tracked changes, .docx) · pdf.js |
 | Operations | Docker Compose · Tailscale · Cloudflare Tunnel · **Playwright**, which captured every screenshot here |
@@ -278,7 +296,7 @@ docker compose up -d falkordb                      # graph on :6380 · FalkorDB 
 
 cd api && cp .env.example .env && uv sync
 uv run python -m neura1.cli load                   # load Flyvi Technologies and the saved, verified extractions
-uv run pytest -q                                   # 103 tests
+uv run pytest -q                                   # 117 tests
 uv run uvicorn neura1.main:app --port 8000
 
 cd ../web && pnpm install && pnpm dev              # http://localhost:3000, then "Take the tour"
@@ -312,6 +330,10 @@ NEURA1_LLM_EMBED_BASE_URL=http://localhost:11435/v1
 NEURA1_LLM_EMBED_MODEL=nomic-embed-text
 # NEURA1_STT_BASE_URL=...                          # optional: a remote transcription endpoint instead of local Whisper
 # NEURA1_DEMO_PASSCODE=...                         # optional: require a passcode for changes
+# NEURA1_ERP_MCP_URL=...                           # optional: a real Zoho MCP server instead of the simulated one
+# NEURA1_ERP_SYNC_MINUTES=30                       # optional: sync the ERP and planner on a schedule
+# NEURA1_AGENT_MCP_TOKEN=...                       # optional: turn on the remote MCP endpoint for cloud agents
+# NEURA1_AGENT_ALERT_WEBHOOK=...                   # optional: post plan checks to a Slack or Teams channel
 ```
 
 ```bash
@@ -331,6 +353,8 @@ uv run python -m neura1.cli tag-skills             # tag work with the skills it
 api/neura1/
   queries.py · impact.py · engine/          change impact and the deterministic cost engine
   supply.py · promise.py · sandbox.py       lead times, "can we promise?", the GRAPH.COPY sandbox
+  timeline.py                               the Gantt: baseline, plan and a forecast worked out by code
+  connect/ · agent_mcp.py · alerts.py       ERP and planner sync over MCP; remote MCP for cloud agents; alerts
   inventory.py · purchasing.py              stock ledger, forecasts, drafted and received purchase orders
   guard.py · knowledge_health.py            never the same mistake twice; living documents checked against the graph
   meetings.py · rescue.py                   recordings to verified decisions; knowledge capture interviews
@@ -338,9 +362,9 @@ api/neura1/
   agent.py · mcp_server.py · search.py      Ask agent, MCP tools, hybrid search
   access.py · people.py · capabilities.py   permissions from the graph, organisation, capability map
   ingest/                                   validator, loaders, passages, verified extraction
-api/tests/  api/eval/                       103 tests · frozen evaluation with a blind set
+api/tests/  api/eval/                       117 tests · frozen evaluation with a blind set
 web/src/                                    Next.js app
-fixture/flyvi/                              the synthetic company: records, chats, tickets, documents, samples
+fixture/flyvi/                              the synthetic company: records, chats, tickets, documents, samples, Zoho changes
 docs/                                       evaluation, data model, Cypher reference, deployment, demo, video script
 scripts/                                    Playwright captures and the public demo launcher
 ```

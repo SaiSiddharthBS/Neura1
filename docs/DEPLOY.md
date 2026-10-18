@@ -21,3 +21,17 @@ scripts/serve_public.sh stop         # take it down
   background reader (`worker` in `/api/health`) pauses until the DGX is back.
 - **Reset the story** before a demo: Import → *Reset the demo company*, or `uv run python -m neura1.cli load`.
 - Data is synthetic. People appear by first name only.
+
+## Connections: the ERP and planner, and cloud agents
+
+- **ERP and planner sync.** By default Connections reads a simulated Zoho (`python -m neura1.connect.zoho_sim`, launched
+  over stdio). To read a real Zoho MCP server, set `NEURA1_ERP_MCP_URL` (Streamable HTTP; Zoho's MCP URLs carry their
+  own key, so keep it in `api/.env`). If its tool names differ from `list_items`, `list_purchase_orders`,
+  `list_purchase_receives`, `list_projects` and `list_tasks`, map them with `NEURA1_ERP_TOOLS='{"list_items": "..."}'`.
+  `NEURA1_ERP_SYNC_MINUTES` syncs on a schedule. Only the directors and leadership can run a sync.
+- **Cloud agents (OpenAI Dots, ChatGPT, Claude).** Off unless `NEURA1_AGENT_MCP_TOKEN` is set. The endpoint is
+  `<public URL>/api/agent/mcp` with `Authorization: Bearer <token>`, or `<public URL>/api/agent/<token>/mcp` for
+  clients that only take a URL. The agent reads as `NEURA1_AGENT_VIEWER` (a person id) with that person's permissions;
+  unset, it sees no amounts and nobody's leave. Turning it on sends answers to the agent's provider.
+- **Alerts.** `NEURA1_AGENT_ALERT_WEBHOOK` (a Slack incoming webhook or a Teams workflow URL) receives a short,
+  permission-filtered plan check on request and a note after each sync.

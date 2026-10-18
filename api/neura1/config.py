@@ -23,6 +23,18 @@ class Settings(BaseSettings):
     stt_api_key: str | None = None
     stt_remote_model: str = "whisper-1"
 
+    # Neura1 Connect: the ERP and project planner, read over MCP. Unset = the simulated Zoho used by the demo.
+    erp_mcp_url: str | None = None      # a Zoho MCP server URL (Streamable HTTP)
+    erp_tools: str | None = None        # JSON map from Neura1's tool names to the server's, if they differ
+    erp_sync_minutes: int = 0           # sync on a schedule; 0 = only when someone presses Sync
+
+    # Remote MCP for agents in the cloud (OpenAI Dots, ChatGPT, Claude): off unless a token is set. The agent reads
+    # as agent_viewer (a person id) with that person's permissions; unset, it sees no amounts and no one's leave.
+    agent_mcp_token: str | None = None
+    agent_viewer: str | None = None
+    # Where Neura1 posts alerts for agents and people to pick up (a Slack or Teams incoming webhook). Unset = off.
+    agent_alert_webhook: str | None = None
+
     # Any OpenAI-compatible endpoint: a local DGX (vLLM / Ollama / SGLang) or a hosted provider.
     llm_base_url: str | None = None
     llm_api_key: str = "not-needed"

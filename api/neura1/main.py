@@ -33,10 +33,20 @@ async def lifespan(_app):
         brief.start_scheduler(get_graph)
         if settings.auto_extract:
             auto.start(get_graph)
-    yield
+        if settings.erp_sync_minutes > 0:
+            from neura1.connect import scheduler
+            scheduler.start(get_graph)
+    from neura1 import agent_mcp
+    async with agent_mcp.mcp.session_manager.run():  # the remote MCP endpoint for cloud agents (off without a token)
+        yield
 
 
 app = FastAPI(title="Neura1", version="0.1.0", lifespan=lifespan)
+
+
+def _mount_agent_mcp():
+    from neura1 import agent_mcp
+    app.mount("/api/agent", agent_mcp.gated_app)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
@@ -545,6 +555,92 @@ def person(person_id: str, g=Depends(graph), v: access.Viewer = Depends(current_
     if not found:
         raise HTTPException(404, "Unknown person")
     return found
+
+
+# ---------- Connect: the ERP and project planner, over MCP ----------
+
+def require_leader(v: access.Viewer = Depends(current_viewer)) -> access.Viewer:
+    if not (v.unrestricted or v.leader):
+        raise HTTPException(403, "Only the directors and leadership can change what Neura1 syncs")
+    return v
+
+
+@app.get("/api/connect")
+def connect_status(g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1.connect import sync
+    return {"source": sync.describe(), "runs": sync.history(g), "can_sync": v.unrestricted or v.leader}
+
+
+@app.post("/api/connect/zoho/test")
+def connect_test(v: access.Viewer = Depends(require_leader)):
+    from neura1.connect import sync
+    return sync.probe()
+
+
+class SyncIn(BaseModel):
+    dry_run: bool = False
+
+
+@app.post("/api/connect/zoho/sync")
+def connect_sync(body: SyncIn, g=Depends(graph), v: access.Viewer = Depends(require_leader)):
+    from neura1 import alerts
+    from neura1.connect import sync
+    report = sync.run(g, dry_run=body.dry_run, by=v.name)
+    if report.get("run") and settings.agent_alert_webhook:
+        alerts.post(f"Neura1 synced {len(report['changes'])} change(s) from Zoho:\n"
+                    + "\n".join(f"• {c['summary']}" for c in report["changes"][:8]))
+    return report
+
+
+# ---------- agents in the cloud (OpenAI Dots and other MCP clients) ----------
+
+@app.get("/api/agents")
+def agents_status(g=Depends(graph)):
+    from neura1 import agent_mcp
+    v = agent_mcp.agent_viewer(g)
+    tools = [{"name": t.name, "description": (t.description or "").split("\n")[0]}
+             for t in agent_mcp.mcp._tool_manager.list_tools()]
+    return {"mcp": {"enabled": bool(settings.agent_mcp_token), "path": "/api/agent/mcp", "transport": "Streamable HTTP",
+                    "read_as": v.name, "sees_money": v.sees_money, "sees_leave": v.unrestricted or v.leader,
+                    "tools": tools},
+            "alerts": {"enabled": bool(settings.agent_alert_webhook)}}
+
+
+@app.post("/api/agents/test")
+def agents_test(request: Request, v: access.Viewer = Depends(require_leader)):
+    """Connect to Neura1's own remote MCP endpoint as an agent would, list its tools and call one."""
+    import anyio
+    from mcp import Client
+    if not settings.agent_mcp_token:
+        return {"ok": False, "error": "Agent access is off. Set NEURA1_AGENT_MCP_TOKEN to turn it on."}
+    host, port = request.scope.get("server") or ("127.0.0.1", 8000)
+    url = f"http://{host}:{port}/api/agent/{settings.agent_mcp_token}/mcp"
+
+    async def go():
+        async with Client(url, read_timeout_seconds=60) as c:
+            tools = [t.name for t in (await c.list_tools()).tools]
+            r = await c.call_tool("timeline_deviations", {})
+            data = json.loads("".join(getattr(x, "text", "") for x in r.content))
+            return {"ok": True, "tools": tools, "sample": {"tool": "timeline_deviations", "summary": data["summary"],
+                                                           "read_as": data["read_as"]}}
+    try:
+        return anyio.run(go)
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+@app.post("/api/agents/alert")
+def agents_alert(g=Depends(graph), v: access.Viewer = Depends(require_leader)):
+    from neura1 import alerts
+    text = alerts.digest(g)
+    return {"text": text} | alerts.post(text)
+
+
+@app.get("/api/gantt")
+def get_gantt(today: date | None = None, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    """Every project, task, build and customer order with baseline, plan and forecast dates, and the deviation."""
+    from neura1 import timeline
+    return timeline.timeline(g, v, today)
 
 
 @app.get("/api/projects")
@@ -1512,3 +1608,6 @@ async def inbox_upload(file: UploadFile = File(...), g=Depends(graph)):
     path.write_bytes(blob)
     with inbox._lock:
         return {"processed": inbox.process_file(g, path)}
+
+
+_mount_agent_mcp()  # after every /api route, so the mount never shadows one

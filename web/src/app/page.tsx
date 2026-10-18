@@ -78,7 +78,7 @@ export default function Overview() {
               ? <>{open} signal{open === 1 ? "" : "s"} need{open === 1 ? "s" : ""} a decision. Each is traced through Flyvi&apos;s people, products, orders and decisions.</>
               : "Nothing is waiting on a decision. Everything below is up to date."}
           </p>
-          <p className="mt-1 text-[12.5px] text-faint">Neura1 is built for hardware manufacturers. You are exploring Flyvi Technologies, the reference company, with synthetic records.</p>
+          <p className="mt-1 text-[12.5px] text-faint">Neura1 is built for hardware manufacturers and works alongside their ERP and planner. You are exploring Flyvi Technologies, the reference company, with synthetic records.</p>
         </div>
         <button onClick={startTour} className="flex items-center gap-2 rounded-full border border-line bg-elev px-4 py-2 text-[13.5px] font-medium transition hover:border-line2">
           <Compass size={15} className="text-accent" /> Take the 3-minute tour
