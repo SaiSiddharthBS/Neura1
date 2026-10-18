@@ -14,3 +14,4 @@ quotes, decisions, tickets, chats, leave and task history. People appear by firs
 - `inbox/`: signals. A supplier notice, a customer escalation and a leave notice.
 - `updates/`: new facts that arrive mid-demo (a bench result in chat and a new quote).
 - `extracted/`: raw model outputs, replayed and verified on load.
+- `erp/`: what changed in the (simulated) Zoho Inventory and Zoho Projects since the export; read over MCP by Connections.

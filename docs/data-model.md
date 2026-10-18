@@ -47,6 +47,7 @@ A newer timestamp never overrides an approval. Only an explicit superseding deci
 | `StockMove` | `date`, `qty` (signed), `kind` (opening · receipt · issue · adjustment), `ref` | The stock ledger: every movement `MOVES` an item, and the running balance equals stock on hand |
 | `Channel`, `Message` | `kind` (channel · dm · group · bot), `members`; message `text`, `reactions`, `reply_to` | Channel messages are `Chunk` passages (company knowledge); direct, group and personal messages are `Message` nodes no knowledge query matches |
 | `Brief` | `date`, `person` | One per day (and per person): the morning brief is posted once |
+| `Setting` | `id`, `enabled`, `by`, `at` | Company switches; `external_ai` governs whether any agent or alert channel outside Neura1 may receive answers (off by default and after a reset) |
 | `SyncRun`, `SyncChange` | `connector`, `at`, `by`, `changes`; a change's `what`, `detail`, `ref` | One run per ERP sync over MCP; each change is `IN_RUN` and `ABOUT` the record it changed, and shows in What's new |
 
 Relationships not in the diagram above: `REPORTS_TO`, `BACKS_UP`, `IN_PROJECT` (work items), `ASSIGNED_TO` (tickets and

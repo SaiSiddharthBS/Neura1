@@ -50,6 +50,20 @@ documents and chats split into passages linked to what they mention, and the dec
 - **Knowledge rescue.** Before someone leaves, Neura1 interviews them with questions built from the graph and keeps the
   answers as linked, searchable knowledge. The model only helps with follow-up questions and facts it can quote.
 
+## Working with the tools a company already has
+
+Most manufacturers already plan in an ERP and a project tool, so Neura1 is built as an add-on, not a replacement:
+
+- **The plan, and where it is slipping.** One Gantt of every project, task, build and customer order: the first plan
+  recorded, today's plan, and a forecast worked out by code from stock, open purchase orders, supplier notices, lead
+  times and leave. The Nilgiri order ships 142 days late because its build waits for one regulator; the date matches
+  the delivery check exactly, and every slip says why.
+- **The ERP over MCP.** Neura1 reads Zoho Inventory and Zoho Projects through the Model Context Protocol (a simulated
+  Zoho in the demo), compares field by field, validates like any import and loads only what changed. A date moved in
+  Zoho shows on the timeline against the original plan.
+- **Agents, only if the company wants them.** A switch, off by default, lets OpenAI Dots or another agent ask Neura1
+  what is slipping, with a person's permissions. Until a leader turns it on, nothing leaves the building.
+
 ## The evaluation, including where we lost
 
 We wrote expected answers before running anything and compared three systems on the same model (ornith-1.5-35b-a3b on a
@@ -76,7 +90,9 @@ price, so that question could never pass for anyone. We fixed it and rescored ev
 
 ## What we would do next
 
-Connectors for real ERP and PLM exports, a blind evaluation at a larger scale, and per-person briefs. The core idea will
-stay: one graph, every claim with its evidence, and permissions that follow the data.
+A live connection to Flyvi's own Zoho, PLM and EDA connectors, company sign-in instead of the demo's "view as", and a
+blind evaluation at a larger scale. Over time, the modules Flyvi pays for elsewhere (inventory, chat) can move into
+Neura1 one at a time. The core idea will stay: one graph, every claim with its evidence, and permissions that follow
+the data.
 
 *Neura1 is open source (AGPL-3.0) and runs entirely on open models and FalkorDB.*

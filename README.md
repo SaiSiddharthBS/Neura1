@@ -54,7 +54,7 @@ The part that traces parts, builds, orders and suppliers is built for manufactur
 **An add-on to the planning tools a company already has.** Neura1 does not ask anyone to leave their ERP or project
 planner. It reads them over the Model Context Protocol (Zoho Inventory and Zoho Projects in the demo), keeps the graph in
 step, shows on one timeline where the plan is slipping and why, and lets the agents a team already works with, such as
-OpenAI Dots, ask it questions. Modules can take over from paid tools later, one at a time, when a company is ready.
+OpenAI Dots, ask it questions, but only if the company switches that on. Modules can take over from paid tools later, one at a time, when a company is ready.
 
 > [!NOTE]
 > **Flyvi Technologies is the reference company, not the limit.** Neura1 was designed around a real manufacturer:
@@ -140,7 +140,7 @@ Neura1 holds the whole company in one FalkorDB graph, so one traversal answers i
 <table>
   <tr>
     <td width="50%"><img src="docs/demo/impact-overview.png" alt="Impact workspace"><br><sub><b>Change impact.</b> Headline numbers, the rejected-part banner, the evidence graph and who needs to do what, with every Cypher query and its timing one click away.</sub></td>
-    <td width="50%"><img src="docs/demo/neura1-chat.png" alt="Ask Neura1"><br><sub><b>Ask anything.</b> An agent plans its own steps over 26 bounded graph tools and read-only Cypher, and cites its sources. "What should we order this week, and why?" is answered on the DGX from inventory, drafted orders and supplier notices.</sub></td>
+    <td width="50%"><img src="docs/demo/neura1-chat.png" alt="Ask Neura1"><br><sub><b>Ask anything.</b> An agent plans its own steps over 27 bounded graph tools and read-only Cypher, and cites its sources. "What should we order this week, and why?" is answered on the DGX from inventory, drafted orders and supplier notices.</sub></td>
   </tr>
   <tr>
     <td><img src="docs/demo/risk-radar.png" alt="Risk radar"><br><sub><b>Risk radar.</b> FalkorDB betweenness centrality and label propagation find chokepoints, single-sourced parts, one-person knowledge and how work really clusters.</sub></td>
@@ -203,7 +203,7 @@ Neura1 holds the whole company in one FalkorDB graph, so one traversal answers i
 
 ## ◆ Architecture
 
-<img src="docs/readme/architecture.svg" alt="Sources are validated and read on Flyvi's own hardware, verified facts enter one FalkorDB graph, code-only engines answer, and people use it through the web app, chat, the Ask agent, the docs editor and MCP, which also syncs the ERP and planner and serves cloud agents such as OpenAI Dots" width="100%">
+<img src="docs/readme/architecture.svg" alt="Sources are validated and read on Flyvi's own hardware, verified facts enter one FalkorDB graph, code-only engines answer, and people use it through the web app, chat, the Ask agent, the docs editor and MCP, which also syncs the ERP and planner and, when switched on, serves cloud agents such as OpenAI Dots" width="100%">
 
 Three rules hold everywhere:
 
@@ -305,8 +305,8 @@ a browser cannot submit made-up tasks or prices · if FalkorDB is down the API r
 | Graph | **FalkorDB**: Cypher, vector and full-text indexes, graph algorithms, `GRAPH.COPY` |
 | Models | **NVIDIA DGX Spark** serving **ornith-1.5-35b-a3b** with **vLLM** (OpenAI-compatible) · Qwen2.5-7B on Ollama as fallback · nomic-embed-text embeddings |
 | Speech | **faster-whisper** (open-source Whisper, CTranslate2), on premises, primed with the graph's vocabulary |
-| API | **Python 3.12** · **FastAPI** · Pydantic · a JSON plan-act agent with 26 tools |
-| MCP | **Model Context Protocol** both ways: a local server with 16 tools, a remote Streamable HTTP server with 14 permission-filtered tools for cloud agents (OpenAI Dots, ChatGPT, Claude), and a client that syncs Zoho Inventory and Zoho Projects |
+| API | **Python 3.12** · **FastAPI** · Pydantic · a JSON plan-act agent with 27 tools |
+| MCP | **Model Context Protocol** both ways: a local server with 16 tools, a remote Streamable HTTP server with 14 permission-filtered tools for cloud agents (off until switched on in the app) (OpenAI Dots, ChatGPT, Claude), and a client that syncs Zoho Inventory and Zoho Projects |
 | Web | **Next.js 16** · **React 19** with View Transitions · **Tailwind CSS 4** with OKLCH tokens · **Motion** · Lenis · React Flow |
 | Documents | **SuperDoc** (Word layout, tracked changes, .docx) · pdf.js |
 | Operations | Docker Compose · Tailscale · Cloudflare Tunnel · **Playwright**, which captured every screenshot here |

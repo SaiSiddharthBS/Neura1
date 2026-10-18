@@ -84,7 +84,7 @@
           <circle cx="-104" cy="0" r="6" fill="#f87171"/><circle cx="34" cy="80" r="6" fill="#f87171"/>
         </g>
         <g class="cs" fill="#dbe4ff">
-          <text x="582" y="456">29 kinds of record · 45 kinds of link</text>
+          <text x="582" y="456">30 kinds of record · 45 kinds of link</text>
           <text x="582" y="482">• variable-length Cypher traversals</text>
           <text x="582" y="504">• vector + full-text hybrid search</text>
           <text x="582" y="526">• betweenness, label propagation</text>
@@ -110,7 +110,7 @@
       <g>
         <rect x="1104" y="170" width="140" height="88" rx="16" class="box"/><text x="1120" y="203" class="ct">Web app</text><text x="1120" y="225" class="cs">Next.js 16</text><text x="1120" y="243" class="cs">React 19</text>
         <rect x="1104" y="272" width="140" height="88" rx="16" class="box"/><text x="1120" y="305" class="ct">Chat</text><text x="1120" y="327" class="cs">channels, DMs,</text><text x="1120" y="345" class="cs">daily briefs</text>
-        <rect x="1104" y="374" width="140" height="88" rx="16" class="box"/><text x="1120" y="407" class="ct">Ask agent</text><text x="1120" y="429" class="cs">26 graph tools,</text><text x="1120" y="447" class="cs">cited answers</text>
+        <rect x="1104" y="374" width="140" height="88" rx="16" class="box"/><text x="1120" y="407" class="ct">Ask agent</text><text x="1120" y="429" class="cs">27 graph tools,</text><text x="1120" y="447" class="cs">cited answers</text>
         <rect x="1104" y="476" width="140" height="88" rx="16" class="box"/><text x="1120" y="509" class="ct">MCP · Dots</text><text x="1120" y="531" class="cs">16 local tools,</text><text x="1120" y="549" class="cs">14 for cloud agents</text>
         <rect x="1104" y="578" width="140" height="88" rx="16" class="box"/><text x="1120" y="611" class="ct">Docs editor</text><text x="1120" y="633" class="cs">Word layout,</text><text x="1120" y="651" class="cs">fact checks</text>
       </g>
