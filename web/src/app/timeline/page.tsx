@@ -184,7 +184,7 @@ export default function TimelinePage() {
       </div>
 
       {/* The chart */}
-      <div className="card overflow-hidden p-0">
+      <div data-tour="gantt" className="card overflow-hidden p-0">
         {!t || !scale ? <div className="h-[420px] animate-pulse bg-elev" /> : (
           <div className="flex">
             <div className="w-[190px] shrink-0 border-r border-line sm:w-[330px]">

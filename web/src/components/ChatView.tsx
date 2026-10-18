@@ -23,6 +23,7 @@ import { credentials, forgetPasscode } from "@/lib/session";
 
 const COMMANDS = [
   ["/impact NB54360 320 22", "Trace a part change through the company"],
+  ["/slips", "What is late against the plan, and why"],
   ["/who CAN bus", "Who knows about something, and why"],
   ["/away Raghavendra", "What changes while someone is away"],
   ["/risk", "Where the company is fragile right now"],

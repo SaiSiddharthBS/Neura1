@@ -20,6 +20,7 @@ import io
 import json
 import os
 import sys
+import threading
 import uuid
 from datetime import date, datetime, timezone
 
@@ -285,7 +286,20 @@ def summary(c: dict) -> str:
 
 # ---------- run ----------
 
+_running = threading.Lock()
+
+
 def run(graph: Graph, dry_run: bool = False, server=None, by: str | None = None) -> dict:
+    """One sync at a time: a second press, or the schedule, waits for none and is told so."""
+    if not _running.acquire(blocking=False):
+        return {"ok": False, "stage": "busy", "error": "A sync is already running. Try again in a moment."}
+    try:
+        return _run(graph, dry_run, server, by)
+    finally:
+        _running.release()
+
+
+def _run(graph: Graph, dry_run: bool, server, by: str | None) -> dict:
     started = datetime.now(timezone.utc).isoformat(timespec="seconds")
     try:
         raw = fetch(server)

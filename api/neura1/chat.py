@@ -11,7 +11,7 @@ Three kinds of conversation:
 Everything a messenger needs: unread counts and @mentions, replies, edits, deletes, emoji reactions, read receipts,
 typing indicators, presence and search. In any conversation:
   * `@neura1 <question>` asks the company brain; the answer is posted back with its sources.
-  * `/impact <part> [price] [lead weeks]`, `/who <topic>`, `/away <person>`, `/risk`, `/help` run graph tools
+  * `/impact <part> [price] [lead weeks]`, `/slips`, `/who <topic>`, `/away <person>`, `/risk`, `/help` run graph tools
     directly, with no model.
 Neura1 also posts on its own when something happens that a channel should know (see `notify`).
 """
@@ -508,8 +508,8 @@ def recent_cursor() -> str:
 
 # ---------- commands, answered from the graph without a model ----------
 
-HELP = ("Try: `/impact NB54360 320 22` (price and lead time are optional), `/who CAN bus`, `/away Raghavendra`, "
-        "`/risk`, or ask anything with `@neura1`.")
+HELP = ("Try: `/impact NB54360 320 22` (price and lead time are optional), `/slips` (what is late against the plan), "
+        "`/who CAN bus`, `/away Raghavendra`, `/risk`, or ask anything with `@neura1`.")
 
 
 def _money(v) -> str:
@@ -545,6 +545,20 @@ def command(graph: Graph, text: str, audience: "Audience | None" = None) -> dict
         lines.append(f"{len(r['actions'])} tasks proposed under HB-ENG-04.")
         q = f"item={r['part']['id']}" + (f"&price={price}" if price else "") + (f"&lead={lead}" if lead else "")
         return {"text": " ".join(lines), "links": [{"label": "Open impact", "href": f"/impact?{q}"}]}
+    if cmd in ("/slips", "/timeline"):
+        from neura1.agent import Reader, plan_deviations
+        reader = Reader(None if audience is None else {"money": audience.money, "leave_of": audience.sees_leave_of})
+        r = plan_deviations(graph, reader, " ".join(args) or None, limit=5)
+        s = r["summary"]
+        lines = [f"{s['late']} item{'s' if s['late'] != 1 else ''} late, {s['projects_past_target']} project"
+                 f"{'s' if s['projects_past_target'] != 1 else ''} past target."]
+        for p in r["projects"]:
+            if (p["days_late"] or 0) > 0:
+                lines.append(f"**{p['name']}**: target {p['target']}, forecast {p['forecast']} (+{p['days_late']} days).")
+        for i in r["slipping"]:
+            if i["state"] == "late":
+                lines.append(f"`{i['id']}` +{i['days_late']} days: {(i['why'] or [''])[0]}")
+        return {"text": " ".join(lines), "links": [{"label": "Open the timeline", "href": "/timeline"}]}
     if cmd == "/who" and args:
         r = brain.who_knows(graph, " ".join(args))
         if not r["subject"]:

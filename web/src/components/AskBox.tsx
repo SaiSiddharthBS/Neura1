@@ -18,6 +18,7 @@ const EXAMPLES = [
   "Who knows CAN bus, and what are they working on?",
   "What happens if Raghavendra is away in November?",
   "What is Konkan Naval unhappy about?",
+  "What is slipping against the plan, and why?",
   "Ask Sai to review pmic_seq.c for MX-3360",
 ];
 

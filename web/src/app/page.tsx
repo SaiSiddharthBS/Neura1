@@ -7,6 +7,7 @@ import {
   ArrowRight, ArrowUpRight, Brain, CalendarOff, Compass, FolderKanban, KanbanSquare, MessageSquareWarning, PackageSearch, Radar, Sparkles,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import PlanStrip from "@/components/PlanStrip";
 import RippleGraph from "@/components/RippleGraph";
 import { startTour } from "@/components/Tour";
 import { PageTitle, Pill, Section, Stagger, Ticker, riseItem } from "@/components/ui";
@@ -33,6 +34,7 @@ const PROMPTS = [
   "What breaks if NB54360 goes to ₹320 and 22 weeks?",
   "Who covers for Raghavendra in November?",
   "Why is Konkan Naval unhappy?",
+  "What is slipping against the plan, and why?",
 ];
 
 function greeting() {
@@ -84,6 +86,8 @@ export default function Overview() {
           <Compass size={15} className="text-accent" /> Take the 3-minute tour
         </button>
       </motion.section>
+
+      <motion.div variants={riseItem}><PlanStrip /></motion.div>
 
       <motion.div variants={riseItem}><RippleGraph /></motion.div>
 

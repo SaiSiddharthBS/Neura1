@@ -130,3 +130,31 @@ def test_the_agent_endpoint_is_off_without_a_token_and_checks_it(monkeypatch):
     assert client.post("/mcp", headers={"Authorization": "Bearer s3cret-token"}).status_code == 200
     assert client.post("/s3cret-token/mcp").status_code == 200
     assert seen == ["/mcp", "/mcp"]  # the token never reaches the MCP app as part of the path
+
+
+def test_one_sync_at_a_time(fresh_graph):
+    sync._running.acquire()
+    try:
+        busy = sync.run(fresh_graph, dry_run=True, server=zoho_sim.mcp)
+    finally:
+        sync._running.release()
+    assert busy == {"ok": False, "stage": "busy", "error": "A sync is already running. Try again in a moment."}
+    assert sync.run(fresh_graph, dry_run=True, server=zoho_sim.mcp)["ok"]
+
+
+def test_ask_and_chat_can_say_what_is_slipping(graph):
+    from neura1 import agent, chat
+    from neura1.impact import Trace
+    everyone = agent.run_tool(graph, Trace(graph), "plan_deviations", {})
+    assert everyone["slipping"][0]["id"] in ("BO-0412", "SO-881") and everyone["slipping"][0]["days_late"] > 100
+    assert any(p["id"] == "PRJ-NILGIRI" and p["days_late"] > 0 for p in everyone["projects"])
+    # Read for an employee: no one's leave, no penalty amounts.
+    restricted = agent.Reader({"money": False, "leave_of": lambda pid: False})
+    r = agent._restrict("plan_deviations", agent.run_tool(graph, Trace(graph), "plan_deviations", {}, restricted),
+                        {"money": False, "leave_of": lambda pid: False})
+    assert not any("away" in w for i in r["slipping"] for w in i["why"])
+    assert all(i.get("penalty", {}).get("value") is None for i in r["slipping"])
+    nilgiri = agent.run_tool(graph, Trace(graph), "plan_deviations", {"project": "Nilgiri"})
+    assert [p["id"] for p in nilgiri["projects"]] == ["PRJ-NILGIRI"]
+    reply = chat.command(graph, "/slips")
+    assert "Nilgiri airborne PDU delivery" in reply["text"] and reply["links"][0]["href"] == "/timeline"

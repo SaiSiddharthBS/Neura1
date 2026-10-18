@@ -293,7 +293,7 @@ function Flow() {
     `M 770 ${mid} C 840 ${mid}, 840 ${Y[0]}, 900 ${Y[0]}`, `M 770 ${mid} C 840 ${mid}, 840 ${Y[1]}, 900 ${Y[1]}`,
   ];
   return (
-    <div className="card overflow-x-auto p-4" data-lenis-prevent>
+    <div data-tour="connect" className="card overflow-x-auto p-4" data-lenis-prevent>
       <svg viewBox="0 0 1080 164" className="h-auto w-full min-w-[760px]" role="img"
            aria-label="Zoho Inventory and Zoho Projects flow over MCP into Neura1 Connect, then the company graph, which agents and channels read">
         {edges.map((d, i) => (

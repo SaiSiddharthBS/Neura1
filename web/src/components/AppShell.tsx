@@ -19,7 +19,7 @@ import ViewerSwitch from "@/components/ViewerSwitch";
 import { api } from "@/lib/api";
 import { useResolvedTheme } from "@/lib/theme";
 
-type Item = { href: string; label: string; icon: typeof Sun; badge?: "signals" | "chat" };
+type Item = { href: string; label: string; icon: typeof Sun; badge?: "signals" | "chat" | "new" };
 const NAV: { section: string; items: Item[]; collapsible?: boolean }[] = [
   { section: "Today", items: [
     { href: "/", label: "Overview", icon: LayoutDashboard },
@@ -38,7 +38,7 @@ const NAV: { section: string; items: Item[]; collapsible?: boolean }[] = [
     { href: "/risk", label: "Risk radar", icon: Radar },
   ]},
   { section: "Plan ahead", items: [
-    { href: "/timeline", label: "Timeline", icon: GanttChartSquare },
+    { href: "/timeline", label: "Timeline", icon: GanttChartSquare, badge: "new" },
     { href: "/promise", label: "Can we promise?", icon: Handshake },
     { href: "/sandbox", label: "Sandbox", icon: FlaskConical },
     { href: "/rescue", label: "Knowledge rescue", icon: LifeBuoy },
@@ -49,7 +49,7 @@ const NAV: { section: string; items: Item[]; collapsible?: boolean }[] = [
     { href: "/projects", label: "Projects", icon: FolderKanban },
     { href: "/customers", label: "Customers", icon: Building2 },
     { href: "/inventory", label: "Inventory", icon: Package },
-    { href: "/connect", label: "Connections", icon: Plug },
+    { href: "/connect", label: "Connections", icon: Plug, badge: "new" },
   ]},
   { section: "More", collapsible: true, items: [
     { href: "/history", label: "Plans", icon: History },
@@ -164,6 +164,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                       <span className="flex-1 truncate">{label}</span>
                       {badge === "chat" && unreadChat > 0 && (
                         <span className="num min-w-[18px] rounded-full bg-accent px-1.5 text-center text-[11px] font-medium text-accent-ink">{unreadChat > 99 ? "99+" : unreadChat}</span>
+                      )}
+                      {badge === "new" && (
+                        <span className="rounded-full bg-violet/15 px-1.5 py-px text-[9.5px] font-semibold uppercase tracking-wider text-violet">New</span>
                       )}
                       {badge === "signals" && openSignals > 0 && (
                         <span className="num min-w-[18px] rounded-full bg-accent/15 px-1.5 text-center text-[11px] font-medium text-accent">{openSignals}</span>

@@ -139,6 +139,10 @@ TOOLS = [
     ("risk_radar", "Where the company is fragile: graph chokepoints (betweenness), single-sourced parts with order "
                    "value at risk, knowledge held by one person, customer concentration, workload, and how teams "
                    "actually cluster (community detection).", {}),
+    ("plan_deviations", "What is slipping against the plan, and why: projects past their target, late builds, customer "
+                        "orders and tasks, with days late, forecast dates and reasons, worked out by code from stock, "
+                        "open purchase orders, supplier notices, lead times and leave. Optional: a project name or id.",
+     {"project": {"type": ["string", "null"]}}),
     ("recall", "What has already been asked and answered about a record or topic, by anyone (shared memory of past "
                "conversations). Use for 'did we discuss', 'what did we decide earlier', or before re-investigating.",
      {"text": {"type": "string"}}),
@@ -159,7 +163,46 @@ TOOLS = [
 ]
 
 
-def run_tool(graph: Graph, trace: Trace, name: str, args: dict):
+class Reader:
+    """The reader an answer is for, as the timeline needs it: from a restriction, or everyone when unrestricted."""
+
+    def __init__(self, restrict: dict | None = None):
+        self.unrestricted = not restrict
+        self.leader = False
+        self.sees_money = not restrict or bool(restrict.get("money"))
+        self._leave = (restrict or {}).get("leave_of")
+
+    def sees_leave_of(self, person_id: str) -> bool:
+        return self.unrestricted or bool(self._leave and self._leave(person_id))
+
+
+def plan_deviations(graph: Graph, reader, project: str | None = None, limit: int = 15) -> dict:
+    from neura1 import timeline
+    t = timeline.timeline(graph, reader)
+    groups = t["groups"]
+    if project:
+        p = project.strip().lower()
+        groups = [g for g in groups if g["id"].lower() == p or p in g["name"].lower()] or groups
+    slipping = [{"id": i["id"], "kind": i["kind"], "title": i["title"], "owner": i["owner"], "state": i["state"],
+                 "plan_end": i["plan"]["end"], "forecast_end": i["forecast"]["end"], "days_late": i["deviation_days"],
+                 "why": i["reasons"], **({"penalty": i["penalty"]} if i.get("penalty") else {})}
+                for g in groups for i in g["items"] if i["state"] in ("late", "at_risk", "unconfirmed")]
+    slipping.sort(key=lambda i: -(i["days_late"] or 0))
+    s = t["summary"]
+    return {"today": t["today"],
+            "summary": {"items_on_the_timeline": s["items"], "late": s["late"], "finished_late": s["done_late"],
+                        "at_risk": s["at_risk"], "projects_past_target": s["projects_late"]},
+            "projects": [{"id": g["id"], "name": g["name"], "target": g["plan"]["end"], "forecast": g["forecast"]["end"],
+                          "days_late": g["deviation_days"], "why": g["reasons"]} for g in groups if g["plan"]["end"]],
+            "slipping": slipping[:limit], "open_in_app": "/timeline", "rules": t["rules"]}
+
+
+def run_tool(graph: Graph, trace: Trace, name: str, args: dict, reader: "Reader | None" = None):
+    if name == "plan_deviations":
+        r = plan_deviations(graph, reader or Reader(), args.get("project"))
+        trace.steps.append({"name": "plan_deviations", "cypher": "(timeline engine: projects, tasks, builds, orders, "
+                            "open purchase orders, notices, leave)", "params": args, "rows": len(r["slipping"]), "ms": 0})
+        return r
     if name == "resolve_item":
         text = str(args.get("text", "")).strip()
         found = trace.run(name, Q.RESOLVE_ITEM, {"text": text})
@@ -514,7 +557,7 @@ def ask(graph: Graph, question: str, max_steps: int = 10, history: list[dict] | 
         if on_step:
             on_step({"type": "tool", "tool": step["tool"], "args": args})
         try:
-            result = _restrict(step["tool"], run_tool(graph, trace, step["tool"], args), restrict)
+            result = _restrict(step["tool"], run_tool(graph, trace, step["tool"], args, Reader(restrict)), restrict)
         except Exception as exc:  # report tool errors back to the model instead of failing the request
             result = {"error": str(exc)}
         calls.append({"tool": step["tool"], "args": args})

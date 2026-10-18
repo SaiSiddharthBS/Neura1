@@ -26,7 +26,7 @@
 <img alt="Next.js" src="https://img.shields.io/badge/Next.js_16-React_19-ffffff?style=flat-square&logo=nextdotjs&logoColor=white&labelColor=0b0d12">
 <img alt="Tailwind" src="https://img.shields.io/badge/Tailwind_4-OKLCH-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white&labelColor=0b0d12">
 <img alt="Motion" src="https://img.shields.io/badge/Motion-View_Transitions-ff4f9a?style=flat-square&logo=framer&logoColor=white&labelColor=0b0d12">
-<img alt="Tests" src="https://img.shields.io/badge/tests-117_passing-34d399?style=flat-square&labelColor=0b0d12">
+<img alt="Tests" src="https://img.shields.io/badge/tests-119_passing-34d399?style=flat-square&labelColor=0b0d12">
 <img alt="Licence" src="https://img.shields.io/badge/licence-AGPL--3.0-a42e2b?style=flat-square&labelColor=0b0d12">
 
 </div>
@@ -67,6 +67,29 @@ OpenAI Dots, ask it questions. Modules can take over from paid tools later, one 
 
 <br>
 
+## ◆ New: the plan, your ERP and your agents
+
+> [!IMPORTANT]
+> **Neura1 sits on top of the planning tools a company already has.** Three things make that real:
+>
+> 1. **[Timeline](#03--it-plans-ahead): the plan, and where it is slipping.** One Gantt of every project, task, build
+>    and customer order: the original plan, today's plan, and a forecast worked out by code from stock, open orders,
+>    supplier notices, lead times and leave. Every slip explains itself; deviations export for the planner.
+> 2. **[Connections](#06--it-works-with-what-you-already-use): the ERP and planner, over MCP.** Neura1 reads Zoho
+>    Inventory and Zoho Projects through the Model Context Protocol, compares field by field, validates and loads only
+>    what changed. A date moved in Zoho appears on the timeline against the original plan.
+> 3. **OpenAI Dots and other agents, over MCP.** A token-protected, read-only endpoint lets Dots, ChatGPT or Claude ask
+>    Neura1 what is slipping, whether a date can be promised and who knows what, with a person's permissions.
+>    Ask Neura1 and the `/slips` chat command answer the same question inside the app.
+
+<div align="center">
+<img src="docs/demo/timeline.png" alt="The timeline: baseline, plan and forecast for every project, task, build and order, with deviations in red" width="92%">
+<br>
+<sub>Only deviations shown: red is the forecast past the plan. The line from BO-0412 to SO-881 shows which order waits on which build.</sub>
+</div>
+
+<br>
+
 ## ◆ One morning at a manufacturer
 
 A distributor emails: the **NB54360** regulator goes from **₹250 to ₹320**, and its lead time from **6 to 22 weeks**.
@@ -90,6 +113,9 @@ Neura1 holds the whole company in one FalkorDB graph, so one traversal answers i
 | 💸 | **₹37,400 cost increase** = 420 × (₹320 − ₹250) + ₹8,000 requalification; the expired quote ignored | `Decimal` arithmetic, never the model |
 | 🧠 | **"Do not switch to NB54361-L"**: rejected as DEC-117 in March 2025, found in Slack *and* Jira, quoted word for word | Model proposes, code verifies quotes |
 | ✅ | **11 tasks for 7 people** from the company's own change policy, approved once, never duplicated | Idempotent actions in the graph |
+| 📅 | **SO-881 ships 142 days late and the Nilgiri project misses its target by 117 days**, because BO-0412 waits for NB54360 | Timeline engine: stock and orders allocated in date order, in code |
+| 🔌 | **7 changes read from Zoho over MCP**, field by field (stock 320 → 520, a PO received, a due date moved), validated, loaded | MCP client · field diff · import validator |
+| 🤖 | **OpenAI Dots can ask Neura1** what is slipping and why, with the same permissions as a person | Remote MCP, token-protected, read-only |
 
 <br>
 
@@ -251,7 +277,7 @@ CALL db.idx.fulltext.queryNodes('Chunk', $q) YIELD node, score RETURN node.id, s
 
 ## ◆ Proof
 
-<img src="docs/readme/stats.svg" alt="15 of 18 blind questions answered by the graph agent (search alone: 10); a sandbox copies the company in 0.1 s; 110 documented Cypher queries; 117 automated tests; zero cloud cost" width="100%">
+<img src="docs/readme/stats.svg" alt="15 of 18 blind questions answered by the graph agent (search alone: 10); a sandbox copies the company in 0.1 s; 110 documented Cypher queries; 119 automated tests; zero cloud cost" width="100%">
 
 We wrote the expected answers before running anything and compared three systems on the same model
 (ornith-1.5-35b-a3b on the DGX Spark). Every result and every failure is published in [docs/EVAL.md](docs/EVAL.md).
@@ -296,7 +322,7 @@ docker compose up -d falkordb                      # graph on :6380 · FalkorDB 
 
 cd api && cp .env.example .env && uv sync
 uv run python -m neura1.cli load                   # load Flyvi Technologies and the saved, verified extractions
-uv run pytest -q                                   # 117 tests
+uv run pytest -q                                   # 119 tests
 uv run uvicorn neura1.main:app --port 8000
 
 cd ../web && pnpm install && pnpm dev              # http://localhost:3000, then "Take the tour"
@@ -362,7 +388,7 @@ api/neura1/
   agent.py · mcp_server.py · search.py      Ask agent, MCP tools, hybrid search
   access.py · people.py · capabilities.py   permissions from the graph, organisation, capability map
   ingest/                                   validator, loaders, passages, verified extraction
-api/tests/  api/eval/                       117 tests · frozen evaluation with a blind set
+api/tests/  api/eval/                       119 tests · frozen evaluation with a blind set
 web/src/                                    Next.js app
 fixture/flyvi/                              the synthetic company: records, chats, tickets, documents, samples, Zoho changes
 docs/                                       evaluation, data model, Cypher reference, deployment, demo, video script
