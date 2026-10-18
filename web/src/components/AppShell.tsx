@@ -9,7 +9,7 @@ import { motion } from "motion/react";
 import { Toaster } from "sonner";
 import {
   AudioLines, Bell, Brain, Building2, ChevronRight, FileText, FolderKanban, History, Inbox, KanbanSquare, LayoutDashboard, Menu, MessageCircle,
-  Compass, FlaskConical, GanttChartSquare, Handshake, HeartPulse, LifeBuoy, Network, Package, Plug, Radar, Search, Sparkles, Sun, Target, Upload, Users, Waypoints,
+  Bot, Compass, FlaskConical, GanttChartSquare, Handshake, HeartPulse, LifeBuoy, Network, Package, Plug, Radar, Search, Sparkles, Sun, Target, Upload, Users, Waypoints,
 } from "lucide-react";
 import CommandPalette from "@/components/CommandPalette";
 import ModelStatus from "@/components/ModelStatus";
@@ -39,6 +39,7 @@ const NAV: { section: string; items: Item[]; collapsible?: boolean }[] = [
   ]},
   { section: "Plan ahead", items: [
     { href: "/timeline", label: "Timeline", icon: GanttChartSquare, badge: "new" },
+    { href: "/agents", label: "Department agents", icon: Bot, badge: "new" },
     { href: "/promise", label: "Can we promise?", icon: Handshake },
     { href: "/sandbox", label: "Sandbox", icon: FlaskConical },
     { href: "/rescue", label: "Knowledge rescue", icon: LifeBuoy },

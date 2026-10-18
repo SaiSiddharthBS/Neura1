@@ -657,6 +657,23 @@ def agents_alert(g=Depends(graph), v: access.Viewer = Depends(require_leader)):
     return {"text": text} | alerts.post(text)
 
 
+# ---------- department agents ----------
+
+@app.get("/api/departments")
+def departments_status(g=Depends(graph)):
+    from neura1 import departments
+    return departments.status(g)
+
+
+@app.post("/api/departments/{agent_id}/run")
+def departments_run(agent_id: str, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
+    from neura1 import departments
+    if agent_id != "all" and agent_id not in departments.BY_ID:
+        raise HTTPException(404, "No such agent")
+    ids = [a["id"] for a in departments.AGENTS] if agent_id == "all" else [agent_id]
+    return [departments.run(g, i) for i in ids]
+
+
 @app.get("/api/gantt")
 def get_gantt(today: date | None = None, g=Depends(graph), v: access.Viewer = Depends(current_viewer)):
     """Every project, task, build and customer order with baseline, plan and forecast dates, and the deviation."""

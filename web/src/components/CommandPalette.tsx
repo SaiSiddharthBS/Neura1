@@ -13,7 +13,7 @@ type Cmd = { key: string; title: string; hint: string; icon: React.ElementType; 
 const PAGES = [
   ["Overview", "/"], ["Chat", "/chat"], ["My day", "/me"], ["Organisation", "/org"], ["Signals", "/signals"], ["Workboard", "/board"], ["Plans", "/history"], ["Ask & search", "/brain"], ["Graph explorer", "/explore"], ["Documents", "/docs"], ["Capability map", "/capabilities"],
   ["People", "/people"], ["Projects", "/projects"], ["Customers", "/customers"], ["Risk radar", "/risk"],
-  ["What's new", "/changes"], ["Import", "/import"], ["Timeline", "/timeline"], ["Connections", "/connect"],
+  ["What's new", "/changes"], ["Import", "/import"], ["Timeline", "/timeline"], ["Connections", "/connect"], ["Department agents", "/agents"],
   ["Can we promise?", "/promise"], ["Inventory", "/inventory"],
 ];
 

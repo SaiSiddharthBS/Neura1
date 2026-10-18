@@ -26,7 +26,7 @@
 <img alt="Next.js" src="https://img.shields.io/badge/Next.js_16-React_19-ffffff?style=flat-square&logo=nextdotjs&logoColor=white&labelColor=0b0d12">
 <img alt="Tailwind" src="https://img.shields.io/badge/Tailwind_4-OKLCH-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white&labelColor=0b0d12">
 <img alt="Motion" src="https://img.shields.io/badge/Motion-View_Transitions-ff4f9a?style=flat-square&logo=framer&logoColor=white&labelColor=0b0d12">
-<img alt="Tests" src="https://img.shields.io/badge/tests-120_passing-34d399?style=flat-square&labelColor=0b0d12">
+<img alt="Tests" src="https://img.shields.io/badge/tests-122_passing-34d399?style=flat-square&labelColor=0b0d12">
 <img alt="Licence" src="https://img.shields.io/badge/licence-AGPL--3.0-a42e2b?style=flat-square&labelColor=0b0d12">
 
 </div>
@@ -116,6 +116,7 @@ Neura1 holds the whole company in one FalkorDB graph, so one traversal answers i
 | ✅ | **11 tasks for 7 people** from the company's own change policy, approved once, never duplicated | Idempotent actions in the graph |
 | 📅 | **SO-881 ships 142 days late and the Nilgiri project misses its target by 117 days**, because BO-0412 waits for NB54360 | Timeline engine: stock and orders allocated in date order, in code |
 | 🔌 | **7 changes read from Zoho over MCP**, field by field (stock 320 → 520, a PO received, a due date moved), validated, loaded | MCP client · field diff · import validator |
+| 🧑‍🔧 | **An agent for every department**: Procurement, Production, Engineering and Sales each check the graph and post what needs attention to their own channel (12 items on the demo) | Sub-agents in a harness: goal, scoped engines, channel, permissions |
 | 🤖 | **OpenAI Dots can ask Neura1** what is slipping and why, only once a leader switches it on, and with a person's permissions | Remote MCP: off by default, token-protected, read-only |
 
 <br>
@@ -191,7 +192,15 @@ Neura1 holds the whole company in one FalkorDB graph, so one traversal answers i
   </tr>
 </table>
 
-### 06 · It works with what you already use
+### 06 · An agent for every department
+
+<table>
+  <tr>
+    <td><img src="docs/demo/agents.png" alt="Department agents"><br><sub><b>Sub-agents with a harness.</b> Each department has its own agent: a standing goal, the few Neura1 engines it may use, the channel it reports to and the permissions of the person it works for. Procurement flags parts to order, Production flags builds that cannot start on time, Engineering flags documents that disagree with the graph, and Sales flags orders that will ship late (amounts stay in #leadership). Every check is code over the graph, so nothing is invented, and each pass reports what is new since the last one. Agents read and post; tasks and purchase orders stay a human approval.</sub></td>
+  </tr>
+</table>
+
+### 07 · It works with what you already use
 
 <table>
   <tr>
@@ -278,7 +287,7 @@ CALL db.idx.fulltext.queryNodes('Chunk', $q) YIELD node, score RETURN node.id, s
 
 ## ◆ Proof
 
-<img src="docs/readme/stats.svg" alt="15 of 18 blind questions answered by the graph agent (search alone: 10); a sandbox copies the company in 0.1 s; 110 documented Cypher queries; 120 automated tests; zero cloud cost" width="100%">
+<img src="docs/readme/stats.svg" alt="15 of 18 blind questions answered by the graph agent (search alone: 10); a sandbox copies the company in 0.1 s; 110 documented Cypher queries; 122 automated tests; zero cloud cost" width="100%">
 
 We wrote the expected answers before running anything and compared three systems on the same model
 (ornith-1.5-35b-a3b on the DGX Spark). Every result and every failure is published in [docs/EVAL.md](docs/EVAL.md).
@@ -323,7 +332,7 @@ docker compose up -d falkordb                      # graph on :6380 · FalkorDB 
 
 cd api && cp .env.example .env && uv sync
 uv run python -m neura1.cli load                   # load Flyvi Technologies and the saved, verified extractions
-uv run pytest -q                                   # 120 tests
+uv run pytest -q                                   # 122 tests
 uv run uvicorn neura1.main:app --port 8000
 
 cd ../web && pnpm install && pnpm dev              # http://localhost:3000, then "Take the tour"
@@ -382,6 +391,7 @@ api/neura1/
   supply.py · promise.py · sandbox.py       lead times, "can we promise?", the GRAPH.COPY sandbox
   timeline.py                               the Gantt: baseline, plan and a forecast worked out by code
   connect/ · agent_mcp.py · alerts.py       ERP and planner sync over MCP; remote MCP for cloud agents; alerts
+  departments.py                            one agent per department: goal, scoped engines, channel, permissions
   inventory.py · purchasing.py              stock ledger, forecasts, drafted and received purchase orders
   guard.py · knowledge_health.py            never the same mistake twice; living documents checked against the graph
   meetings.py · rescue.py                   recordings to verified decisions; knowledge capture interviews
@@ -389,7 +399,7 @@ api/neura1/
   agent.py · mcp_server.py · search.py      Ask agent, MCP tools, hybrid search
   access.py · people.py · capabilities.py   permissions from the graph, organisation, capability map
   ingest/                                   validator, loaders, passages, verified extraction
-api/tests/  api/eval/                       120 tests · frozen evaluation with a blind set
+api/tests/  api/eval/                       122 tests · frozen evaluation with a blind set
 web/src/                                    Next.js app
 fixture/flyvi/                              the synthetic company: records, chats, tickets, documents, samples, Zoho changes
 docs/                                       evaluation, data model, Cypher reference, deployment, demo, video script
