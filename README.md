@@ -31,6 +31,12 @@
 
 </div>
 
+<div align="center">
+<a href="docs/demo/neura1-film.mp4"><img src="docs/demo/film-poster.jpg" alt="Watch the Neura1 film: 1 minute 52 seconds, 60 fps" width="88%"></a>
+<br>
+<sub><b>The Neura1 film</b> (1:52, 60 fps). Rendered frame by frame from the real product and the real impact data, with a score written for it. <a href="docs/demo/neura1-film.mp4">Play it</a>.</sub>
+</div>
+
 <br>
 
 ## ◆ Who it's for
@@ -75,13 +81,15 @@ OpenAI Dots, ask it questions, but only if the company switches that on. Modules
 > 1. **[Timeline](#03--it-plans-ahead): the plan, and where it is slipping.** One Gantt of every project, task, build
 >    and customer order: the original plan, today's plan, and a forecast worked out by code from stock, open orders,
 >    supplier notices, lead times and leave. Every slip explains itself; deviations export for the planner.
-> 2. **[Connections](#06--it-works-with-what-you-already-use): the ERP and planner, over MCP.** Neura1 reads Zoho
+> 2. **[Connections](#07--it-works-with-what-you-already-use): the ERP and planner, over MCP.** Neura1 reads Zoho
 >    Inventory and Zoho Projects through the Model Context Protocol, compares field by field, validates and loads only
 >    what changed. A date moved in Zoho appears on the timeline against the original plan.
 > 3. **OpenAI Dots and other agents, over MCP: optional, and off by default.** Nothing leaves Neura1 until a director
 >    or leader switches external AI access on in the app. Then a token-protected, read-only endpoint lets Dots, ChatGPT
 >    or Claude ask what is slipping, whether a date can be promised and who knows what, with a person's permissions;
 >    one switch turns it off again. Inside the app, Ask Neura1 and the `/slips` chat command answer the same questions.
+> 4. **[An agent for every department](#06--an-agent-for-every-department).** Procurement, Production, Engineering and
+>    Sales agents each check the graph and post what needs attention to their own channel, with their lead's permissions.
 
 <div align="center">
 <img src="docs/demo/timeline.png" alt="The timeline: baseline, plan and forecast for every project, task, build and order, with deviations in red" width="92%">
@@ -319,6 +327,7 @@ a browser cannot submit made-up tasks or prices · if FalkorDB is down the API r
 | Web | **Next.js 16** · **React 19** with View Transitions · **Tailwind CSS 4** with OKLCH tokens · **Motion** · Lenis · React Flow |
 | Documents | **SuperDoc** (Word layout, tracked changes, .docx) · pdf.js |
 | Operations | Docker Compose · Tailscale · Cloudflare Tunnel · **Playwright**, which captured every screenshot here |
+| Film | Rendered frame by frame at 60 fps from an HTML scene graph with **Playwright**, scored with **numpy**, mixed with **ffmpeg** ([scripts/film](scripts/film)) |
 
 Everything is free and open: no paid API, no cloud bill.
 
@@ -403,7 +412,7 @@ api/tests/  api/eval/                       122 tests · frozen evaluation with 
 web/src/                                    Next.js app
 fixture/flyvi/                              the synthetic company: records, chats, tickets, documents, samples, Zoho changes
 docs/                                       evaluation, data model, Cypher reference, deployment, demo, video script
-scripts/                                    Playwright captures and the public demo launcher
+scripts/                                    Playwright captures, the public demo launcher, and the film (scripts/film)
 ```
 
 </details>
@@ -420,7 +429,7 @@ Main entry: **Track 03, Company Brain**. Also entered: Track 01, Agents That Act
 - [x] Built during the event (16–18 Oct 2026); earlier Neura1 work is described in [docs/REUSE.md](docs/REUSE.md)
 - [x] AI assistance disclosed in [docs/AI_DISCLOSURE.md](docs/AI_DISCLOSURE.md)
 - [x] Live deployment (link in the submission; see [docs/DEPLOY.md](docs/DEPLOY.md))
-- [ ] Demo video
+- [x] Demo video: [the Neura1 film](docs/demo/neura1-film.mp4)
 
 <br>
 

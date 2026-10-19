@@ -15,3 +15,12 @@ data/
 api/DGX API DETAILS
 *API DETAILS*
 web/.next-rec/
+
+# Film renders and captured screens (regenerate with scripts/film)
+scripts/film/public/shots/
+scripts/film/public/impact.json
+scripts/film/public/logo.png
+scripts/film/board/
+*.mp4.json
+film.mp4
+score.wav

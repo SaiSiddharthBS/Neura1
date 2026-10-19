@@ -1,0 +1,378 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Neura1 film</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+  :root { --bg:#04070d; --ink:#f2f8fc; --soft:#a9bccb; --muted:#6f8597; --cyan:#5ee3f5; --ice:#bfeefb; --coral:#ff7a8a; --amber:#fbbf24; --violet:#a78bfa; --green:#7cf0b0; }
+  html, body { margin:0; width:1920px; height:1080px; overflow:hidden; background:var(--bg); color:var(--ink);
+    font-family: Inter, -apple-system, "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing:antialiased; }
+  #stage { position:absolute; inset:0; overflow:hidden; }
+  .glow { position:absolute; inset:-20%; pointer-events:none; }
+  .scene { position:absolute; inset:0; opacity:0; }
+  .h { font-family:"Inter Tight", Inter, sans-serif; font-weight:800; letter-spacing:-0.045em; line-height:0.98; }
+  .k { font:600 18px "JetBrains Mono", Menlo, monospace; letter-spacing:.28em; text-transform:uppercase; color:var(--cyan); }
+  .w { display:inline-block; will-change:transform, filter, opacity; }
+  .win { position:absolute; border-radius:22px; overflow:hidden; background:#0b1220;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.07), 0 50px 140px rgba(0,0,0,.65), 0 0 80px rgba(94,227,245,.06); }
+  .win img { position:absolute; left:0; top:0; width:100%; height:100%; display:block; }
+  .chip { position:absolute; padding:18px 26px; border-radius:20px; background:rgba(10,18,32,.86); border:1px solid rgba(191,238,251,.14);
+    box-shadow: 0 24px 60px rgba(0,0,0,.5); backdrop-filter: blur(16px); }
+  .chip b { display:block; font:800 54px "Inter Tight", Inter, sans-serif; letter-spacing:-0.035em; font-variant-numeric: tabular-nums; }
+  .chip span { display:block; margin-top:6px; font:500 19px Inter, sans-serif; color:var(--soft); }
+  .note { position:absolute; width:620px; padding:22px 24px; border-radius:26px; background:rgba(28,34,46,.82);
+    border:1px solid rgba(255,255,255,.10); box-shadow:0 30px 80px rgba(0,0,0,.55); backdrop-filter: blur(30px); display:flex; gap:18px; }
+  .note .ic { width:58px; height:58px; border-radius:14px; flex:none; background:linear-gradient(160deg,#3b82f6,#1d4ed8); display:grid; place-items:center; }
+  .note .t1 { font:600 21px Inter; } .note .t2 { margin-top:4px; font:500 19px Inter; color:#d7e2ea; } .note .t3 { margin-top:2px; font:400 18px Inter; color:var(--soft); }
+  .note .now { margin-left:auto; font:500 16px Inter; color:var(--muted); }
+  .frag { position:absolute; font:600 30px "Inter Tight", Inter; color:var(--soft); }
+  .scrap { position:absolute; padding:16px 20px; border-radius:16px; background:rgba(16,24,38,.9); border:1px solid rgba(255,255,255,.08);
+    font:500 20px Inter; color:var(--soft); box-shadow:0 20px 50px rgba(0,0,0,.45); }
+  .scrap small { display:block; font:500 14px "JetBrains Mono"; color:var(--muted); margin-bottom:6px; letter-spacing:.06em; }
+  .pill { display:inline-block; padding:12px 22px; border-radius:999px; font:600 22px Inter; border:1px solid rgba(191,238,251,.2); background:rgba(94,227,245,.06); margin:0 8px; }
+  .pill.n { border-color:rgba(118,185,0,.6); background:rgba(118,185,0,.12); color:#cdf29a; }
+  canvas { position:absolute; left:0; top:0; }
+</style></head>
+<body><div id="stage"></div>
+<script>
+// ---------- maths ----------
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, p) => a + (b - a) * p;
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const expo = (p) => (p >= 1 ? 1 : 1 - Math.pow(2, -10 * p));
+const cubic = (p) => (p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+const outBack = (p) => { const c = 1.4; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
+const $ = (html) => { const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstChild; };
+const stage = document.getElementById('stage');
+
+function headline(text, size, x, y, opts = {}) {
+  const el = $(`<div class="h" style="position:absolute;left:${x}px;top:${y}px;font-size:${size}px;${opts.center ? 'width:1920px;left:0;text-align:center;' : ''}${opts.width ? `width:${opts.width}px;` : ''}"></div>`);
+  let on = false;
+  text.split(' ').forEach((w) => {
+    const s = document.createElement('span'); s.className = 'w';
+    if (w.startsWith('*')) { on = true; w = w.slice(1); }
+    let close = false;
+    if (w.includes('*')) { close = true; w = w.replace('*', ''); }
+    if (on) s.style.color = opts.accent || 'var(--cyan)';
+    s.textContent = w;
+    if (close) on = false;
+    el.appendChild(s); el.appendChild(document.createTextNode(' '));
+  });
+  return el;
+}
+function reveal(el, t, start, step = 0.07, dur = 0.9) {
+  [...el.querySelectorAll('.w')].forEach((w, i) => {
+    const p = expo(prog(t, start + i * step, start + i * step + dur));
+    w.style.opacity = p; w.style.transform = `translateY(${(1 - p) * 34}px)`; w.style.filter = `blur(${(1 - p) * 14}px)`;
+  });
+}
+function fadeEl(el, t, a, b, dy = 24) {
+  const p = expo(prog(t, a, b)); el.style.opacity = p; el.style.transform = (el._base || '') + ` translateY(${(1 - p) * dy}px)`;
+  el.style.filter = `blur(${(1 - p) * 10}px)`; return p;
+}
+// title and subtitle hold the frame until the camera pushes in, then lift away
+function titleAway(els, t, at) {
+  const q = cubic(prog(t, at, at + 0.7));
+  els.forEach((e) => { if (!e) return; e.style.opacity = Math.min(parseFloat(e.style.opacity || 1), 1 - q);
+    e.style.transform = (e.style.transform || '') + ` translateY(${-q * 30}px)`; });
+}
+function windowEl(src, w, h) {
+  const el = $(`<div class="win" style="width:${w}px;height:${h}px"><img src="shots/${src}.png"></div>`); return el;
+}
+// a window that floats in with a gentle 3D settle and then a camera move towards (fx, fy) at scale s
+function camera(el, t, t0, moves, base = { x: 960, y: 560, w: 1500 }) {
+  const enter = expo(prog(t, t0, t0 + 1.4));
+  let s = 1, fx = .5, fy = .5;
+  for (const m of moves) {
+    const p = cubic(prog(t, m.at, m.at + (m.dur || 1.6)));
+    s = lerp(s, m.s, p); fx = lerp(fx, m.fx, p); fy = lerp(fy, m.fy, p);
+  }
+  const w = base.w, h = w * 9 / 16;
+  el.style.width = w + 'px'; el.style.height = h + 'px';
+  const ox = (fx - .5) * w * (s - 1), oy = (fy - .5) * h * (s - 1);
+  el.style.left = (base.x - w / 2) + 'px'; el.style.top = (base.y - h / 2) + 'px';
+  el.style.transform = `perspective(2200px) translate(${-ox}px, ${-oy + (1 - enter) * 120}px) rotateX(${(1 - enter) * 14}deg) scale(${s * lerp(.92, 1, enter)})`;
+  el.style.opacity = enter;
+}
+
+// ---------- background ----------
+const bg = $(`<canvas width="1920" height="1080"></canvas>`); stage.appendChild(bg);
+const bgx = bg.getContext('2d');
+function drawBg(t, hue) {
+  bgx.fillStyle = '#04070d'; bgx.fillRect(0, 0, 1920, 1080);
+  const blobs = [[0.78, 0.38, 900, hue[0]], [0.15, 0.95, 800, hue[1]], [0.95, 0.02, 600, hue[2]]];
+  for (const [x, y, r, c] of blobs) {
+    const cx = (x + Math.sin(t * 0.07 + x * 9) * 0.04) * 1920, cy = (y + Math.cos(t * 0.06 + y * 7) * 0.04) * 1080;
+    const g = bgx.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, c); g.addColorStop(1, 'rgba(4,7,13,0)');
+    bgx.fillStyle = g; bgx.fillRect(0, 0, 1920, 1080);
+  }
+}
+
+// ---------- scenes ----------
+const S = [];
+function scene(dur, build, render, hue = ['rgba(34,140,200,.20)', 'rgba(70,90,220,.14)', 'rgba(94,227,245,.08)']) {
+  const el = $(`<div class="scene"></div>`); stage.appendChild(el);
+  const ctx = build(el) || {}; S.push({ dur, el, ctx, render, hue });
+}
+
+// 1 · the email
+scene(7.2, (el) => {
+  const time = headline('Monday, 9:02 AM', 40, 0, 330, { center: true }); time.style.color = 'var(--soft)'; time.style.fontWeight = 600; time.style.letterSpacing = '-0.01em';
+  const note = $(`<div class="note" style="left:401px;top:322px;zoom:1.35"><div class="ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></div>
+    <div style="flex:1;min-width:0"><div style="display:flex"><div class="t1">Deccan Components</div><div class="now">now</div></div>
+    <div class="t2">NB54360 regulator: price and lead time revision</div><div class="t3">₹250 → ₹320 per unit · lead time 6 → 22 weeks</div></div></div>`);
+  el.append(time, note); return { time, note };
+}, (t, c) => {
+  reveal(c.time, t, 0.4, 0.09);
+  const p = expo(prog(t, 1.4, 2.4)); c.note.style.opacity = p;
+  c.note.style.transform = `translateY(${(1 - p) * -60}px) scale(${lerp(.94, 1, p)})`;
+  const q = cubic(prog(t, 5.0, 6.6)); c.note.style.transform += ` translateY(${q * -150}px) scale(${1 - q * .1})`; c.time.style.opacity = 1 - q;
+});
+
+// 2 · the question
+scene(5.4, (el) => {
+  const h = headline('What does it *break?*', 150, 0, 400, { center: true, accent: 'var(--coral)' });
+  const frags = ['Builds', 'Customer orders', 'Delivery promises', 'Penalty clauses', 'Firmware', 'Test procedures'].map((f, i) => {
+    const a = (i / 6) * Math.PI * 2 + 0.4; const e = $(`<div class="frag">${f}?</div>`);
+    e._x = 960 + Math.cos(a) * 640 - 90; e._y = 520 + Math.sin(a) * 330 - 20; el.appendChild(e); return e;
+  });
+  el.appendChild(h); return { h, frags };
+}, (t, c) => {
+  reveal(c.h, t, 0.2, 0.1, 1.0);
+  c.frags.forEach((f, i) => { const p = expo(prog(t, 1.4 + i * 0.18, 2.4 + i * 0.18));
+    f.style.opacity = p * .75; f.style.left = f._x + 'px'; f.style.top = (f._y + (1 - p) * 30 + Math.sin(t * .8 + i) * 6) + 'px'; f.style.filter = `blur(${(1 - p) * 8}px)`; });
+}, ['rgba(255,90,110,.16)', 'rgba(70,90,220,.12)', 'rgba(94,227,245,.06)']);
+
+// 3 · scattered
+scene(5.6, (el) => {
+  const h = headline('The answer is *scattered.*', 120, 0, 430, { center: true, accent: 'var(--soft)' });
+  const scraps = [
+    ['BOM_PDU-28_v7_FINAL(2).xlsx', 'SPREADSHEET', 250, 200], ['"tried NB54361-L, didn\'t work out"', '#hw-power · MAR 2025', 1250, 170],
+    ['Raghavendra knows the thermal limits', 'ONE PERSON', 1240, 760], ['SO-881 · penalty clause 9.2', 'CONTRACT PDF', 200, 780]].map(([a, b, x, y]) => {
+    const e = $(`<div class="scrap"><small>${b}</small>${a}</div>`); e._x = x; e._y = y; el.appendChild(e); return e; });
+  el.appendChild(h); return { h, scraps };
+}, (t, c) => {
+  reveal(c.h, t, 1.3, 0.1);
+  c.scraps.forEach((s, i) => { const p = expo(prog(t, 0.15 + i * 0.22, 1.2 + i * 0.22));
+    s.style.opacity = p; s.style.left = (s._x + Math.sin(t * .5 + i) * 10) + 'px'; s.style.top = (s._y + (1 - p) * 40 + Math.cos(t * .4 + i) * 8) + 'px';
+    s.style.transform = `rotate(${(i % 2 ? 1 : -1) * 2.5}deg)`; s.style.filter = `blur(${(1 - p) * 10}px)`;
+    const q = cubic(prog(t, 4.6, 5.6)); s.style.left = lerp(parseFloat(s.style.left), 900, q) + 'px'; s.style.top = lerp(parseFloat(s.style.top), 500, q) + 'px'; s.style.opacity = p * (1 - q); });
+  c.h.style.opacity = 1 - cubic(prog(t, 4.7, 5.5));
+});
+
+// 4 · logo
+scene(5.6, (el) => {
+  const logo = $(`<img src="shots/../logo.png" style="position:absolute;left:810px;top:250px;width:300px">`);
+  const sub = headline('The company brain for hardware manufacturers.', 40, 0, 690, { center: true }); sub.style.fontWeight = 600; sub.style.letterSpacing = '-0.015em'; sub.style.color = 'var(--soft)';
+  const ring = $(`<div style="position:absolute;left:660px;top:120px;width:600px;height:600px;border-radius:50%;border:1px solid rgba(191,238,251,.35)"></div>`);
+  el.append(ring, logo, sub); return { logo, sub, ring };
+}, (t, c) => {
+  const p = expo(prog(t, 0.2, 1.8));
+  c.logo.style.opacity = p; c.logo.style.transform = `scale(${lerp(.82, 1, p)})`;
+  c.logo.style.filter = `blur(${(1 - p) * 20}px) drop-shadow(0 0 ${40 * p}px rgba(94,227,245,.55))`;
+  const r = prog(t, 0.6, 3.2); c.ring.style.opacity = (1 - r) * .8; c.ring.style.transform = `scale(${lerp(.5, 1.5, r)})`;
+  reveal(c.sub, t, 1.4, 0.05);
+}, ['rgba(94,227,245,.22)', 'rgba(59,130,246,.14)', 'rgba(94,227,245,.10)']);
+
+// 5 · the ripple, drawn from the real impact data
+let IMPACT = null;
+scene(12.5, (el) => {
+  const cv = $(`<canvas width="1920" height="1080"></canvas>`);
+  const h = headline('One graph. *Every connection.*', 84, 120, 110);
+  const sub = $(`<div style="position:absolute;left:124px;top:216px;font:500 26px Inter;color:var(--soft);width:900px">One supplier change, followed through revisions, builds, customer orders, customers and the people who own them.</div>`);
+  const tag = $(`<div class="chip" style="left:124px;top:860px"><b style="font-size:34px;color:var(--coral)">Nilgiri Aero · SO-881</b><span>penalty clause 9.2 · ships months late</span></div>`);
+  el.append(cv, h, sub, tag); return { cv, h, sub, tag, x: cv.getContext('2d') };
+}, (t, c) => {
+  reveal(c.h, t, 0.3, 0.08); fadeEl(c.sub, t, 0.9, 1.9);
+  const x = c.x; x.clearRect(0, 0, 1920, 1080);
+  if (!IMPACT) return;
+  const { nodes, edges, level, pos } = IMPACT;
+  const path = new Set(['NB54360', 'PDU-28-C', 'BO-0412', 'SO-881', 'C-NILGIRI']);
+  const focus = cubic(prog(t, 7.4, 8.6));
+  const colorOf = { part: '#5ee3f5', revision: '#22d3ee', build: '#fbbf24', order: '#a78bfa', customer: '#ff7a8a', person: '#e2e8f0', decision: '#ff7a8a', alternate: '#94a3b8', shipment: '#f59e0b', firmware: '#7cf0b0', test: '#7cf0b0' };
+  const appear = (l) => expo(prog(t, 1.2 + l * 0.75, 2.0 + l * 0.75));
+  // shockwaves
+  for (let k = 0; k < 3; k++) { const ph = ((t * 0.22 + k / 3) % 1); if (t < 1.2) break;
+    x.beginPath(); x.ellipse(1080, 650, ph * 860, ph * 400, 0, 0, 7); x.strokeStyle = `rgba(94,227,245,${0.25 * (1 - ph)})`; x.lineWidth = 1.2; x.stroke(); }
+  for (const e of edges) {
+    const a = pos[e.source], b = pos[e.target]; if (!a || !b) continue;
+    const la = level[e.source], lb = level[e.target], [p, q, l] = la <= lb ? [a, b, lb] : [b, a, la];
+    const k = appear(l); if (!k) continue;
+    const on = path.has(e.source) && path.has(e.target);
+    const mx = (p.x + q.x) / 2, my = (p.y + q.y) / 2 - 26;
+    x.beginPath(); x.moveTo(p.x, p.y);
+    const ex = lerp(p.x, q.x, k), ey = lerp(p.y, q.y, k); x.quadraticCurveTo(lerp(p.x, mx, k), lerp(p.y, my, k), ex, ey);
+    x.strokeStyle = on ? `rgba(255,122,138,${lerp(.25, .95, focus)})` : `rgba(191,238,251,${lerp(.22, .06, focus)})`; x.lineWidth = on ? lerp(1.2, 3, focus) : 1.2; x.stroke();
+    if (k >= 1) { const u = ((t * 0.4 + (p.x + q.y) * 0.0007) % 1); const px = (1 - u) ** 2 * p.x + 2 * (1 - u) * u * mx + u * u * q.x, py = (1 - u) ** 2 * p.y + 2 * (1 - u) * u * my + u * u * q.y;
+      x.beginPath(); x.arc(px, py, on ? 3.2 * (0.6 + focus) : 2, 0, 7); x.fillStyle = on ? `rgba(255,170,180,${.4 + .6 * focus})` : `rgba(94,227,245,${lerp(.8, .25, focus)})`; x.fill(); }
+  }
+  for (const n of nodes) {
+    const p = pos[n.id]; if (!p) continue; const l = level[n.id]; const k = appear(l); if (!k) continue;
+    const on = path.has(n.id); const dim = on ? 1 : lerp(1, .25, focus); const r = (l === 0 ? 20 : 9.5) * outBack(k);
+    const col = colorOf[n.type] || '#94a3b8';
+    const g = x.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 4); g.addColorStop(0, col + '88'); g.addColorStop(1, col + '00');
+    x.globalAlpha = dim; x.fillStyle = g; x.beginPath(); x.arc(p.x, p.y, r * 4, 0, 7); x.fill();
+    x.fillStyle = l === 0 ? '#e8faff' : col; x.beginPath(); x.arc(p.x, p.y, r, 0, 7); x.fill();
+    if (l === 0 || on) { x.font = `${l === 0 ? 600 : 500} ${l === 0 ? 22 : 17}px "JetBrains Mono"`; x.fillStyle = on && l ? '#ffd2d8' : '#e8f6ff'; x.textAlign = 'center';
+      x.fillText(n.label.length > 22 ? n.label.slice(0, 21) + '…' : n.label, p.x, p.y + (l === 0 ? 46 : 30)); }
+    x.globalAlpha = 1;
+  }
+  const tp = expo(prog(t, 8.4, 9.4)); c.tag.style.opacity = tp; c.tag.style.transform = `translateY(${(1 - tp) * 20}px)`;
+});
+
+// 6 · impact
+scene(9.5, (el) => {
+  const w = windowEl('impact'); const h = headline('Know what breaks, *in one view.*', 76, 120, 70);
+  const chips = [['3 of 3', 'planned builds at risk', 'var(--coral)', 230], ['3', 'customer orders exposed', 'var(--ink)', 690], ['₹37,400', 'cost increase, computed by code', 'var(--ink)', 1150]]
+    .map(([b, s, col, x]) => { const e = $(`<div class="chip" style="left:${x}px;top:900px;width:380px"><b style="color:${col}">${b}</b><span>${s}</span></div>`); el.appendChild(e); return e; });
+  el.prepend(w); el.appendChild(h); return { w, h, chips };
+}, (t, c) => {
+  reveal(c.h, t, 0.2, 0.08); titleAway([c.h], t, 2.0);
+  camera(c.w, t, 0.3, [{ at: 2.0, s: 1.3, fx: .5, fy: .66, dur: 2.0 }], { x: 960, y: 668, w: 1420 });
+  c.chips.forEach((ch, i) => { const p = expo(prog(t, 3.8 + i * .25, 4.8 + i * .25)); ch.style.opacity = p; ch.style.transform = `translateY(${(1 - p) * 40}px) scale(${lerp(.9, 1, p)})`; });
+});
+
+// 7 · never twice
+scene(10.5, (el) => {
+  const a = windowEl('chat_empty'), b = windowEl('chat_guard');
+  const h = headline('It remembers why you *said no.*', 76, 120, 70);
+  const sub = $(`<div style="position:absolute;left:124px;top:168px;font:500 26px Inter;color:var(--soft)">Suggest a part rejected in 2025, and Neura1 shows the decision and its proof before you hit send.</div>`);
+  el.append(a, b, h, sub); return { a, b, h, sub };
+}, (t, c) => {
+  reveal(c.h, t, 0.2, 0.08); fadeEl(c.sub, t, 0.9, 1.9); titleAway([c.h, c.sub], t, 4.2);
+  const moves = [{ at: 4.2, s: 1.55, fx: .72, fy: .76, dur: 2.0 }];
+  camera(c.a, t, 0.4, moves, { x: 960, y: 668, w: 1420 }); camera(c.b, t, 0.4, moves, { x: 960, y: 668, w: 1420 });
+  const x = cubic(prog(t, 2.8, 3.6)); c.b.style.opacity = x * parseFloat(c.a.style.opacity); c.a.style.opacity = parseFloat(c.a.style.opacity) * (1 - x * 0.999);
+});
+
+// 8 · promise
+scene(8.5, (el) => {
+  const q = headline('Can we promise *50 units* by December?', 76, 120, 70);
+  const w = windowEl('promise');
+  const ans = $(`<div class="chip" style="left:1210px;top:300px;width:520px"><b style="color:var(--coral);font-size:72px">No. April.</b><span>Stock and quotes said yes. A supplier notice said otherwise, and Neura1 checked.</span></div>`);
+  el.append(w, q, ans); return { q, w, ans };
+}, (t, c) => {
+  reveal(c.q, t, 0.2, 0.08); titleAway([c.q], t, 2.6);
+  camera(c.w, t, 0.8, [{ at: 2.6, s: 1.4, fx: .3, fy: .5, dur: 1.8 }], { x: 880, y: 668, w: 1340 });
+  const p = expo(prog(t, 4.2, 5.2)); c.ans.style.opacity = p; c.ans.style.transform = `translateX(${(1 - p) * 60}px)`;
+});
+
+// 9 · timeline
+scene(9.5, (el) => {
+  const a = windowEl('timeline'), b = windowEl('timeline_why');
+  const h = headline('See every slip *before it happens.*', 76, 120, 70);
+  const sub = $(`<div style="position:absolute;left:124px;top:168px;font:500 26px Inter;color:var(--soft)">Every project, task, build and order. Red is the forecast, worked out from stock, orders, notices and leave.</div>`);
+  el.append(a, b, h, sub); return { a, b, h, sub };
+}, (t, c) => {
+  reveal(c.h, t, 0.2, 0.08); fadeEl(c.sub, t, 0.9, 1.9); titleAway([c.h, c.sub], t, 2.2);
+  const moves = [{ at: 2.2, s: 1.45, fx: .62, fy: .55, dur: 2.2 }, { at: 5.6, s: 1.45, fx: .85, fy: .3, dur: 1.6 }];
+  camera(c.a, t, 0.4, moves, { x: 960, y: 668, w: 1420 }); camera(c.b, t, 0.4, moves, { x: 960, y: 668, w: 1420 });
+  const x = cubic(prog(t, 5.4, 6.2)); const o = parseFloat(c.a.style.opacity); c.b.style.opacity = x * o; c.a.style.opacity = o * (1 - x * .999);
+}, ['rgba(255,90,110,.14)', 'rgba(59,130,246,.12)', 'rgba(94,227,245,.08)']);
+
+// 10 · sandbox
+scene(7.5, (el) => {
+  const w = windowEl('sandbox'); const h = headline('Try it on a *copy of the company* first.', 72, 120, 70);
+  const chip = $(`<div class="chip" style="left:1330px;top:830px;width:420px"><b>0.1 s</b><span>to copy the whole company graph</span></div>`);
+  el.append(w, h, chip); return { w, h, chip };
+}, (t, c) => {
+  reveal(c.h, t, 0.2, 0.08); titleAway([c.h], t, 2.0);
+  camera(c.w, t, 0.4, [{ at: 2.0, s: 1.35, fx: .62, fy: .42, dur: 2.2 }], { x: 960, y: 668, w: 1420 });
+  const p = expo(prog(t, 3.2, 4.2)); c.chip.style.opacity = p; c.chip.style.transform = `translateY(${(1 - p) * 30}px)`;
+});
+
+// 11 · agents
+scene(9.0, (el) => {
+  const w = windowEl('agents'); const h = headline('An agent for *every department.*', 76, 120, 70);
+  const sub = $(`<div style="position:absolute;left:124px;top:168px;font:500 26px Inter;color:var(--soft)">Procurement, Production, Engineering and Sales: each checks the graph and posts what needs attention.</div>`);
+  el.append(w, h, sub); return { w, h, sub };
+}, (t, c) => {
+  reveal(c.h, t, 0.2, 0.08); fadeEl(c.sub, t, 0.9, 1.9); titleAway([c.h, c.sub], t, 2.4);
+  camera(c.w, t, 0.4, [{ at: 2.4, s: 1.5, fx: .38, fy: .45, dur: 2.0 }, { at: 5.4, s: 1.5, fx: .78, fy: .45, dur: 2.0 }], { x: 960, y: 668, w: 1420 });
+});
+
+// 12 · connections
+scene(8.5, (el) => {
+  const a = windowEl('connect_diff'), b = windowEl('connect_on');
+  const h = headline('Plugs into the ERP *you already run.*', 76, 120, 70);
+  const sub = $(`<div style="position:absolute;left:124px;top:168px;font:500 26px Inter;color:var(--soft)">Zoho over MCP, synced field by field. OpenAI Dots can ask too, only when you switch it on.</div>`);
+  el.append(a, b, h, sub); return { a, b, h, sub };
+}, (t, c) => {
+  reveal(c.h, t, 0.2, 0.08); fadeEl(c.sub, t, 0.9, 1.9); titleAway([c.h, c.sub], t, 2.2);
+  const ma = [{ at: 2.2, s: 1.45, fx: .38, fy: .62, dur: 2.0 }], mb = [{ at: 4.8, s: 1.55, fx: .78, fy: .3, dur: 1.6 }];
+  camera(c.a, t, 0.4, ma, { x: 960, y: 668, w: 1420 }); camera(c.b, t, 0.4, ma.concat(mb), { x: 960, y: 668, w: 1420 });
+  const x = cubic(prog(t, 4.4, 5.2)); const o = parseFloat(c.a.style.opacity); c.b.style.opacity = x * o; c.a.style.opacity = o * (1 - x * .999);
+});
+
+// 13 · private
+scene(7.0, (el) => {
+  const h = headline('Runs on *your* hardware.', 130, 0, 330, { center: true });
+  const h2 = headline('Nothing leaves.', 130, 0, 480, { center: true }); h2.style.color = 'var(--soft)';
+  const pills = $(`<div style="position:absolute;left:0;width:1920px;top:700px;text-align:center"><span class="pill">FalkorDB</span><span class="pill n">NVIDIA DGX Spark</span><span class="pill">Open models</span><span class="pill">Permissions from the org chart</span><span class="pill">₹0 cloud</span></div>`);
+  el.append(h, h2, pills); return { h, h2, pills };
+}, (t, c) => {
+  reveal(c.h, t, 0.2, 0.1); reveal(c.h2, t, 1.1, 0.12);
+  [...c.pills.children].forEach((p, i) => { const k = expo(prog(t, 2.2 + i * .15, 3.0 + i * .15)); p.style.opacity = k; p.style.transform = `translateY(${(1 - k) * 20}px)`; p.style.display = 'inline-block'; });
+}, ['rgba(118,185,0,.14)', 'rgba(59,130,246,.12)', 'rgba(94,227,245,.10)']);
+
+// 14 · proof
+scene(6.5, (el) => {
+  const h = headline('Measured, not promised.', 72, 0, 250, { center: true });
+  const stats = [['15/18', 'blind questions answered', 15], ['0.1 s', 'to copy the company', 0.1], ['110', 'Cypher queries, documented', 110], ['122', 'automated tests', 122]]
+    .map(([b, s, v], i) => { const e = $(`<div style="position:absolute;top:470px;left:${180 + i * 410}px;width:380px;text-align:center"><div class="h" style="font-size:110px"></div><div style="font:500 24px Inter;color:var(--soft);margin-top:10px">${s}</div></div>`); e._b = b; e._v = v; el.appendChild(e); return e; });
+  el.appendChild(h); return { h, stats };
+}, (t, c) => {
+  reveal(c.h, t, 0.2, 0.09);
+  c.stats.forEach((s, i) => { const p = expo(prog(t, 1.0 + i * .2, 2.4 + i * .2)); s.style.opacity = Math.min(1, p * 1.4); s.style.transform = `translateY(${(1 - p) * 30}px)`;
+    const v = s._v * p; s.firstChild.textContent = s._b.includes('/') ? `${Math.round(v)}/18` : s._b.includes('s') ? `${v.toFixed(1)} s` : `${Math.round(v)}`; });
+});
+
+// 15 · close
+scene(7.0, (el) => {
+  const logo = $(`<img src="logo.png" style="position:absolute;left:830px;top:200px;width:260px">`);
+  const h = headline('The company brain for *hardware manufacturers.*', 54, 0, 640, { center: true });
+  const url = $(`<div style="position:absolute;left:0;width:1920px;top:760px;text-align:center;font:600 30px 'JetBrains Mono';color:var(--ice)">github.com/SaiSiddharthBS/Neura1</div>`);
+  const tiny = $(`<div style="position:absolute;left:0;width:1920px;top:980px;text-align:center;font:500 18px Inter;color:var(--muted)">Built for Graph Hacks 2026 · FalkorDB · synthetic demo data, real graph</div>`);
+  el.append(logo, h, url, tiny); return { logo, h, url, tiny };
+}, (t, c) => {
+  const p = expo(prog(t, 0.2, 1.6)); c.logo.style.opacity = p; c.logo.style.transform = `scale(${lerp(.85, 1, p)})`;
+  c.logo.style.filter = `blur(${(1 - p) * 18}px) drop-shadow(0 0 ${36 * p}px rgba(94,227,245,.5))`;
+  reveal(c.h, t, 1.0, 0.06); fadeEl(c.url, t, 2.0, 3.0); fadeEl(c.tiny, t, 2.6, 3.6);
+}, ['rgba(94,227,245,.2)', 'rgba(59,130,246,.14)', 'rgba(94,227,245,.08)']);
+
+// ---------- timeline ----------
+const XF = 0.55;  // crossfade between scenes
+let starts = [], TOTAL = 0;
+function layout(durs) {
+  if (durs) S.forEach((s, i) => s.dur = durs[i] ?? s.dur);
+  starts = []; let t = 0; S.forEach((s) => { starts.push(t); t += s.dur - XF; }); TOTAL = t + XF;
+}
+layout();
+window.FILM = { get total() { return TOTAL; }, get starts() { return starts; }, layout, count: S.length, durs: () => S.map(s => s.dur) };
+window.seek = (T) => {
+  // background follows the active scene's colours
+  let act = 0; for (let i = 0; i < S.length; i++) if (T >= starts[i]) act = i;
+  drawBg(T, S[act].hue);
+  S.forEach((s, i) => {
+    const t = T - starts[i];
+    if (t < -0.01 || t > s.dur + 0.01) { s.el.style.opacity = 0; s.el.style.visibility = 'hidden'; return; }
+    s.el.style.visibility = 'visible';
+    const fin = i === 0 ? 1 : cubic(prog(t, 0, XF)), fout = i === S.length - 1 ? 1 : 1 - cubic(prog(t, s.dur - XF, s.dur));
+    s.el.style.opacity = Math.min(fin, fout);
+    s.render(t, s.ctx);
+  });
+};
+
+// layout of the ripple from the real impact data (rings by distance from the changed part)
+fetch('impact.json').then((r) => r.json()).then((d) => {
+  const nodes = d.graph.nodes, edges = d.graph.edges, centre = d.part.id;
+  const adj = {}; edges.forEach((e) => { (adj[e.source] ||= []).push(e.target); (adj[e.target] ||= []).push(e.source); });
+  const level = { [centre]: 0 }, parent = {}; let fr = [centre];
+  while (fr.length) { const nx = []; for (const id of fr) for (const n of adj[id] || []) if (!(n in level)) { level[n] = level[id] + 1; parent[n] = id; nx.push(n); } fr = nx; }
+  const max = Math.max(...Object.values(level)); const ang = { [centre]: 0 }; const pos = { [centre]: { x: 1060, y: 600 } };
+  for (let l = 1; l <= max; l++) {
+    const ring = nodes.filter((n) => level[n.id] === l).map((n) => ({ id: n.id, want: l === 1 ? 0 : ang[parent[n.id]] })).sort((a, b) => a.want - b.want || a.id.localeCompare(b.id));
+    ring.forEach((r, i) => { const a = (l === 1 ? -Math.PI / 2 : (ring[0].want - Math.PI / ring.length)) + (2 * Math.PI * (i + (l === 1 ? 0 : .5))) / ring.length;
+      ang[r.id] = a; const k = 0.24 + 0.76 * Math.pow(l / max, .8); pos[r.id] = { x: 1080 + Math.cos(a) * k * 800, y: 650 + Math.sin(a) * k * 380 }; });
+  }
+  IMPACT = { nodes, edges, level, pos }; window.READY = true;
+});
+</script></body></html>
