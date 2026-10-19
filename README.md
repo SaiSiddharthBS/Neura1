@@ -32,13 +32,13 @@
 </div>
 
 <div align="center">
-<a href="docs/demo/neura1-film-narrated.mp4"><img src="docs/demo/film-poster.jpg" alt="Watch the Neura1 film: 1 minute 52 seconds, 60 fps" width="88%"></a>
+<a href="https://cdn.jsdelivr.net/gh/SaiSiddharthBS/Neura1@64a8cd8c71cab93df6006766be7dbc44e5d68ec2/docs/demo/neura1-film-narrated.mp4"><img src="docs/demo/film-poster.jpg" alt="Watch the Neura1 film: 1 minute 52 seconds, 60 fps" width="88%"></a>
 <br>
-<sub><b>The Neura1 film</b> (1:52, 60 fps). The story in two minutes, rendered frame by frame from the real product and the real impact data, with a score written for it. <a href="docs/demo/neura1-film-narrated.mp4">Play it</a>.</sub>
+<sub><b>The Neura1 film</b> (1:52, 60 fps). The story in two minutes, rendered frame by frame from the real product and the real impact data, with a score written for it. <a href="https://cdn.jsdelivr.net/gh/SaiSiddharthBS/Neura1@64a8cd8c71cab93df6006766be7dbc44e5d68ec2/docs/demo/neura1-film-narrated.mp4">Play it</a>.</sub>
 <br><br>
-<a href="docs/demo/neura1-demo.mp4"><img src="docs/demo/demo-poster.jpg" alt="Watch the full product demo: 3 minutes 6 seconds" width="88%"></a>
+<a href="https://cdn.jsdelivr.net/gh/SaiSiddharthBS/Neura1@64a8cd8c71cab93df6006766be7dbc44e5d68ec2/docs/demo/neura1-demo.mp4"><img src="docs/demo/demo-poster.jpg" alt="Watch the full product demo: 3 minutes 6 seconds" width="88%"></a>
 <br>
-<sub><b>The complete product demo</b> (3:06). Every flagship feature, live in the app: the ripple, impact, never twice, can we promise, the timeline, Zoho over MCP, the sandbox and the department agents. <a href="docs/demo/neura1-demo.mp4">Play it</a>.</sub>
+<sub><b>The complete product demo</b> (3:06). Every flagship feature, live in the app: the ripple, impact, never twice, can we promise, the timeline, Zoho over MCP, the sandbox and the department agents. <a href="https://cdn.jsdelivr.net/gh/SaiSiddharthBS/Neura1@64a8cd8c71cab93df6006766be7dbc44e5d68ec2/docs/demo/neura1-demo.mp4">Play it</a>.</sub>
 </div>
 
 <br>
@@ -433,7 +433,7 @@ Main entry: **Track 03, Company Brain**. Also entered: Track 01, Agents That Act
 - [x] Built during the event (16–18 Oct 2026); earlier Neura1 work is described in [docs/REUSE.md](docs/REUSE.md)
 - [x] AI assistance disclosed in [docs/AI_DISCLOSURE.md](docs/AI_DISCLOSURE.md)
 - [x] Live deployment (link in the submission; see [docs/DEPLOY.md](docs/DEPLOY.md))
-- [x] Demo video: [the Neura1 film](docs/demo/neura1-film-narrated.mp4) and [the complete product demo](docs/demo/neura1-demo.mp4)
+- [x] Demo video: [the Neura1 film](https://cdn.jsdelivr.net/gh/SaiSiddharthBS/Neura1@64a8cd8c71cab93df6006766be7dbc44e5d68ec2/docs/demo/neura1-film-narrated.mp4) and [the complete product demo](https://cdn.jsdelivr.net/gh/SaiSiddharthBS/Neura1@64a8cd8c71cab93df6006766be7dbc44e5d68ec2/docs/demo/neura1-demo.mp4)
 
 <br>
 

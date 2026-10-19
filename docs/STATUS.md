@@ -18,6 +18,8 @@ Submitted:
 
 After the deadline: the Neura1 film (`docs/demo/neura1-film-narrated.mp4`, source in `scripts/film`), the complete product
 demo (`docs/demo/neura1-demo.mp4`, 3:06) and these notes were added.
+Both videos are kept under 20 MB so the README can stream them through jsDelivr (links pinned to a commit);
+GitHub's own file viewer does not play large videos.
 
 ## What is built
 
