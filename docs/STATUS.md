@@ -16,7 +16,8 @@ Submitted:
   the API, the web app and the tunnel process are running. Restarting the tunnel changes the URL.
 - Blog: a private Claude artifact page, shared by the author.
 
-After the deadline: the Neura1 film (`docs/demo/neura1-film.mp4`, source in `scripts/film`) and these notes were added.
+After the deadline: the Neura1 film (`docs/demo/neura1-film-narrated.mp4`, plus a music-only cut `neura1-film-music.mp4`;
+source in `scripts/film`) and these notes were added.
 
 ## What is built
 
