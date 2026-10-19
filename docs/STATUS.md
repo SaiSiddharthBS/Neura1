@@ -16,8 +16,8 @@ Submitted:
   the API, the web app and the tunnel process are running. Restarting the tunnel changes the URL.
 - Blog: a private Claude artifact page, shared by the author.
 
-After the deadline: the Neura1 film (`docs/demo/neura1-film-narrated.mp4`, plus a music-only cut `neura1-film-music.mp4`;
-source in `scripts/film`) and these notes were added.
+After the deadline: the Neura1 film (`docs/demo/neura1-film-narrated.mp4`, source in `scripts/film`), the complete product
+demo (`docs/demo/neura1-demo.mp4`, 3:06) and these notes were added.
 
 ## What is built
 
@@ -53,7 +53,7 @@ Next, in rough priority:
 3. A live connection to Flyvi's own Zoho through Zoho's MCP service (needs a Zoho admin to create the MCP server).
 4. The long-term plan: replace paid Zoho modules one at a time (inventory and chat first); keep accounting and GST
    e-invoicing on a proper system until Neura1 can carry them.
-5. The full feature walkthrough video (8 to 10 minutes) was not made; only the 3-minute cuts and the film exist.
+5. An 8 to 10 minute walkthrough of every feature was not made; the film (1:52) and the complete demo (3:06) exist.
 6. Ideas raised but not built: department agents that run on a schedule and draft tasks for approval; agents per
    department in the style of open-dots with their own LLM harness.
 
